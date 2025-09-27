@@ -22,7 +22,9 @@ const Footer = () => {
   };
 
   return (
-   <footer className="bg-gradient-to-br from-emerald-800 to-emerald-500 text-white">
+     <footer className="bg-[#0b8686] text-white">
+
+
 
       <div className="container mx-auto px-6">
         {/* Main Footer Content */}

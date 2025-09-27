@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Play } from 'lucide-react';
-import heroImage from '@/assets/hero-medical-bg.jpg';
+
 
 const Hero = () => {
   return (
@@ -11,10 +11,11 @@ const Hero = () => {
       {/* Background Image with Blur */}
       <div className="absolute inset-0">
         <img
-          src={heroImage}
-          alt="Advanced biomedical research laboratory with cutting-edge equipment"
-          className="w-full h-full object-cover blur-sm"  
-        />
+  src="/bannerimg.png"
+  alt="Advanced biomedical research laboratory with cutting-edge equipment"
+  className="w-md h-md object-cover blur-md"
+/>
+
         {/* Optional dark overlay for better contrast */}
         <div className="absolute inset-0 bg-black/30" />
       </div>
