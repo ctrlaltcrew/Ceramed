@@ -58,15 +58,17 @@ const Header = () => {
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <div className="flex-shrink-0">
+ {/* Logo */}
+<div className="flex-shrink-0">
   <Link to="/" className="flex items-center">
     <img
-      src="public\Cera logo.png"   
+      src="/logo.png"   // ✅ no import, no backslashes, no "public"
       alt="CERA Medical Logo"
-      className="h-12 w-auto" 
+      className="h-12 w-auto"
     />
   </Link>
 </div>
+
 
             
 
