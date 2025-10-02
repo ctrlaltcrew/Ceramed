@@ -67,7 +67,7 @@ const Header = () => {
                 <img
                   src={Logo}
                   alt="CERA Medical Logo"
-                  className="h-13 w-auto"
+                  className="h-10 w-auto"
                 />
               </Link>
             </div>
