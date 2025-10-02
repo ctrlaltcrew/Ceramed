@@ -62,7 +62,7 @@ const Header = () => {
 <div className="flex-shrink-0">
   <Link to="/" className="flex items-center">
     <img
-      src="/logo.png"   // ✅ no import, no backslashes, no "public"
+      src="src\assets\logo.png"   
       alt="CERA Medical Logo"
       className="h-12 w-auto"
     />
