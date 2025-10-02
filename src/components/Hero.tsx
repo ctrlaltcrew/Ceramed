@@ -1,40 +1,22 @@
-import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ArrowRight, Play } from 'lucide-react';
+
 
 const Hero = () => {
-  const navigate = useNavigate();
-
-  const scrollToSection = useCallback((id: string) => {
-    // If section exists on current page, scroll to it
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-      return;
-    }
-
-    // Otherwise: navigate to home and try again after a short delay.
-    // Adjust delay if your home route takes longer to mount.
-    navigate('/');
-    setTimeout(() => {
-      const el2 = document.getElementById(id);
-      if (el2) el2.scrollIntoView({ behavior: 'smooth' });
-    }, 250);
-  }, [navigate]);
-
   return (
-    <section
+  <section
       id="home"
       className="relative min-h-screen flex items-center overflow-hidden"
     >
       {/* Background Image with Blur */}
       <div className="absolute inset-0">
         <img
-          src="/bannerimg.png"
-          alt="Advanced biomedical research laboratory with cutting-edge equipment"
-          className="w-full h-full object-cover blur-md"
-        />
+  src="/bannerimg.png"
+  alt="Advanced biomedical research laboratory with cutting-edge equipment"
+  className="w-md h-md object-cover blur-md"
+/>
+
+        {/* Optional dark overlay for better contrast */}
         <div className="absolute inset-0 bg-black/30" />
       </div>
 
@@ -43,33 +25,44 @@ const Hero = () => {
         <div className="max-w-3xl mx-auto text-center text-white">
           <div className="animate-fade-in">
             <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
-              Advancing Health through
+              Advancing Health through 
               <span className="bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent">
                 {" "}Rigorous Research
               </span>
               <br />
               and Innovative Solutions
             </h1>
-
-            <p className="text-lg md:text-xl mb-8 text-white/90 max-w-3xl mx-auto leading-relaxed">
-              CERA MEDICAL is dedicated to improving human health through innovative
-              solutions. We develop evidence-based natural health products and
-              provide cutting-edge research services.
+            
+            <p className="text-l md:text-xl mb-8 text-white/90 max-w-3xl mx-auto leading-relaxed">
+              CERA MEDICAL is dedicated to improving human health through innovative solutions. 
+              We develop evidence-based natural health products and provide cutting-edge research 
+              services.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-              <Button
+               <a href="#Products">
+              <Button 
                 className="btn-medical text-lg px-8 py-6 group"
-                onClick={() => scrollToSection('products')}
+                onClick={() => {
+                  const productsSection = document.getElementById('products');
+                  if (productsSection) {
+                    productsSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
               >
                 Shop Products
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-
-              <Button
-                variant="outline"
-                className="btn-medical-outline text-lg px-8 py-6 border-white text-white"
-                onClick={() => scrollToSection('about')}
+              </a>
+              <Button 
+                variant="outline" 
+                className="btn-medical-outline text-lg px-8 py-6 border-white text-white  text-primary"
+                onClick={() => {
+                  const aboutSection = document.getElementById('about');
+                  if (aboutSection) {
+                    aboutSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
               >
                 Who We Are
               </Button>
@@ -93,6 +86,7 @@ const Hero = () => {
           </div>
         </div>
       </div>
+      
 
       {/* Scroll Indicator */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
