@@ -40,7 +40,7 @@ const Hero = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-               <a href="#products">
+               <a href="#Products">
               <Button 
                 className="btn-medical text-lg px-8 py-6 group"
                 onClick={() => {
