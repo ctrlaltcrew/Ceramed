@@ -8,6 +8,9 @@ import { useCart } from '@/contexts/CartContext';
 import Cart from './Cart';
 import LoginPopup from './LoginPopup';
 
+// ✅ Import logo properly
+import Logo from '../assets/logo.png';
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [loginPopupOpen, setLoginPopupOpen] = useState(false);
@@ -57,20 +60,17 @@ const Header = () => {
       <header className="fixed top-0 w-full bg-background/95 backdrop-blur-sm border-b border-border z-50">
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between h-20">
-            {/* Logo */}
- {/* Logo */}
-<div className="flex-shrink-0">
-  <Link to="/" className="flex items-center">
-    <img
-      src="src\assets\logo.png"   
-      alt="CERA Medical Logo"
-      className="h-12 w-auto"
-    />
-  </Link>
-</div>
-
-
             
+            {/* ✅ Correct Logo usage */}
+            <div className="flex-shrink-0">
+              <Link to="/" className="flex items-center">
+                <img
+                  src={Logo}
+                  alt="CERA Medical Logo"
+                  className="h-12 w-auto"
+                />
+              </Link>
+            </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
