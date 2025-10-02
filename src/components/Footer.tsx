@@ -22,10 +22,7 @@ const Footer = () => {
   };
 
   return (
-     <footer className="bg-[#0b8686] text-white">
-
-
-
+    <footer className="bg-[#0b8686] text-white">
       <div className="container mx-auto px-6">
         {/* Main Footer Content */}
         <div className="py-16">
@@ -145,11 +142,16 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="border-t border-white/20 py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-white/80 text-sm">
-              © 2024 CERA MEDICAL. All rights reserved.
-            </p>
-            
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
+            <div className="text-center md:text-left">
+              <p className="text-white/80 text-sm">
+                © 2024 CERA MEDICAL. All rights reserved.
+              </p>
+              <p className="text-white/60 text-xs mt-1">
+                Developed by <a href="https://ctrlaltcrew.com" target="_blank" rel="noopener noreferrer" className="text-secondary hover:underline">CtrlAltCrew</a>
+              </p>
+            </div>
+
             <div className="flex items-center gap-6 text-sm">
               <a href="#" className="text-white/80 hover:text-white transition-colors duration-200">
                 Privacy Policy
