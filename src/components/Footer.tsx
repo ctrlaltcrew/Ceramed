@@ -19,22 +19,23 @@ const Footer = () => {
     { name: 'Blog', href: '/blog' },
   ];
 
-  // Smooth scroll handler for homepage sections
-  const handleScroll = (e: React.MouseEvent, targetId: string) => {
+  // Smooth scroll handler
+  const handleScroll = (
+    e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    targetId: string
+  ) => {
     e.preventDefault();
-
-    if (window.location.pathname !== '/') {
-      navigate('/');
+    const section = document.getElementById(targetId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Force window scroll to section top
       setTimeout(() => {
-        const section = document.getElementById(targetId);
-        if (section) section.scrollIntoView({ behavior: 'smooth' });
+        window.scrollTo({ top: section.offsetTop, behavior: 'smooth' });
       }, 300);
-    } else {
-      const section = document.getElementById(targetId);
-      if (section) section.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
+  // Scroll to top (for "Top" button)
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -45,7 +46,6 @@ const Footer = () => {
         {/* Main Footer Content */}
         <div className="py-16">
           <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-8">
-            
             {/* Company Info */}
             <div className="lg:col-span-1">
               <div className="text-2xl font-bold mb-6">
@@ -74,8 +74,6 @@ const Footer = () => {
             <div>
               <h3 className="text-lg font-semibold mb-6">Quick Links</h3>
               <ul className="space-y-3">
-
-                {/* Scroll Links (homepage sections) */}
                 {scrollLinks.map((link, index) => (
                   <li key={index}>
                     <a
@@ -88,15 +86,14 @@ const Footer = () => {
                     </a>
                   </li>
                 ))}
-
-                {/* Page Links (navigate directly) */}
                 {pageLinks.map((link, index) => (
                   <li key={index}>
                     <a
                       href={link.href}
                       onClick={(e) => {
                         e.preventDefault();
-                        navigate(link.href);
+                        navigate(link.href); // go to page
+                        scrollToTop(); // always start from top
                       }}
                       className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
                     >
@@ -105,7 +102,6 @@ const Footer = () => {
                     </a>
                   </li>
                 ))}
-
               </ul>
             </div>
 
@@ -114,41 +110,25 @@ const Footer = () => {
               <h3 className="text-lg font-semibold mb-6">Our Services</h3>
               <ul className="space-y-3">
                 <li>
-                  <a
-                    href="#services"
-                    onClick={(e) => handleScroll(e, 'services')}
-                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
-                  >
+                  <a href="#services" onClick={(e) => handleScroll(e, 'services')} className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer">
                     <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
                     Preclinical Studies
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="#services"
-                    onClick={(e) => handleScroll(e, 'services')}
-                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
-                  >
+                  <a href="#services" onClick={(e) => handleScroll(e, 'services')} className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer">
                     <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
                     Biochemical Testing
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="#services"
-                    onClick={(e) => handleScroll(e, 'services')}
-                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
-                  >
+                  <a href="#services" onClick={(e) => handleScroll(e, 'services')} className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer">
                     <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
                     Disease Modeling
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="#services"
-                    onClick={(e) => handleScroll(e, 'services')}
-                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
-                  >
+                  <a href="#services" onClick={(e) => handleScroll(e, 'services')} className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer">
                     <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
                     Molecular Research
                   </a>
@@ -172,20 +152,14 @@ const Footer = () => {
 
                 <div className="flex items-center gap-3">
                   <Mail className="h-5 w-5 text-secondary flex-shrink-0" />
-                  <a
-                    href="mailto:medicalcera@gmail.com"
-                    className="text-white/90 hover:text-white transition-colors duration-200 text-sm"
-                  >
+                  <a href="mailto:medicalcera@gmail.com" className="text-white/90 hover:text-white transition-colors duration-200 text-sm">
                     medicalcera@gmail.com
                   </a>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <Phone className="h-5 w-5 text-secondary flex-shrink-0" />
-                  <a
-                    href="tel:+923409052244"
-                    className="text-white/90 hover:text-white transition-colors duration-200 text-sm"
-                  >
+                  <a href="tel:+923409052244" className="text-white/90 hover:text-white transition-colors duration-200 text-sm">
                     +92-3409052244
                   </a>
                 </div>
@@ -222,15 +196,9 @@ const Footer = () => {
             </div>
 
             <div className="flex items-center gap-6 text-sm">
-              <a href="#" className="text-white/80 hover:text-white transition-colors duration-200">
-                Privacy Policy
-              </a>
-              <a href="#" className="text-white/80 hover:text-white transition-colors duration-200">
-                Terms of Service
-              </a>
-              <a href="#" className="text-white/80 hover:text-white transition-colors duration-200">
-                Cookie Policy
-              </a>
+              <a href="#" className="text-white/80 hover:text-white transition-colors duration-200">Privacy Policy</a>
+              <a href="#" className="text-white/80 hover:text-white transition-colors duration-200">Terms of Service</a>
+              <a href="#" className="text-white/80 hover:text-white transition-colors duration-200">Cookie Policy</a>
             </div>
 
             {/* Back to Top */}
