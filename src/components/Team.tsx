@@ -1,5 +1,4 @@
 import { Linkedin, Mail, Award } from 'lucide-react';
-import { useNavigate } from "react-router-dom";
 
 const Team = () => {
   const teamMembers = [
@@ -129,27 +128,12 @@ const Team = () => {
   );
 };
 
+// ✅ No useNavigate needed
 const JoinTeamCTA = () => {
-  const navigate = useNavigate();
-
   const goToContact = () => {
-    const scrollToContact = () => {
-      const el = document.getElementById("contact");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        return true;
-      }
-      return false;
-    };
-
-    if (window.location.pathname !== "/") {
-      navigate("/");
-      // keep checking until the element appears
-      const checkExist = setInterval(() => {
-        if (scrollToContact()) clearInterval(checkExist);
-      }, 200);
-    } else {
-      scrollToContact();
+    const el = document.getElementById("contact");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -171,6 +155,4 @@ const JoinTeamCTA = () => {
   );
 };
 
-
-// ✅ Correct export
 export default Team;
