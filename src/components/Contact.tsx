@@ -16,28 +16,30 @@ const Contact = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Your WhatsApp number — replace with your own
-    const whatsappNumber = "+923409052244";
-
-    // Create WhatsApp message content
+  const handleWhatsAppSubmit = () => {
+    const whatsappNumber = "+923409052244"; // Replace with your number
     const message = `
 Hello CERA Medical Team,
 My name is ${formData.name}.
 Email: ${formData.email}
 Message: ${formData.message}
     `;
-
-    // Encode message for URL
     const encodedMessage = encodeURIComponent(message);
-
-    // WhatsApp URL
     const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-
-    // Open WhatsApp link in new tab
     window.open(whatsappURL, "_blank");
+  };
+
+  const handleEmailSubmit = () => {
+    const emailAddress = "medicalcera@gmail.com";
+    const subject = encodeURIComponent("Contact Form Submission");
+    const body = encodeURIComponent(`
+Hello CERA Medical Team,
+
+My name is ${formData.name}.
+Email: ${formData.email}
+Message: ${formData.message}
+    `);
+    window.location.href = `mailto:${emailAddress}?subject=${subject}&body=${body}`;
   };
 
   const contactInfo = [
@@ -127,7 +129,7 @@ Message: ${formData.message}
               ))}
             </div>
 
-            {/* Interactive Google Map */}
+            {/* Google Map */}
             <div className="medical-card">
               <div className="w-full h-64 rounded-xl overflow-hidden shadow-lg">
                 <iframe
@@ -151,7 +153,7 @@ Message: ${formData.message}
                 Send us a Message
               </h3>
               
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
                     Full Name *
@@ -200,13 +202,18 @@ Message: ${formData.message}
                   />
                 </div>
 
-                <Button type="submit" className="btn-medical w-full group">
-                  <Send className="h-5 w-5 mr-2" />
-                  Send via WhatsApp
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button type="button" className="btn-medical flex-1 group" onClick={handleWhatsAppSubmit}>
+                    <Send className="h-5 w-5 mr-2" />
+                    Send via WhatsApp
+                  </Button>
+                  <Button type="button" className="btn-outline flex-1 group" onClick={handleEmailSubmit}>
+                    <Mail className="h-5 w-5 mr-2" />
+                    Email Us
+                  </Button>
+                </div>
               </form>
 
-              {/* Additional Info */}
               <div className="mt-8 p-4 bg-accent/20 rounded-xl">
                 <p className="text-sm text-muted-foreground">
                   <strong>Response Time:</strong> We typically respond within 24 hours during business days. 
