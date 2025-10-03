@@ -122,6 +122,7 @@ const Team = () => {
           ))}
         </div>
 
+        {/* CTA */}
         <JoinTeamCTA />
       </div>
     </section>
@@ -162,5 +163,5 @@ const JoinTeamCTA = () => {
   );
 };
 
-export default JoinTeamCTA;
-
+// ✅ Correct export
+export default Team;
