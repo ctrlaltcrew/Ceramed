@@ -1,4 +1,5 @@
 import { Linkedin, Mail, Award } from 'lucide-react';
+import { Link } from "react-router-dom";
 
 const Team = () => {
   const teamMembers = [
@@ -128,15 +129,8 @@ const Team = () => {
   );
 };
 
-// ✅ No useNavigate needed
+// ✅ Use Link to navigate with hash (#contact)
 const JoinTeamCTA = () => {
-  const goToContact = () => {
-    const el = document.getElementById("contact");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
   return (
     <div className="text-center mt-16 animate-fade-in">
       <div className="medical-card max-w-2xl mx-auto bg-gradient-card">
@@ -147,9 +141,11 @@ const JoinTeamCTA = () => {
           We're always looking for talented researchers and scientists to join our mission 
           of advancing healthcare through innovative research.
         </p>
-        <button className="btn-medical" onClick={goToContact}>
+
+        {/* Link will take to Home page and jump to #contact */}
+        <Link to="/#contact" className="btn-medical">
           Contact Us
-        </button>
+        </Link>
       </div>
     </div>
   );
