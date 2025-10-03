@@ -18,7 +18,26 @@ const Contact = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+
+    // Your WhatsApp number — replace with your own
+    const whatsappNumber = "+923409052244";
+
+    // Create WhatsApp message content
+    const message = `
+Hello CERA Medical Team,
+My name is ${formData.name}.
+Email: ${formData.email}
+Message: ${formData.message}
+    `;
+
+    // Encode message for URL
+    const encodedMessage = encodeURIComponent(message);
+
+    // WhatsApp URL
+    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+
+    // Open WhatsApp link in new tab
+    window.open(whatsappURL, "_blank");
   };
 
   const contactInfo = [
@@ -58,8 +77,7 @@ const Contact = () => {
           </div>
           
           <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
-            Contact Our 
-            <span className="text-primary"> Research Team</span>
+            Contact Our <span className="text-primary">Research Team</span>
           </h2>
           
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
@@ -113,16 +131,15 @@ const Contact = () => {
             <div className="medical-card">
               <div className="w-full h-64 rounded-xl overflow-hidden shadow-lg">
                 <iframe
-  title="CERA Medical Location"
-  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3327.0833333333335!2d72.933!3d34.0833!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38deddf4e4b5a7d9%3A0x123456789abcdef!2sMang%2C%20Haripur%2C%20Pakistan!5e0!3m2!1sen!2s!4v1727969999999!5m2!1sen!2s"
-  width="100%"
-  height="100%"
-  style={{ border: 0 }}
-  allowFullScreen={true}
-  loading="lazy"
-  referrerPolicy="no-referrer-when-downgrade"
-/>
-
+                  title="CERA Medical Location"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3327.0833333333335!2d72.933!3d34.0833!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38deddf4e4b5a7d9%3A0x123456789abcdef!2sMang%2C%20Haripur%2C%20Pakistan!5e0!3m2!1sen!2s!4v1727969999999!5m2!1sen!2s"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen={true}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
               </div>
             </div>
           </div>
@@ -185,7 +202,7 @@ const Contact = () => {
 
                 <Button type="submit" className="btn-medical w-full group">
                   <Send className="h-5 w-5 mr-2" />
-                  Send Message
+                  Send via WhatsApp
                 </Button>
               </form>
 
