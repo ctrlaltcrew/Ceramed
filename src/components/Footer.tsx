@@ -6,36 +6,21 @@ import { useNavigate } from 'react-router-dom';
 const Footer = () => {
   const navigate = useNavigate();
 
-  // Links that belong to homepage sections
-  const scrollLinks = [
-    { name: 'About Us', target: 'about' },
-    { name: 'Services', target: 'services' },
-    { name: 'Contact', target: 'contact' },
-  ];
-
-  // Links that are separate pages
   const pageLinks = [
+    { name: 'About Us', href: '/about' },
+    { name: 'Services', href: '/services' },
     { name: 'Products', href: '/products' },
     { name: 'Blog', href: '/blog' },
+    { name: 'Contact', href: '/contact' },
   ];
 
-  // Smooth scroll handler
-  const handleScroll = (
-    e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-    targetId: string
-  ) => {
+  // Scroll to top after navigating
+  const handleNavigate = (e: React.MouseEvent, href: string) => {
     e.preventDefault();
-    const section = document.getElementById(targetId);
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Force window scroll to section top
-      setTimeout(() => {
-        window.scrollTo({ top: section.offsetTop, behavior: 'smooth' });
-      }, 300);
-    }
+    navigate(href);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Scroll to top (for "Top" button)
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -74,27 +59,11 @@ const Footer = () => {
             <div>
               <h3 className="text-lg font-semibold mb-6">Quick Links</h3>
               <ul className="space-y-3">
-                {scrollLinks.map((link, index) => (
-                  <li key={index}>
-                    <a
-                      href={`#${link.target}`}
-                      onClick={(e) => handleScroll(e, link.target)}
-                      className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
-                    >
-                      <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
-                      {link.name}
-                    </a>
-                  </li>
-                ))}
                 {pageLinks.map((link, index) => (
                   <li key={index}>
                     <a
                       href={link.href}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        navigate(link.href); // go to page
-                        scrollToTop(); // always start from top
-                      }}
+                      onClick={(e) => handleNavigate(e, link.href)}
                       className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
                     >
                       <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
@@ -110,25 +79,41 @@ const Footer = () => {
               <h3 className="text-lg font-semibold mb-6">Our Services</h3>
               <ul className="space-y-3">
                 <li>
-                  <a href="#services" onClick={(e) => handleScroll(e, 'services')} className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer">
+                  <a
+                    href="/services"
+                    onClick={(e) => handleNavigate(e, '/services')}
+                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                  >
                     <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
                     Preclinical Studies
                   </a>
                 </li>
                 <li>
-                  <a href="#services" onClick={(e) => handleScroll(e, 'services')} className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer">
+                  <a
+                    href="/services"
+                    onClick={(e) => handleNavigate(e, '/services')}
+                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                  >
                     <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
                     Biochemical Testing
                   </a>
                 </li>
                 <li>
-                  <a href="#services" onClick={(e) => handleScroll(e, 'services')} className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer">
+                  <a
+                    href="/services"
+                    onClick={(e) => handleNavigate(e, '/services')}
+                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                  >
                     <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
                     Disease Modeling
                   </a>
                 </li>
                 <li>
-                  <a href="#services" onClick={(e) => handleScroll(e, 'services')} className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer">
+                  <a
+                    href="/services"
+                    onClick={(e) => handleNavigate(e, '/services')}
+                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                  >
                     <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
                     Molecular Research
                   </a>
