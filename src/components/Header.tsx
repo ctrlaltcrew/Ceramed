@@ -67,7 +67,7 @@ const Header = () => {
           <div className="flex items-center justify-between h-20">
             <div className="flex-shrink-0">
               <Link to="/" className="flex items-center" onClick={() => handleNavigate('/')}>
-                <img src={Logo} alt="CERA Medical Logo" className="h-1 w-auto" />
+                <img src={Logo} alt="CERA Medical Logo" className="h-12 w-auto" />
               </Link>
             </div>
 
