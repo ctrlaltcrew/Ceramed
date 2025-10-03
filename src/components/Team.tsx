@@ -1,4 +1,5 @@
 import { Linkedin, Mail, Award } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
 
 const Team = () => {
   const teamMembers = [
@@ -121,24 +122,45 @@ const Team = () => {
           ))}
         </div>
 
-    {/* Join Team CTA */}
-<div className="text-center mt-16 animate-fade-in">
-  <div className="medical-card max-w-2xl mx-auto bg-gradient-card">
-    <h3 className="text-2xl font-semibold text-foreground mb-4">
-      Join Our Research Team
-    </h3>
-    <p className="text-muted-foreground mb-6">
-      We're always looking for talented researchers and scientists to join our mission 
-      of advancing healthcare through innovative research.
-    </p>
-    <a href="#contact">
-      <button className="btn-medical">Contact Us</button>
-    </a>
-  </div>
-</div>
+        <JoinTeamCTA />
       </div>
     </section>
   );
 };
 
-export default Team;
+const JoinTeamCTA = () => {
+  const navigate = useNavigate();
+
+  const goToContact = () => {
+    if (window.location.pathname !== "/") {
+      navigate("/");
+      setTimeout(() => {
+        const el = document.getElementById("contact");
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 300);
+    } else {
+      const el = document.getElementById("contact");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  return (
+    <div className="text-center mt-16 animate-fade-in">
+      <div className="medical-card max-w-2xl mx-auto bg-gradient-card">
+        <h3 className="text-2xl font-semibold text-foreground mb-4">
+          Join Our Research Team
+        </h3>
+        <p className="text-muted-foreground mb-6">
+          We're always looking for talented researchers and scientists to join our mission 
+          of advancing healthcare through innovative research.
+        </p>
+        <button className="btn-medical" onClick={goToContact}>
+          Contact Us
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default JoinTeamCTA;
+

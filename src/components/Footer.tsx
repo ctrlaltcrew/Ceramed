@@ -1,32 +1,40 @@
 import { Button } from '@/components/ui/button';
 import { Mail, Phone, MapPin, Linkedin, Twitter, Facebook, ArrowUp } from 'lucide-react';
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Footer = () => {
+  const navigate = useNavigate();
+
   const quickLinks = [
-    { name: 'About Us', href: '#about' },
-    { name: 'Services', href: '#services' },
-    { name: 'Products', href: '#products' },
-    { name: 'Blog', href: '#blog' },
-    { name: 'Contact', href: '#contact' },
+    { name: 'About Us', target: 'about' },
+    { name: 'Services', target: 'services' },
+    { name: 'Products', target: 'products' },
+    { name: 'Blog', target: 'blog' },
+    { name: 'Contact', target: 'contact' },
   ];
 
   const services = [
-    { name: 'Preclinical Studies', href: '#services' },
-    { name: 'Biochemical Testing', href: '#services' },
-    { name: 'Disease Modeling', href: '#services' },
-    { name: 'Molecular Research', href: '#services' },
+    { name: 'Preclinical Studies', target: 'services' },
+    { name: 'Biochemical Testing', target: 'services' },
+    { name: 'Disease Modeling', target: 'services' },
+    { name: 'Molecular Research', target: 'services' },
   ];
 
-  // Smooth scroll handler
-  const handleScroll = (
-    e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-    targetId: string
-  ) => {
+  // ✅ Reusable smooth scroll handler
+  const handleNavigation = (e: React.MouseEvent, targetId: string) => {
     e.preventDefault();
-    const section = document.getElementById(targetId);
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth' });
+
+    if (window.location.pathname !== '/') {
+      // Navigate back to home first
+      navigate('/');
+      setTimeout(() => {
+        const section = document.getElementById(targetId);
+        if (section) section.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    } else {
+      const section = document.getElementById(targetId);
+      if (section) section.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -68,21 +76,18 @@ const Footer = () => {
             <div>
               <h3 className="text-lg font-semibold mb-6">Quick Links</h3>
               <ul className="space-y-3">
-                {quickLinks.map((link, index) => {
-                  const targetId = link.href.replace('#', '');
-                  return (
-                    <li key={index}>
-                      <a
-                        href={link.href}
-                        onClick={(e) => handleScroll(e, targetId)}
-                        className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
-                      >
-                        <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
-                        {link.name}
-                      </a>
-                    </li>
-                  );
-                })}
+                {quickLinks.map((link, index) => (
+                  <li key={index}>
+                    <a
+                      href={`#${link.target}`}
+                      onClick={(e) => handleNavigation(e, link.target)}
+                      className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                    >
+                      <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                      {link.name}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -90,21 +95,18 @@ const Footer = () => {
             <div>
               <h3 className="text-lg font-semibold mb-6">Our Services</h3>
               <ul className="space-y-3">
-                {services.map((service, index) => {
-                  const targetId = service.href.replace('#', '');
-                  return (
-                    <li key={index}>
-                      <a
-                        href={service.href}
-                        onClick={(e) => handleScroll(e, targetId)}
-                        className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
-                      >
-                        <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
-                        {service.name}
-                      </a>
-                    </li>
-                  );
-                })}
+                {services.map((service, index) => (
+                  <li key={index}>
+                    <a
+                      href={`#${service.target}`}
+                      onClick={(e) => handleNavigation(e, service.target)}
+                      className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                    >
+                      <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                      {service.name}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
 
