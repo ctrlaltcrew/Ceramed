@@ -133,15 +133,23 @@ const JoinTeamCTA = () => {
   const navigate = useNavigate();
 
   const goToContact = () => {
+    const scrollToContact = () => {
+      const el = document.getElementById("contact");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        return true;
+      }
+      return false;
+    };
+
     if (window.location.pathname !== "/") {
       navigate("/");
-      setTimeout(() => {
-        const el = document.getElementById("contact");
-        if (el) el.scrollIntoView({ behavior: "smooth" });
-      }, 300);
+      // keep checking until the element appears
+      const checkExist = setInterval(() => {
+        if (scrollToContact()) clearInterval(checkExist);
+      }, 200);
     } else {
-      const el = document.getElementById("contact");
-      if (el) el.scrollIntoView({ behavior: "smooth" });
+      scrollToContact();
     }
   };
 
@@ -162,6 +170,7 @@ const JoinTeamCTA = () => {
     </div>
   );
 };
+
 
 // ✅ Correct export
 export default Team;
