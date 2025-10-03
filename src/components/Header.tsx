@@ -13,7 +13,6 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [loginPopupOpen, setLoginPopupOpen] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  const [scrollToId, setScrollToId] = useState<string | null>(null);
 
   const { user, signOut } = useAuth();
   const { getTotalItems } = useCart();
@@ -33,43 +32,41 @@ const Header = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (scrollToId && location.pathname === "/") {
-      const el = document.getElementById(scrollToId);
-      if (el) {
-        const yOffset = -80; // navbar offset
-        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-        window.scrollTo({ top: y, behavior: "smooth" });
-      }
-      setScrollToId(null);
-    }
-  }, [location, scrollToId]);
-
   const navigation = [
     { name: "Home", href: "/" },
     { name: "About", id: "about" },
-    { name: "Products", href: "/products" },
     { name: "Services", id: "services" },
-    { name: "Blog", href: "/blog" },
     { name: "Team", id: "team" },
     { name: "Contact", id: "contact" },
+    { name: "Products", href: "/products" },
+    { name: "Blog", href: "/blog" },
     ...(user ? [{ name: "Admin", href: "/admin/products" }] : []),
   ];
 
   const handleScroll = (id: string) => {
     if (location.pathname !== "/") {
-      setScrollToId(id);
-      navigate("/");
+      navigate("/", { state: { scrollToId: id } });
     } else {
-      const el = document.getElementById(id);
-      if (el) {
-        const yOffset = -80;
-        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-        window.scrollTo({ top: y, behavior: "smooth" });
-      }
+      scrollToId(id);
     }
     setIsMenuOpen(false);
   };
+
+  const scrollToId = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const yOffset = -80;
+      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    if (location.state?.scrollToId) {
+      scrollToId(location.state.scrollToId);
+      window.history.replaceState({}, document.title); // clear state
+    }
+  }, [location.state]);
 
   const goToProducts = () => {
     navigate("/products");
@@ -98,8 +95,8 @@ const Header = () => {
                 item.id ? (
                   <button
                     key={item.name}
-                    className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
                     onClick={() => handleScroll(item.id!)}
+                    className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
                   >
                     {item.name}
                   </button>
