@@ -1,52 +1,78 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Menu, X, ShoppingCart, User, LogOut } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useCart } from '@/contexts/CartContext';
-import Cart from './Cart';
-import LoginPopup from './LoginPopup';
-
-// ✅ Import logo properly
-import Logo from '../assets/logo.png';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Menu, X, ShoppingCart, User, LogOut } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
+import Cart from "./Cart";
+import LoginPopup from "./LoginPopup";
+import Logo from "../assets/logo.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [loginPopupOpen, setLoginPopupOpen] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [scrollToId, setScrollToId] = useState<string | null>(null);
+
   const { user, signOut } = useAuth();
   const { getTotalItems } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Show login prompt popup occasionally for non-authenticated users
   useEffect(() => {
     if (!user) {
       const timer = setTimeout(() => {
-        const hasSeenPrompt = localStorage.getItem('loginPromptSeen');
+        const hasSeenPrompt = localStorage.getItem("loginPromptSeen");
         if (!hasSeenPrompt) {
           setShowLoginPrompt(true);
-          localStorage.setItem('loginPromptSeen', 'true');
+          localStorage.setItem("loginPromptSeen", "true");
         }
-      }, 10000); // Show after 10 seconds
-
+      }, 10000);
       return () => clearTimeout(timer);
     }
   }, [user]);
 
+  useEffect(() => {
+    if (scrollToId && location.pathname === "/") {
+      const el = document.getElementById(scrollToId);
+      if (el) {
+        const yOffset = -80; // navbar offset
+        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: "smooth" });
+      }
+      setScrollToId(null);
+    }
+  }, [location, scrollToId]);
+
   const navigation = [
-    { name: 'Home', href: '/' },
-    { name: 'About', href: '/about' },
-    { name: 'Products', href: '/products' },
-    { name: 'Services', href: '/services' },
-    { name: 'Blog', href: '/blog' },
-    { name: 'Team', href: '/team' },
-    { name: 'Contact', href: '/contact' },
-    ...(user ? [{ name: 'Admin', href: '/admin/products' }] : []),
+    { name: "Home", href: "/" },
+    { name: "About", id: "about" },
+    { name: "Products", href: "/products" },
+    { name: "Services", id: "services" },
+    { name: "Blog", href: "/blog" },
+    { name: "Team", id: "team" },
+    { name: "Contact", id: "contact" },
+    ...(user ? [{ name: "Admin", href: "/admin/products" }] : []),
   ];
 
+  const handleScroll = (id: string) => {
+    if (location.pathname !== "/") {
+      setScrollToId(id);
+      navigate("/");
+    } else {
+      const el = document.getElementById(id);
+      if (el) {
+        const yOffset = -80;
+        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: "smooth" });
+      }
+    }
+    setIsMenuOpen(false);
+  };
+
   const goToProducts = () => {
-    navigate('/products');
+    navigate("/products");
     setIsMenuOpen(false);
   };
 
@@ -60,29 +86,33 @@ const Header = () => {
       <header className="fixed top-0 w-full bg-background/95 backdrop-blur-sm border-b border-border z-50">
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between h-20">
-            
-            {/* ✅ Correct Logo usage */}
             <div className="flex-shrink-0">
               <Link to="/" className="flex items-center">
-                <img
-                  src={Logo}
-                  alt="CERA Medical Logo"
-                  className="h-11 w-auto"
-                />
+                <img src={Logo} alt="CERA Medical Logo" className="h-11 w-auto" />
               </Link>
             </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {navigation.map((item) =>
+                item.id ? (
+                  <button
+                    key={item.name}
+                    className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
+                    onClick={() => handleScroll(item.id!)}
+                  >
+                    {item.name}
+                  </button>
+                ) : (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
+                  >
+                    {item.name}
+                  </Link>
+                )
+              )}
             </nav>
 
             {/* Cart & Shop Button */}
@@ -137,49 +167,26 @@ const Header = () => {
           {isMenuOpen && (
             <div className="md:hidden">
               <div className="px-2 pt-2 pb-3 space-y-1 bg-background border-t border-border">
-                {navigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className="block px-3 py-2 text-foreground hover:text-primary transition-colors duration-200 font-medium"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-                <div className="pt-4 pb-2 px-3 space-y-2">
-                  <Cart>
-                    <Button variant="ghost" size="sm" className="w-full justify-start">
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Cart ({getTotalItems()})
-                    </Button>
-                  </Cart>
-
-                  <Button className="btn-medical w-full" onClick={goToProducts}>
-                    Shop Products
-                  </Button>
-
-                  {user ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start"
-                      onClick={handleSignOut}
+                {navigation.map((item) =>
+                  item.id ? (
+                    <button
+                      key={item.name}
+                      className="block px-3 py-2 text-foreground hover:text-primary transition-colors duration-200 font-medium"
+                      onClick={() => handleScroll(item.id!)}
                     >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Sign Out
-                    </Button>
+                      {item.name}
+                    </button>
                   ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => setLoginPopupOpen(true)}
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className="block px-3 py-2 text-foreground hover:text-primary transition-colors duration-200 font-medium"
+                      onClick={() => setIsMenuOpen(false)}
                     >
-                      Login
-                    </Button>
-                  )}
-                </div>
+                      {item.name}
+                    </Link>
+                  )
+                )}
               </div>
             </div>
           )}
