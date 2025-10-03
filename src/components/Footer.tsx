@@ -1,185 +1,206 @@
-import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Menu, X, ShoppingCart, User, LogOut } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useCart } from '@/contexts/CartContext';
-import Cart from './Cart';
-import LoginPopup from './LoginPopup';
-import Logo from '../assets/logo.png';
+import { Mail, Phone, MapPin, Linkedin, Twitter, Facebook, ArrowUp } from 'lucide-react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [loginPopupOpen, setLoginPopupOpen] = useState(false);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  const { user, signOut } = useAuth();
-  const { getTotalItems } = useCart();
+const Footer = () => {
   const navigate = useNavigate();
 
-  // Show login prompt popup occasionally for non-authenticated users
-  useEffect(() => {
-    if (!user) {
-      const timer = setTimeout(() => {
-        const hasSeenPrompt = localStorage.getItem('loginPromptSeen');
-        if (!hasSeenPrompt) {
-          setShowLoginPrompt(true);
-          localStorage.setItem('loginPromptSeen', 'true');
-        }
-      }, 10000); // Show after 10 seconds
-
-      return () => clearTimeout(timer);
-    }
-  }, [user]);
-
-  const navigation = [
-    { name: 'Home', href: '/' },
-    { name: 'About', href: '/about' },
-    { name: 'Products', href: '/products' },
+  const pageLinks = [
+    { name: 'About Us', href: '/about' },
     { name: 'Services', href: '/services' },
+    { name: 'Products', href: '/products' },
     { name: 'Blog', href: '/blog' },
-    { name: 'Team', href: '/team' },
     { name: 'Contact', href: '/contact' },
-    ...(user ? [{ name: 'Admin', href: '/admin/products' }] : []),
   ];
+
+  // Scroll to top after navigating
+  const handleNavigate = (e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    navigate(href);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleNavigate = (href: string) => {
-    navigate(href);
-    scrollToTop();
-    setIsMenuOpen(false);
-  };
-
-  const goToProducts = () => handleNavigate('/products');
-
-  const handleSignOut = async () => {
-    await signOut();
-    setIsMenuOpen(false);
-  };
-
   return (
-    <>
-      <header className="fixed top-0 w-full bg-background/95 backdrop-blur-sm border-b border-border z-50">
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex-shrink-0">
-              <Link to="/" className="flex items-center" onClick={() => handleNavigate('/')}>
-                <img src={Logo} alt="CERA Medical Logo" className="h-1 w-auto" />
-              </Link>
+    <footer className="bg-[#0b8686] text-white">
+      <div className="container mx-auto px-6">
+        {/* Main Footer Content */}
+        <div className="py-16">
+          <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-8">
+            {/* Company Info */}
+            <div className="lg:col-span-1">
+              <div className="text-2xl font-bold mb-6">
+                CERA <span className="text-secondary">MEDICAL</span>
+              </div>
+              <p className="text-white/80 leading-relaxed mb-6">
+                Advancing Health through Rigorous Research and Innovative Solutions.
+                Leading biomedical R&D company dedicated to improving human health.
+              </p>
+
+              {/* Social Links */}
+              <div className="flex gap-3">
+                <Button size="icon" variant="ghost" className="bg-white/10 hover:bg-white/20 text-white">
+                  <Linkedin className="h-5 w-5" />
+                </Button>
+                <Button size="icon" variant="ghost" className="bg-white/10 hover:bg-white/20 text-white">
+                  <Twitter className="h-5 w-5" />
+                </Button>
+                <Button size="icon" variant="ghost" className="bg-white/10 hover:bg-white/20 text-white">
+                  <Facebook className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
-              {navigation.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => handleNavigate(item.href)}
-                  className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
-                >
-                  {item.name}
-                </button>
-              ))}
-            </nav>
-
-            {/* Cart & Shop Button */}
-            <div className="hidden md:flex items-center space-x-4">
-              <Cart>
-                <Button variant="ghost" size="icon" className="relative">
-                  <ShoppingCart className="h-5 w-5" />
-                  {getTotalItems() > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
+            {/* Quick Links */}
+            <div>
+              <h3 className="text-lg font-semibold mb-6">Quick Links</h3>
+              <ul className="space-y-3">
+                {pageLinks.map((link, index) => (
+                  <li key={index}>
+                    <a
+                      href={link.href}
+                      onClick={(e) => handleNavigate(e, link.href)}
+                      className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
                     >
-                      {getTotalItems()}
-                    </Badge>
-                  )}
-                </Button>
-              </Cart>
-
-              <Button className="btn-medical" onClick={goToProducts}>
-                Shop Products
-              </Button>
-
-              {user ? (
-                <div className="flex items-center space-x-2">
-                  <Button variant="ghost" size="icon">
-                    <User className="h-5 w-5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={handleSignOut}>
-                    <LogOut className="h-5 w-5" />
-                  </Button>
-                </div>
-              ) : (
-                <Button variant="outline" onClick={() => setLoginPopupOpen(true)}>
-                  Login
-                </Button>
-              )}
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </Button>
-            </div>
-          </div>
-
-          {/* Mobile Navigation */}
-          {isMenuOpen && (
-            <div className="md:hidden">
-              <div className="px-2 pt-2 pb-3 space-y-1 bg-background border-t border-border">
-                {navigation.map((item) => (
-                  <button
-                    key={item.name}
-                    className="block px-3 py-2 text-foreground hover:text-primary transition-colors duration-200 font-medium w-full text-left"
-                    onClick={() => handleNavigate(item.href)}
-                  >
-                    {item.name}
-                  </button>
+                      <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                      {link.name}
+                    </a>
+                  </li>
                 ))}
+              </ul>
+            </div>
 
-                <div className="pt-4 pb-2 px-3 space-y-2">
-                  <Cart>
-                    <Button variant="ghost" size="sm" className="w-full justify-start">
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Cart ({getTotalItems()})
-                    </Button>
-                  </Cart>
+            {/* Services */}
+            <div>
+              <h3 className="text-lg font-semibold mb-6">Our Services</h3>
+              <ul className="space-y-3">
+                <li>
+                  <a
+                    href="/services"
+                    onClick={(e) => handleNavigate(e, '/services')}
+                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                  >
+                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                    Preclinical Studies
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/services"
+                    onClick={(e) => handleNavigate(e, '/services')}
+                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                  >
+                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                    Biochemical Testing
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/services"
+                    onClick={(e) => handleNavigate(e, '/services')}
+                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                  >
+                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                    Disease Modeling
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/services"
+                    onClick={(e) => handleNavigate(e, '/services')}
+                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                  >
+                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                    Molecular Research
+                  </a>
+                </li>
+              </ul>
+            </div>
 
-                  <Button className="btn-medical w-full" onClick={goToProducts}>
-                    Shop Products
+            {/* Contact Info */}
+            <div>
+              <h3 className="text-lg font-semibold mb-6">Contact Info</h3>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-white/90 text-sm">
+                      PAF-IAST, Mang,<br />
+                      Haripur, Pakistan
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-secondary flex-shrink-0" />
+                  <a href="mailto:medicalcera@gmail.com" className="text-white/90 hover:text-white transition-colors duration-200 text-sm">
+                    medicalcera@gmail.com
+                  </a>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Phone className="h-5 w-5 text-secondary flex-shrink-0" />
+                  <a href="tel:+923409052244" className="text-white/90 hover:text-white transition-colors duration-200 text-sm">
+                    +92-3409052244
+                  </a>
+                </div>
+              </div>
+
+              {/* Newsletter Signup */}
+              <div className="mt-8">
+                <h4 className="text-sm font-semibold mb-3">Stay Updated</h4>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    placeholder="Your email"
+                    className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-secondary"
+                  />
+                  <Button size="sm" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+                    Subscribe
                   </Button>
-
-                  {user ? (
-                    <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleSignOut}>
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Sign Out
-                    </Button>
-                  ) : (
-                    <Button variant="outline" size="sm" className="w-full" onClick={() => setLoginPopupOpen(true)}>
-                      Login
-                    </Button>
-                  )}
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
-      </header>
 
-      <LoginPopup
-        open={loginPopupOpen || showLoginPrompt}
-        onOpenChange={(open) => {
-          setLoginPopupOpen(open);
-          setShowLoginPrompt(false);
-        }}
-      />
-    </>
+        {/* Bottom Bar */}
+        <div className="border-t border-white/20 py-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
+            <div className="text-center md:text-left">
+              <p className="text-white/80 text-sm">
+                © 2024 CERA MEDICAL. All rights reserved.
+              </p>
+              <p className="text-white/60 text-xs mt-1">
+                Developed by <a href="https://ctrlaltcrew.com" target="_blank" rel="noopener noreferrer" className="text-secondary hover:underline">CtrlAltCrew</a>
+              </p>
+            </div>
+
+            <div className="flex items-center gap-6 text-sm">
+              <a href="#" className="text-white/80 hover:text-white transition-colors duration-200">Privacy Policy</a>
+              <a href="#" className="text-white/80 hover:text-white transition-colors duration-200">Terms of Service</a>
+              <a href="#" className="text-white/80 hover:text-white transition-colors duration-200">Cookie Policy</a>
+            </div>
+
+            {/* Back to Top */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={scrollToTop}
+              className="bg-white/10 hover:bg-white/20 text-white"
+            >
+              <ArrowUp className="h-4 w-4 mr-1" />
+              Top
+            </Button>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 };
 
-export default Header;
+export default Footer;
