@@ -110,16 +110,19 @@ const Contact = () => {
               ))}
             </div>
 
-            {/* Map Placeholder */}
+            {/* Interactive Google Map */}
             <div className="medical-card">
-              <div className="w-full h-64 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="h-12 w-12 text-primary mx-auto mb-4" />
-                  <p className="text-muted-foreground">Interactive Map</p>
-                  <p className="text-sm text-muted-foreground">
-                    PAF-IAST, Mang, Haripur, Pakistan
-                  </p>
-                </div>
+              <div className="w-full h-64 rounded-xl overflow-hidden shadow-lg">
+                <iframe
+                  title="CERA Medical Location"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3327.033266448956!2d72.9452782!3d34.0853742!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38dedde08417d42b%3A0xd3ef176e8854f0b5!2sPAF-IAST%20Pak-Austria%20Fachhochschule%20Institute%20of%20Applied%20Sciences%20and%20Technology!5e0!3m2!1sen!2s!4v1696319999999!5m2!1sen!2s"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen={true}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
               </div>
             </div>
           </div>
