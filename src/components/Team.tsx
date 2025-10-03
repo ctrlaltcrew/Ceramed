@@ -143,7 +143,7 @@ const JoinTeamCTA = () => {
         </p>
 
         {/* Link will take to Home page and jump to #contact */}
-        <Link to="/#contact" className="btn-medical">
+        <Link to="/contact" className="btn-medical">
           Contact Us
         </Link>
       </div>
