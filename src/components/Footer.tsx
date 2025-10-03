@@ -6,27 +6,24 @@ import { useNavigate } from 'react-router-dom';
 const Footer = () => {
   const navigate = useNavigate();
 
-  const quickLinks = [
+  // Links that belong to homepage sections
+  const scrollLinks = [
     { name: 'About Us', target: 'about' },
     { name: 'Services', target: 'services' },
-    { name: 'Products', target: 'products' },
-    { name: 'Blog', target: 'blog' },
     { name: 'Contact', target: 'contact' },
   ];
 
-  const services = [
-    { name: 'Preclinical Studies', target: 'services' },
-    { name: 'Biochemical Testing', target: 'services' },
-    { name: 'Disease Modeling', target: 'services' },
-    { name: 'Molecular Research', target: 'services' },
+  // Links that are separate pages
+  const pageLinks = [
+    { name: 'Products', href: '/products' },
+    { name: 'Blog', href: '/blog' },
   ];
 
-  // ✅ Reusable smooth scroll handler
-  const handleNavigation = (e: React.MouseEvent, targetId: string) => {
+  // Smooth scroll handler for homepage sections
+  const handleScroll = (e: React.MouseEvent, targetId: string) => {
     e.preventDefault();
 
     if (window.location.pathname !== '/') {
-      // Navigate back to home first
       navigate('/');
       setTimeout(() => {
         const section = document.getElementById(targetId);
@@ -48,6 +45,7 @@ const Footer = () => {
         {/* Main Footer Content */}
         <div className="py-16">
           <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-8">
+            
             {/* Company Info */}
             <div className="lg:col-span-1">
               <div className="text-2xl font-bold mb-6">
@@ -76,11 +74,13 @@ const Footer = () => {
             <div>
               <h3 className="text-lg font-semibold mb-6">Quick Links</h3>
               <ul className="space-y-3">
-                {quickLinks.map((link, index) => (
+
+                {/* Scroll Links (homepage sections) */}
+                {scrollLinks.map((link, index) => (
                   <li key={index}>
                     <a
                       href={`#${link.target}`}
-                      onClick={(e) => handleNavigation(e, link.target)}
+                      onClick={(e) => handleScroll(e, link.target)}
                       className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
                     >
                       <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
@@ -88,6 +88,24 @@ const Footer = () => {
                     </a>
                   </li>
                 ))}
+
+                {/* Page Links (navigate directly) */}
+                {pageLinks.map((link, index) => (
+                  <li key={index}>
+                    <a
+                      href={link.href}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(link.href);
+                      }}
+                      className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                    >
+                      <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                      {link.name}
+                    </a>
+                  </li>
+                ))}
+
               </ul>
             </div>
 
@@ -95,18 +113,46 @@ const Footer = () => {
             <div>
               <h3 className="text-lg font-semibold mb-6">Our Services</h3>
               <ul className="space-y-3">
-                {services.map((service, index) => (
-                  <li key={index}>
-                    <a
-                      href={`#${service.target}`}
-                      onClick={(e) => handleNavigation(e, service.target)}
-                      className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
-                    >
-                      <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
-                      {service.name}
-                    </a>
-                  </li>
-                ))}
+                <li>
+                  <a
+                    href="#services"
+                    onClick={(e) => handleScroll(e, 'services')}
+                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                  >
+                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                    Preclinical Studies
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#services"
+                    onClick={(e) => handleScroll(e, 'services')}
+                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                  >
+                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                    Biochemical Testing
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#services"
+                    onClick={(e) => handleScroll(e, 'services')}
+                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                  >
+                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                    Disease Modeling
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#services"
+                    onClick={(e) => handleScroll(e, 'services')}
+                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                  >
+                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                    Molecular Research
+                  </a>
+                </li>
               </ul>
             </div>
 
