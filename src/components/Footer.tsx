@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Mail, Phone, MapPin, Linkedin, Twitter, Facebook, ArrowUp } from 'lucide-react';
+import React from 'react';
 
 const Footer = () => {
   const quickLinks = [
@@ -17,6 +18,18 @@ const Footer = () => {
     { name: 'Molecular Research', href: '#services' },
   ];
 
+  // Smooth scroll handler
+  const handleScroll = (
+    e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    targetId: string
+  ) => {
+    e.preventDefault();
+    const section = document.getElementById(targetId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -33,10 +46,10 @@ const Footer = () => {
                 CERA <span className="text-secondary">MEDICAL</span>
               </div>
               <p className="text-white/80 leading-relaxed mb-6">
-                Advancing Health through Rigorous Research and Innovative Solutions. 
+                Advancing Health through Rigorous Research and Innovative Solutions.
                 Leading biomedical R&D company dedicated to improving human health.
               </p>
-              
+
               {/* Social Links */}
               <div className="flex gap-3">
                 <Button size="icon" variant="ghost" className="bg-white/10 hover:bg-white/20 text-white">
@@ -55,17 +68,21 @@ const Footer = () => {
             <div>
               <h3 className="text-lg font-semibold mb-6">Quick Links</h3>
               <ul className="space-y-3">
-                {quickLinks.map((link, index) => (
-                  <li key={index}>
-                    <a
-                      href={link.href}
-                      className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group"
-                    >
-                      <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
-                      {link.name}
-                    </a>
-                  </li>
-                ))}
+                {quickLinks.map((link, index) => {
+                  const targetId = link.href.replace('#', '');
+                  return (
+                    <li key={index}>
+                      <a
+                        href={link.href}
+                        onClick={(e) => handleScroll(e, targetId)}
+                        className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                      >
+                        <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                        {link.name}
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
@@ -73,17 +90,21 @@ const Footer = () => {
             <div>
               <h3 className="text-lg font-semibold mb-6">Our Services</h3>
               <ul className="space-y-3">
-                {services.map((service, index) => (
-                  <li key={index}>
-                    <a
-                      href={service.href}
-                      className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group"
-                    >
-                      <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
-                      {service.name}
-                    </a>
-                  </li>
-                ))}
+                {services.map((service, index) => {
+                  const targetId = service.href.replace('#', '');
+                  return (
+                    <li key={index}>
+                      <a
+                        href={service.href}
+                        onClick={(e) => handleScroll(e, targetId)}
+                        className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                      >
+                        <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                        {service.name}
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
@@ -100,20 +121,20 @@ const Footer = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
                   <Mail className="h-5 w-5 text-secondary flex-shrink-0" />
-                  <a 
+                  <a
                     href="mailto:medicalcera@gmail.com"
                     className="text-white/90 hover:text-white transition-colors duration-200 text-sm"
                   >
                     medicalcera@gmail.com
                   </a>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
                   <Phone className="h-5 w-5 text-secondary flex-shrink-0" />
-                  <a 
+                  <a
                     href="tel:+923409052244"
                     className="text-white/90 hover:text-white transition-colors duration-200 text-sm"
                   >

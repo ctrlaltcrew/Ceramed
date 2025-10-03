@@ -115,7 +115,7 @@ const Contact = () => {
               <div className="w-full h-64 rounded-xl overflow-hidden shadow-lg">
                 <iframe
                   title="CERA Medical Location"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3327.033266448956!2d72.9452782!3d34.0853742!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38dedde08417d42b%3A0xd3ef176e8854f0b5!2sPAF-IAST%20Pak-Austria%20Fachhochschule%20Institute%20of%20Applied%20Sciences%20and%20Technology!5e0!3m2!1sen!2s!4v1696319999999!5m2!1sen!2s"
+                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3327.033266448956!2d72.9452782!3d34.0853742!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38dedde08417d42b%3A0xd3ef176e8854f0b5!2sPak-Austria%20Fachhochschule%20Institute%20of%20Applied%20Sciences%20and%20Technology%2C%20Mang%2C%20Haripur%2C%20Pakistan!5e0!3m2!1sen!2s!4v1696321111111!5m2!1sen!2s"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
