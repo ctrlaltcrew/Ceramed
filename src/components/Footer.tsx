@@ -176,7 +176,7 @@ const Footer = () => {
                 © 2024 CERA MEDICAL. All rights reserved.
               </p>
               <p className="text-white/60 text-xs mt-1">
-                Developed by <a href="https://ctrlaltcrew.com" target="_blank" rel="noopener noreferrer" className="text-secondary hover:underline">CtrlAltCrew</a>
+                Developed by <a href="https://ctrlaltcrew.com" target="_blank" rel="noopener noreferrer" className="text-black hover:underline">CtrlAltCrew</a>
               </p>
             </div>
 
