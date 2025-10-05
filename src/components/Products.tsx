@@ -38,7 +38,6 @@ const Products = () => {
 
       if (error) throw error;
 
-      // Process image URLs with fallback
       const processed = (data || []).map((p: Product, i: number) => {
         let image = p.image_url;
 
@@ -105,11 +104,11 @@ const Products = () => {
           {products.map((product, index) => (
             <div
               key={product.id}
-              className="medical-card group hover:bg-gradient-card transition-all animate-slide-up shadow-md hover:shadow-xl rounded-2xl bg-background"
+              className="flex flex-col justify-between h-full bg-background rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all animate-slide-up"
               style={{ animationDelay: `${index * 0.15}s` }}
             >
               {/* Product Image */}
-              <div className="relative mb-6 overflow-hidden rounded-xl flex items-center justify-center bg-gray-50">
+              <div className="relative overflow-hidden rounded-t-2xl flex items-center justify-center bg-gray-50 h-56">
                 <img
                   src={product.image_url || localImages[index % localImages.length]}
                   alt={`${product.name} - ${product.description}`}
@@ -139,48 +138,48 @@ const Products = () => {
               </div>
 
               {/* Product Info */}
-              <div className="space-y-4 px-4 pb-6">
+              <div className="flex flex-col flex-grow justify-between p-6">
                 <div>
-                  <h3 className="text-2xl font-semibold text-foreground mb-2">
+                  <h3 className="text-2xl font-semibold text-foreground mb-2 line-clamp-2">
                     {product.name}
                   </h3>
                   <p className="text-muted-foreground leading-relaxed line-clamp-3">
                     {product.description}
                   </p>
-                </div>
 
-                {/* Benefits */}
-                {product.benefits?.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {product.benefits.map((benefit, i) => (
-                      <Badge key={i} variant="outline" className="text-xs">
-                        {benefit}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
+                  {/* Benefits */}
+                  {product.benefits?.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {product.benefits.map((benefit, i) => (
+                        <Badge key={i} variant="outline" className="text-xs">
+                          {benefit}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
 
-                {/* Rating */}
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < Math.floor(product.rating)
-                            ? "text-yellow-400 fill-current"
-                            : "text-gray-300"
-                        }`}
-                      />
-                    ))}
+                  {/* Rating */}
+                  <div className="flex items-center gap-2 mt-3">
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${
+                            i < Math.floor(product.rating)
+                              ? "text-yellow-400 fill-current"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {product.rating} ({product.reviews_count} reviews)
+                    </span>
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    {product.rating} ({product.reviews_count} reviews)
-                  </span>
                 </div>
 
                 {/* Price & Add to Cart */}
-                <div className="flex items-center justify-between pt-4 border-t border-border">
+                <div className="flex items-center justify-between pt-4 border-t border-border mt-6">
                   <div className="text-2xl font-bold text-primary">
                     ${product.price.toFixed(2)}
                   </div>
@@ -190,9 +189,7 @@ const Products = () => {
                     disabled={product.stock_quantity === 0}
                   >
                     <ShoppingCart className="h-4 w-4 mr-2" />
-                    {product.stock_quantity === 0
-                      ? "Out of Stock"
-                      : "Add to Cart"}
+                    {product.stock_quantity === 0 ? "Out of Stock" : "Add to Cart"}
                   </Button>
                 </div>
               </div>
