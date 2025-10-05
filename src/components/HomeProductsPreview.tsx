@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 
@@ -24,6 +24,7 @@ const fallbackImages = [
 const HomeProductsPreview = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -54,15 +55,13 @@ const HomeProductsPreview = () => {
   };
 
   const handleProductClick = (product: Product) => {
-    const quickBuySection = document.getElementById("quick-buy");
-    if (quickBuySection) {
-      quickBuySection.scrollIntoView({ behavior: "smooth" });
-      setSelectedProduct(product);
-    }
+    setSelectedProduct(product);
+    setModalOpen(true);
   };
 
   return (
     <>
+      {/* Featured Products */}
       <section
         id="featured-products"
         className="py-16 bg-gradient-to-b from-white to-accent/10 overflow-hidden"
@@ -78,21 +77,20 @@ const HomeProductsPreview = () => {
             </p>
           </div>
 
-          {/* Continuous Auto-Scrolling */}
+          {/* Auto Scroll / Swipe Scroll */}
           <div className="relative overflow-hidden">
-            <div className="flex animate-scroll gap-6">
-              {/* Duplicate products for smooth infinite scroll */}
+            <div className="flex gap-6 animate-scroll scrollbar-hide">
               {[...products, ...products].map((product, index) => (
                 <div
                   key={index}
-                  className="min-w-[220px] sm:min-w-[250px] bg-white shadow-lg rounded-3xl p-4 flex-shrink-0 hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+                  className="min-w-[220px] sm:min-w-[250px] bg-white shadow-lg rounded-2xl overflow-hidden p-4 flex-shrink-0 hover:shadow-xl transition-shadow duration-300 cursor-pointer"
                   onClick={() => handleProductClick(product)}
                 >
-                  <div className="relative mb-3 overflow-hidden rounded-3xl">
+                  <div className="relative mb-3 overflow-hidden rounded-2xl">
                     <img
                       src={product.image_url || fallbackImages[index % fallbackImages.length]}
                       alt={product.name}
-                      className="w-full h-44 object-cover rounded-3xl"
+                      className="w-full h-44 object-cover rounded-2xl"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
                           fallbackImages[index % fallbackImages.length];
@@ -115,13 +113,7 @@ const HomeProductsPreview = () => {
 
           {/* View More Button */}
           <div className="text-center mt-10">
-            <Link
-              to="/products"
-              onClick={() => {
-                const target = document.getElementById("products");
-                if (target) target.scrollIntoView({ behavior: "smooth" });
-              }}
-            >
+            <Link to="/products">
               <Button className="group bg-secondary hover:bg-secondary/90 text-white px-6 py-3">
                 View More Products
                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -131,29 +123,34 @@ const HomeProductsPreview = () => {
         </div>
       </section>
 
-      {/* Quick Buy Section */}
-      <section id="quick-buy" className="py-16 bg-white">
-        <div className="container mx-auto px-6">
-          {selectedProduct ? (
-            <div className="max-w-3xl mx-auto bg-gray-50 p-6 rounded-2xl shadow-lg">
-              <h2 className="text-2xl font-bold mb-4">Quick Buy: {selectedProduct.name}</h2>
-              <img
-                src={selectedProduct.image_url || fallbackImages[0]}
-                alt={selectedProduct.name}
-                className="w-full h-64 object-cover rounded-2xl mb-4"
-              />
-              <p className="text-lg font-semibold text-primary">
-                Price: ${selectedProduct.price?.toFixed(2) || "0.00"}
-              </p>
-              <Button className="mt-4 bg-secondary text-white px-6 py-3">
-                Buy Now
-              </Button>
-            </div>
-          ) : (
-            <p className="text-center text-gray-500">Click on a product above to quick buy.</p>
-          )}
+      {/* Modal for Add to Cart */}
+      {modalOpen && selectedProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full relative">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-900"
+              onClick={() => setModalOpen(false)}
+            >
+              <X size={24} />
+            </button>
+            <img
+              src={selectedProduct.image_url || fallbackImages[0]}
+              alt={selectedProduct.name}
+              className="w-full h-64 object-cover rounded-xl mb-4"
+            />
+            <h2 className="text-2xl font-bold">{selectedProduct.name}</h2>
+            <p className="text-lg font-semibold text-primary mt-2">
+              ${selectedProduct.price?.toFixed(2) || "0.00"}
+            </p>
+            <p className="mt-2 text-sm text-gray-600">
+              Category: {selectedProduct.category || "Health"}
+            </p>
+            <Button className="mt-6 bg-secondary w-full text-white px-6 py-3">
+              Add to Cart
+            </Button>
+          </div>
         </div>
-      </section>
+      )}
 
       {/* CSS for continuous scroll */}
       <style>
