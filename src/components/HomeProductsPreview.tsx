@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
-import { useCart } from "@/contexts/CartContext"; // ✅ important
+import { useCart } from "@/contexts/CartContext";
 
 interface Product {
   id: string;
@@ -25,7 +25,7 @@ const fallbackImages = [
 const HomeProductsPreview = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const navigate = useNavigate();
-  const { addToCart } = useCart(); // ✅ useCart hook
+  const { addToCart } = useCart();
 
   useEffect(() => {
     fetchProducts();
@@ -41,13 +41,20 @@ const HomeProductsPreview = () => {
       if (error) throw error;
 
       const processed =
-        data?.map((p, i) => ({
-          ...p,
-          image_url:
-            p.image_url && p.image_url !== ""
-              ? p.image_url
-              : fallbackImages[i % fallbackImages.length],
-        })) || [];
+        data?.map((p, i) => {
+          let image = p.image_url;
+
+          if (!image || image.trim() === "") {
+            image = fallbackImages[i % fallbackImages.length];
+          } else if (!image.startsWith("http")) {
+            const { data: publicUrlData } = supabase.storage
+              .from("product-images")
+              .getPublicUrl(p.image_url);
+            image = publicUrlData?.publicUrl || fallbackImages[i % fallbackImages.length];
+          }
+
+          return { ...p, image_url: image };
+        }) || [];
 
       setProducts(processed);
     } catch (error) {
@@ -59,56 +66,60 @@ const HomeProductsPreview = () => {
     navigate(`/products/${product.id}`);
   };
 
-  const handleAddToCart = (product: Product) => {
-    addToCart({
-      id: product.id,
-      product,
-      quantity: 1
-    });
+  const handleAddToCart = async (product: Product) => {
+    try {
+      await addToCart(product.id); // ✅ uses the same logic as Products page
+    } catch (err) {
+      console.error("Add to cart failed:", err);
+    }
   };
 
   return (
     <section className="py-12 bg-gradient-to-b from-white to-accent/10 overflow-hidden">
       <div className="container mx-auto px-4">
+        {/* Section Header */}
         <div className="text-center mb-8">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
+          <h2 className="text-3xl md:text-4xl font-bold mb-2">
             Featured <span className="text-secondary">Products</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-base">
             Explore our latest science-backed innovations — crafted to enhance wellness and performance.
           </p>
         </div>
 
-        <div className="relative overflow-hidden">
-          <div className="flex gap-4 animate-scroll scrollbar-hide">
+        {/* Infinite Scroll Animation */}
+        <div className="relative w-full overflow-hidden">
+          <div className="flex gap-6 animate-infinite-scroll">
             {[...products, ...products].map((product, index) => (
               <div
-                key={index}
-                className="min-w-[200px] sm:min-w-[220px] bg-white shadow-md rounded-xl overflow-hidden flex flex-col p-3 flex-shrink-0 hover:shadow-lg transition-shadow duration-300"
+                key={`${product.id}-${index}`}
+                className="min-w-[220px] bg-white shadow-md rounded-xl overflow-hidden flex flex-col p-4 hover:shadow-lg transition-shadow duration-300"
               >
+                {/* Image */}
                 <div
-                  className="relative mb-3 overflow-hidden rounded-lg h-40 flex items-center justify-center bg-gray-50"
+                  className="relative mb-3 overflow-hidden rounded-lg h-40 flex items-center justify-center bg-gray-50 cursor-pointer"
                   onClick={() => handleProductClick(product)}
                 >
                   <img
                     src={product.image_url || fallbackImages[index % fallbackImages.length]}
                     alt={product.name}
-                    className="max-h-full w-auto object-contain"
+                    className="max-h-full w-auto object-contain transition-transform duration-300 hover:scale-105"
                   />
                   <Badge className="absolute top-2 left-2 bg-secondary text-white text-xs">
                     {product.category || "Health"}
                   </Badge>
                 </div>
 
-                <div className="flex flex-col flex-grow">
-                  <h3 className="text-sm sm:text-md font-semibold text-gray-800 truncate mb-1">
+                {/* Product Info */}
+                <div className="flex flex-col flex-grow text-center">
+                  <h3 className="text-md font-semibold text-gray-800 truncate mb-1">
                     {product.name}
                   </h3>
-                  <p className="text-primary font-bold text-sm sm:text-base mt-auto">
+                  <p className="text-primary font-bold text-base mb-2">
                     ${product.price?.toFixed(2) || "0.00"}
                   </p>
                   <Button
-                    className="mt-2 bg-secondary w-full text-white px-4 py-2 text-sm"
+                    className="bg-secondary hover:bg-secondary/90 w-full text-white"
                     onClick={() => handleAddToCart(product)}
                   >
                     Add to Cart
@@ -119,7 +130,8 @@ const HomeProductsPreview = () => {
           </div>
         </div>
 
-        <div className="text-center mt-8">
+        {/* View More Button */}
+        <div className="text-center mt-10">
           <Link to="/products">
             <Button className="group bg-secondary hover:bg-secondary/90 text-white px-6 py-3">
               View More Products
@@ -128,6 +140,19 @@ const HomeProductsPreview = () => {
           </Link>
         </div>
       </div>
+
+      {/* Custom Animation Styles */}
+      <style>{`
+        @keyframes infinite-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-infinite-scroll {
+          display: flex;
+          width: max-content;
+          animation: infinite-scroll 30s linear infinite;
+        }
+      `}</style>
     </section>
   );
 };
