@@ -77,16 +77,17 @@ const HomeProductsPreview = () => {
             </p>
           </div>
 
-          {/* Auto Scroll / Swipe Scroll */}
+          {/* Auto Scroll */}
           <div className="relative overflow-hidden">
             <div className="flex gap-6 animate-scroll scrollbar-hide">
               {[...products, ...products].map((product, index) => (
                 <div
                   key={index}
-                  className="min-w-[220px] sm:min-w-[250px] bg-white shadow-lg rounded-2xl overflow-hidden p-4 flex-shrink-0 hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+                  className="min-w-[220px] sm:min-w-[250px] bg-white shadow-lg rounded-2xl overflow-hidden flex flex-col p-4 flex-shrink-0 hover:shadow-xl transition-shadow duration-300 cursor-pointer"
                   onClick={() => handleProductClick(product)}
                 >
-                  <div className="relative mb-3 overflow-hidden rounded-2xl">
+                  {/* Image Section */}
+                  <div className="relative mb-4 overflow-hidden rounded-2xl flex-shrink-0">
                     <img
                       src={product.image_url || fallbackImages[index % fallbackImages.length]}
                       alt={product.name}
@@ -100,12 +101,16 @@ const HomeProductsPreview = () => {
                       {product.category || "Health"}
                     </Badge>
                   </div>
-                  <h3 className="text-md sm:text-lg font-semibold text-gray-800 truncate">
-                    {product.name}
-                  </h3>
-                  <p className="text-primary font-bold mt-1 text-sm sm:text-base">
-                    ${product.price?.toFixed(2) || "0.00"}
-                  </p>
+
+                  {/* Product Info */}
+                  <div className="flex flex-col flex-grow">
+                    <h3 className="text-md sm:text-lg font-semibold text-gray-800 truncate mb-1">
+                      {product.name}
+                    </h3>
+                    <p className="text-primary font-bold text-sm sm:text-base mt-auto">
+                      ${product.price?.toFixed(2) || "0.00"}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -123,7 +128,7 @@ const HomeProductsPreview = () => {
         </div>
       </section>
 
-      {/* Modal for Add to Cart */}
+      {/* Modal */}
       {modalOpen && selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full relative">
@@ -152,7 +157,7 @@ const HomeProductsPreview = () => {
         </div>
       )}
 
-      {/* CSS for continuous scroll */}
+      {/* Scroll Animation CSS */}
       <style>
         {`
           @keyframes scroll {
