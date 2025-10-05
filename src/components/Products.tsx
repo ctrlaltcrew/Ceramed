@@ -38,17 +38,15 @@ const Products = () => {
 
       if (error) throw error;
 
-      // Apply local fallback images dynamically
+      // Process image URLs with fallback
       const processed = (data || []).map((p: Product, i: number) => {
         let image = p.image_url;
 
         if (!image || image.trim() === "") {
-          // Cycle through local images
           image = localImages[i % localImages.length];
         } else if (!image.startsWith("http")) {
-          // Generate public Supabase URL if only file name stored
           const { data: publicUrlData } = supabase.storage
-            .from("product-images") // Supabase bucket name
+            .from("product-images")
             .getPublicUrl(p.image_url);
           image = publicUrlData?.publicUrl || localImages[i % localImages.length];
         }
@@ -107,15 +105,15 @@ const Products = () => {
           {products.map((product, index) => (
             <div
               key={product.id}
-              className="medical-card group hover:bg-gradient-card transition-all animate-slide-up"
+              className="medical-card group hover:bg-gradient-card transition-all animate-slide-up shadow-md hover:shadow-xl rounded-2xl bg-background"
               style={{ animationDelay: `${index * 0.15}s` }}
             >
               {/* Product Image */}
-              <div className="relative mb-6 overflow-hidden rounded-xl">
+              <div className="relative mb-6 overflow-hidden rounded-xl flex items-center justify-center bg-gray-50">
                 <img
                   src={product.image_url || localImages[index % localImages.length]}
                   alt={`${product.name} - ${product.description}`}
-                  className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="max-h-56 w-auto object-contain group-hover:scale-105 transition-transform duration-500"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src =
                       localImages[index % localImages.length];
@@ -141,7 +139,7 @@ const Products = () => {
               </div>
 
               {/* Product Info */}
-              <div className="space-y-4">
+              <div className="space-y-4 px-4 pb-6">
                 <div>
                   <h3 className="text-2xl font-semibold text-foreground mb-2">
                     {product.name}
