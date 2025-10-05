@@ -43,15 +43,17 @@ const App = () => (
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/contact" element={<ContactPage />} />
 
-              {/* ---------------- ADMIN LOGIN (PUBLIC) ---------------- */}
-              <Route path="/admin/login" element={<AdminLogin />} />
+            
 
               {/* ---------------- PROTECTED ADMIN ROUTES ---------------- */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminProducts />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="blogs" element={<AdminBlogs />} />
-              </Route>
+              <Route path="/admin/login" element={<AdminLogin />} />
+
+<Route path="/admin" element={<AdminLayout />}>
+  <Route index element={<AdminProducts />} />
+  <Route path="products" element={<AdminProducts />} />
+  <Route path="blogs" element={<AdminBlogs />} />
+</Route>
+
 
               {/* ---------------- CATCH-ALL ROUTE ---------------- */}
               <Route path="*" element={<NotFound />} />
