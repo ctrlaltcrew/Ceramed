@@ -20,7 +20,7 @@ import NotFound from "./pages/NotFound";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminBlogs from "./pages/admin/AdminBlogs";
-import AdminLogin from "./pages/admin/AdminLogin";
+
 
 const queryClient = new QueryClient();
 
@@ -46,7 +46,7 @@ const App = () => (
             
 
               {/* ---------------- PROTECTED ADMIN ROUTES ---------------- */}
-              <Route path="/admin/login" element={<AdminLogin />} />
+              
 
 <Route path="/admin" element={<AdminLayout />}>
   <Route index element={<AdminProducts />} />
