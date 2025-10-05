@@ -167,3 +167,17 @@ All colors MUST be HSL for proper theming.
     @apply absolute inset-0 bg-gradient-to-r from-primary/80 to-secondary/80;
   }
 }
+@keyframes scroll-continuous {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll-continuous {
+  display: flex;
+  animation: scroll-continuous 40s linear infinite;
+}
+
