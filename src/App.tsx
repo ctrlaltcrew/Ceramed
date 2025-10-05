@@ -29,7 +29,6 @@ const App = () => (
     <AuthProvider>
       <CartProvider>
         <TooltipProvider>
-          {/* Global Notifications */}
           <Toaster />
           <Sonner />
 
@@ -44,16 +43,14 @@ const App = () => (
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/contact" element={<ContactPage />} />
 
-              {/* ---------------- ADMIN ROUTES ---------------- */}
+              {/* ---------------- ADMIN LOGIN (PUBLIC) ---------------- */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+
+              {/* ---------------- PROTECTED ADMIN ROUTES ---------------- */}
               <Route path="/admin" element={<AdminLayout />}>
-                {/* Dashboard Home (optional, add later) */}
                 <Route index element={<AdminProducts />} />
-                {/* Manage Products */}
                 <Route path="products" element={<AdminProducts />} />
-                {/* Manage Blogs */}
                 <Route path="blogs" element={<AdminBlogs />} />
-                {/* Admin Login */}
-                <Route path="login" element={<AdminLogin />} />
               </Route>
 
               {/* ---------------- CATCH-ALL ROUTE ---------------- */}
