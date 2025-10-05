@@ -1,52 +1,88 @@
-import React, { useEffect, useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-const AdminLayout = () => {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+const AdminLogin = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const adminStatus = localStorage.getItem("isAdmin");
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    if (adminStatus === "true") {
-      setIsAdmin(true);
-    } else {
-      navigate("/admin/login");
+    const adminUser = import.meta.env.VITE_ADMIN_USERNAME?.trim();
+    const adminPass = import.meta.env.VITE_ADMIN_PASSWORD?.trim();
+
+    if (!adminUser || !adminPass) {
+      setError("Admin credentials not configured.");
+      setLoading(false);
+      return;
     }
 
-    setLoading(false);
-  }, [navigate]);
-
-  if (loading) return <div className="p-10 text-center">Loading admin panel...</div>;
-
-  if (!isAdmin)
-    return (
-      <div className="p-10 text-center text-red-600">
-        Access denied. Please log in.
-      </div>
-    );
+    if (username === adminUser && password === adminPass) {
+      localStorage.setItem("isAdmin", "true");
+      navigate("/admin");
+    } else {
+      setError("Invalid username or password.");
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b bg-white shadow-sm p-4 flex justify-between items-center">
-        <h1 className="text-xl font-semibold text-primary">Admin Panel</h1>
-        <button
-          onClick={() => {
-            localStorage.removeItem("isAdmin");
-            navigate("/admin/login");
-          }}
-          className="text-sm bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-        >
-          Logout
-        </button>
-      </header>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100">
+      <form
+        onSubmit={handleLogin}
+        className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm border border-gray-200"
+      >
+        <h1 className="text-3xl font-bold mb-6 text-center text-primary">
+          Admin Login
+        </h1>
 
-      <main className="p-6">
-        <Outlet />
-      </main>
+        {error && (
+          <p className="text-red-500 bg-red-50 border border-red-200 p-2 mb-4 rounded text-sm text-center">
+            {error}
+          </p>
+        )}
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Username</label>
+            <input
+              type="text"
+              placeholder="Enter admin username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="border border-gray-300 p-2 w-full rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Password</label>
+            <input
+              type="password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="border border-gray-300 p-2 w-full rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-primary text-white py-2 rounded-md hover:bg-primary/90 transition-all font-medium"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
 
-export default AdminLayout;
+export default AdminLogin;
