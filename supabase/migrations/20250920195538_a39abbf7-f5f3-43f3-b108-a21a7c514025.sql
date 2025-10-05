@@ -132,10 +132,21 @@ CREATE TRIGGER update_orders_updated_at
 BEFORE UPDATE ON public.orders
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
-UPDATE public.products
-SET image_url = CASE name
-  WHEN 'Activ-P' THEN '/Active-P.png'
-  WHEN 'Zest' THEN '/zest.png'
-  WHEN 'Mossent' THEN '/Mossent.png'
-  ELSE '/default-product.png'
-END;
+ -- Allow authenticated users (admins) to insert products
+CREATE POLICY "Admins can insert products"
+ON public.products
+FOR INSERT
+WITH CHECK (auth.role() = 'authenticated');
+
+-- Allow authenticated users to update products
+CREATE POLICY "Admins can update products"
+ON public.products
+FOR UPDATE
+USING (auth.role() = 'authenticated');
+
+-- Allow authenticated users to delete products
+CREATE POLICY "Admins can delete products"
+ON public.products
+FOR DELETE
+USING (auth.role() = 'authenticated');
+
