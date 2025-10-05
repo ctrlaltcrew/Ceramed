@@ -59,6 +59,12 @@ const HomeProductsPreview = () => {
     setModalOpen(true);
   };
 
+  const handleAddToCart = (product: Product) => {
+    console.log("Added to cart:", product);
+    alert(`Added "${product.name}" to cart!`);
+    setModalOpen(false);
+  };
+
   return (
     <>
       {/* Featured Products */}
@@ -87,11 +93,11 @@ const HomeProductsPreview = () => {
                   onClick={() => handleProductClick(product)}
                 >
                   {/* Image Section */}
-                  <div className="relative mb-4 overflow-hidden rounded-2xl flex-shrink-0">
+                  <div className="relative mb-4 overflow-hidden rounded-2xl flex-shrink-0 h-48 flex items-center justify-center bg-gray-50">
                     <img
                       src={product.image_url || fallbackImages[index % fallbackImages.length]}
                       alt={product.name}
-                      className="w-full h-44 object-cover rounded-2xl"
+                      className="max-h-full w-auto object-contain"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
                           fallbackImages[index % fallbackImages.length];
@@ -138,11 +144,13 @@ const HomeProductsPreview = () => {
             >
               <X size={24} />
             </button>
-            <img
-              src={selectedProduct.image_url || fallbackImages[0]}
-              alt={selectedProduct.name}
-              className="w-full h-64 object-cover rounded-xl mb-4"
-            />
+            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-xl mb-4">
+              <img
+                src={selectedProduct.image_url || fallbackImages[0]}
+                alt={selectedProduct.name}
+                className="max-h-full w-auto object-contain"
+              />
+            </div>
             <h2 className="text-2xl font-bold">{selectedProduct.name}</h2>
             <p className="text-lg font-semibold text-primary mt-2">
               ${selectedProduct.price?.toFixed(2) || "0.00"}
@@ -150,7 +158,10 @@ const HomeProductsPreview = () => {
             <p className="mt-2 text-sm text-gray-600">
               Category: {selectedProduct.category || "Health"}
             </p>
-            <Button className="mt-6 bg-secondary w-full text-white px-6 py-3">
+            <Button
+              className="mt-6 bg-secondary w-full text-white px-6 py-3"
+              onClick={() => handleAddToCart(selectedProduct)}
+            >
               Add to Cart
             </Button>
           </div>
