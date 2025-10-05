@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, X } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface Product {
   id: string;
@@ -23,8 +23,7 @@ const fallbackImages = [
 
 const HomeProductsPreview = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
@@ -55,15 +54,8 @@ const HomeProductsPreview = () => {
   };
 
   const handleProductClick = (product: Product) => {
-    setSelectedProduct(product);
-    setModalOpen(true);
-  };
-
-  const handleAddToCart = (product: Product) => {
-    const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
-    existingCart.push(product);
-    localStorage.setItem("cart", JSON.stringify(existingCart));
-    setModalOpen(false);
+    // Redirect to product detail page
+    navigate(`/product/${product.id}`);
   };
 
   return (
@@ -134,40 +126,6 @@ const HomeProductsPreview = () => {
           </div>
         </div>
       </section>
-
-      {/* Modal */}
-      {modalOpen && selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full relative">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-900"
-              onClick={() => setModalOpen(false)}
-            >
-              <X size={24} />
-            </button>
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-xl mb-4">
-              <img
-                src={selectedProduct.image_url || fallbackImages[0]}
-                alt={selectedProduct.name}
-                className="max-h-full w-auto object-contain"
-              />
-            </div>
-            <h2 className="text-2xl font-bold">{selectedProduct.name}</h2>
-            <p className="text-lg font-semibold text-primary mt-2">
-              ${selectedProduct.price?.toFixed(2) || "0.00"}
-            </p>
-            <p className="mt-2 text-sm text-gray-600">
-              Category: {selectedProduct.category || "Health"}
-            </p>
-            <Button
-              className="mt-6 bg-secondary w-full text-white px-6 py-3"
-              onClick={() => handleAddToCart(selectedProduct)}
-            >
-              Add to Cart
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Scroll Animation CSS */}
       <style>
