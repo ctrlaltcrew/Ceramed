@@ -60,8 +60,9 @@ const HomeProductsPreview = () => {
   };
 
   const handleAddToCart = (product: Product) => {
-    console.log("Added to cart:", product);
-    alert(`Added "${product.name}" to cart!`);
+    const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    existingCart.push(product);
+    localStorage.setItem("cart", JSON.stringify(existingCart));
     setModalOpen(false);
   };
 
