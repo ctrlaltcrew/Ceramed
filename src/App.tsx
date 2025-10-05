@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminBlogs from "./pages/admin/AdminBlogs";
+import AdminLogin from "./pages/admin/AdminLogin";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,8 @@ const App = () => (
                 <Route path="products" element={<AdminProducts />} />
                 {/* Manage Blogs */}
                 <Route path="blogs" element={<AdminBlogs />} />
+                {/* Admin Login */}
+                <Route path="login" element={<AdminLogin />} />
               </Route>
 
               {/* ---------------- CATCH-ALL ROUTE ---------------- */}
