@@ -23,6 +23,7 @@ const fallbackImages = [
 
 const HomeProductsPreview = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -56,12 +57,9 @@ const HomeProductsPreview = () => {
     const quickBuySection = document.getElementById("quick-buy");
     if (quickBuySection) {
       quickBuySection.scrollIntoView({ behavior: "smooth" });
-      // You can also set state here to show product info in quick-buy
       setSelectedProduct(product);
     }
   };
-
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   return (
     <>
@@ -80,20 +78,21 @@ const HomeProductsPreview = () => {
             </p>
           </div>
 
-          {/* Continuous Auto-Scrolling Products */}
+          {/* Continuous Auto-Scrolling */}
           <div className="relative overflow-hidden">
-            <div className="flex gap-6 animate-scroll">
+            <div className="flex animate-scroll gap-6">
+              {/* Duplicate products for smooth infinite scroll */}
               {[...products, ...products].map((product, index) => (
                 <div
                   key={index}
-                  className="min-w-[220px] sm:min-w-[250px] bg-white shadow-lg rounded-2xl p-4 flex-shrink-0 hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+                  className="min-w-[220px] sm:min-w-[250px] bg-white shadow-lg rounded-3xl p-4 flex-shrink-0 hover:shadow-xl transition-shadow duration-300 cursor-pointer"
                   onClick={() => handleProductClick(product)}
                 >
-                  <div className="relative mb-3 overflow-hidden rounded-xl">
+                  <div className="relative mb-3 overflow-hidden rounded-3xl">
                     <img
                       src={product.image_url || fallbackImages[index % fallbackImages.length]}
                       alt={product.name}
-                      className="w-full h-40 sm:h-44 object-cover hover:scale-105 transition-transform duration-500"
+                      className="w-full h-44 object-cover rounded-3xl"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
                           fallbackImages[index % fallbackImages.length];
@@ -141,7 +140,7 @@ const HomeProductsPreview = () => {
               <img
                 src={selectedProduct.image_url || fallbackImages[0]}
                 alt={selectedProduct.name}
-                className="w-full h-64 object-cover rounded-lg mb-4"
+                className="w-full h-64 object-cover rounded-2xl mb-4"
               />
               <p className="text-lg font-semibold text-primary">
                 Price: ${selectedProduct.price?.toFixed(2) || "0.00"}
@@ -156,7 +155,7 @@ const HomeProductsPreview = () => {
         </div>
       </section>
 
-      {/* CSS for continuous scroll animation */}
+      {/* CSS for continuous scroll */}
       <style>
         {`
           @keyframes scroll {
@@ -165,7 +164,14 @@ const HomeProductsPreview = () => {
           }
           .animate-scroll {
             display: flex;
-            animation: scroll 30s linear infinite;
+            animation: scroll 20s linear infinite;
+          }
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
           }
         `}
       </style>
