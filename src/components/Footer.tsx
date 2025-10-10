@@ -84,7 +84,7 @@ const Footer = () => {
                     onClick={(e) => handleNavigate(e, '/services')}
                     className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
                   >
-                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200 text-[#FFB84D]"></span>
+                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200 "></span>
                     Preclinical Studies
                   </a>
                 </li>
