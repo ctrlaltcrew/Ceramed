@@ -132,12 +132,12 @@ const Team = () => {
 // ✅ Use Link to navigate with hash (#contact)
 const JoinTeamCTA = () => {
   return (
-    <div className="text-center mt-16 animate-fade-in">
-      <div className="medical-card max-w-2xl mx-auto bg-gradient-card">
-        <h3 className="text-2xl font-semibold text-foreground mb-4">
+    <div className="text-center mt-16 animate-fade-in font-mono">
+      <div className="medical-card max-w-2xl mx-auto bg-gradient-card font-sans">
+        <h3 className="text-2xl font-semibold text-foreground mb-4 font-sans">
           Join Our Research Team
         </h3>
-        <p className="text-muted-foreground mb-6">
+        <p className="text-muted-foreground mb-6 font-sans">
           We're always looking for talented researchers and scientists to join our mission 
           of advancing healthcare through innovative research.
         </p>

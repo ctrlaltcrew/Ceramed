@@ -69,7 +69,7 @@ const Stats = () => {
     }, [hasAnimated, end, duration]);
 
     return (
-      <span className="stat-counter text-4xl font-bold text-gray-900">
+      <span className="stat-counter text-4xl font-bold text-gray-900 font-parka">
         {count}
         {suffix}
       </span>

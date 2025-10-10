@@ -123,9 +123,10 @@ All colors MUST be HSL for proper theming.
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  }
+  @apply bg-background text-foreground font-sans;
+  font-family: "Parka", Roboto, "Noto Sans", "Liberation Sans", sans-serif;
+}
+
 }
 
 @layer components {

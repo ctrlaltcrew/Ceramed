@@ -26,15 +26,15 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#0b8686] text-white">
+    <footer className="bg-[#0b8686] text-[#FFB84D]">
       <div className="container mx-auto px-6">
         {/* Main Footer Content */}
         <div className="py-16">
           <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-8">
             {/* Company Info */}
             <div className="lg:col-span-1">
-              <div className="text-2xl font-bold mb-6">
-                CERA <span className="text-secondary">MEDICAL</span>
+              <div className="text-2xl font-bold mb-6 text-white">
+                CERA <span className="text-secondary text-[#FFB84D]">MEDICAL</span>
               </div>
               <p className="text-white/80 leading-relaxed mb-6">
                 Advancing Health through Rigorous Research and Innovative Solutions.
@@ -58,13 +58,13 @@ const Footer = () => {
             {/* Quick Links */}
             <div>
               <h3 className="text-lg font-semibold mb-6">Quick Links</h3>
-              <ul className="space-y-3">
+              <ul className="space-y-3 ">
                 {pageLinks.map((link, index) => (
                   <li key={index}>
                     <a
                       href={link.href}
                       onClick={(e) => handleNavigate(e, link.href)}
-                      className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                      className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer "
                     >
                       <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
                       {link.name}

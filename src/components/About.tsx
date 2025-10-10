@@ -55,12 +55,12 @@ const About = () => {
               Who We Are
             </div>
 
-            <h2 className="text-4xl lg:text-5xl font-extrabold text-foreground mb-6 leading-tight tracking-tight">
+            <h2 className="text-4xl lg:text-5xl font-extrabold text-foreground mb-6 leading-tight tracking-tight font-parka">
               Leading Biomedical Innovation in
               <span className="text-primary"> Pakistan</span>
             </h2>
 
-            <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
+            <div className="space-y-6 text-lg text-muted-foreground leading-relaxed font-parka">
               <p>
                 <span className="font-semibold text-foreground">CERA MEDICAL</span> is a leading biomedical R&amp;D company in Pakistan dedicated to
                 improving human health through innovative solutions. We develop evidence-based
@@ -111,7 +111,7 @@ const About = () => {
             Building the <span className="text-primary">Future of Biomedical Research</span>
           </h3>
 
-          <p className="text-lg leading-relaxed text-muted-foreground">
+          <p className="text-lg leading-relaxed text-muted-foreground font-parka">
             <span className="font-semibold text-foreground">CERA MEDICAL</span> pioneers preclinical research in Pakistan,
             specializing in rigorous drug discovery and development. Unlike traditional CROs,
             we integrate <span className="text-primary font-medium">computational modeling</span> with in-vivo testing to
@@ -125,14 +125,14 @@ const About = () => {
         <div className="grid md:grid-cols-2 gap-6">
           <div className="p-8 bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl shadow-md hover:shadow-xl transition">
             <h4 className="text-2xl font-semibold text-foreground mb-3">Our Mission</h4>
-            <p className="text-muted-foreground text-lg leading-relaxed">
+            <p className="text-muted-foreground text-lg leading-relaxed font-parka">
               We streamline drug development by delivering precise preclinical data, enabling biotech firms to bring
               life-saving therapies to market faster and more affordably.
             </p>
           </div>
           <div className="p-8 bg-gradient-to-br from-accent/5 to-primary/5 rounded-2xl shadow-md hover:shadow-xl transition">
             <h4 className="text-2xl font-semibold text-foreground mb-3">Our Vision</h4>
-            <p className="text-muted-foreground text-lg leading-relaxed">
+            <p className="text-muted-foreground text-lg leading-relaxed font-parka">
               To redefine preclinical research by merging cutting-edge science and technology, making Pakistan a global
               hub for biotech innovation and improving lives worldwide.
             </p>
@@ -141,8 +141,8 @@ const About = () => {
 
         {/* CORE VALUES */}
         <div>
-          <h3 className="text-3xl font-bold text-foreground mb-4">Core Values</h3>
-          <p className="text-muted-foreground mb-8 text-lg">The principles that guide everything we do</p>
+          <h3 className="text-3xl font-bold text-foreground mb-4 font-parka">Core Values</h3>
+          <p className="text-muted-foreground mb-8 text-lg font-parka">The principles that guide everything we do</p>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
@@ -164,11 +164,11 @@ const About = () => {
 
         {/* PARTNERS SLIDER */}
         <div className="animate-slide-up">
-          <div className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold mb-6">
+          <div className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold mb-6 font-parka">
             Institutional Partnerships
           </div>
 
-          <h3 className="text-3xl font-bold text-foreground mb-10 text-center">
+          <h3 className="text-3xl font-bold text-foreground mb-10 text-center font-sans">
             Collaborating with Leading Institutions
           </h3>
 

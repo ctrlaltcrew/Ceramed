@@ -79,10 +79,10 @@ const HomeProductsPreview = () => {
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold mb-2">
-            Featured <span className="text-secondary">Products</span>
+          <h2 className="text-3xl md:text-4xl font-bold mb-2 font-parka">
+            Featured <span className="text-secondary font-bold">Products</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-base">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-base font-parka">
             Explore our latest science-backed innovations — crafted to enhance wellness and performance.
           </p>
         </div>
@@ -111,8 +111,8 @@ const HomeProductsPreview = () => {
                 </div>
 
                 {/* Product Info */}
-                <div className="flex flex-col flex-grow text-center">
-                  <h3 className="text-md font-semibold text-gray-800 truncate mb-1">
+                <div className="flex flex-col flex-grow text-center font-parka">
+                  <h3 className="text-md font-semibold text-gray-800 truncate mb-1 font-parka">
                     {product.name}
                   </h3>
                   <p className="text-primary font-bold text-base mb-2">
@@ -131,11 +131,11 @@ const HomeProductsPreview = () => {
         </div>
 
         {/* View More Button */}
-        <div className="text-center mt-10">
+        <div className="text-center mt-10 font-semibold">
           <Link to="/products">
-            <Button className="group bg-secondary hover:bg-secondary/90 text-white px-6 py-3">
+            <Button className="group bg-secondary hover:bg-secondary/90 text-white px-6 py-3 font-semibold">
               View More Products
-              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform " />
             </Button>
           </Link>
         </div>

@@ -57,10 +57,10 @@ const BlogPage = () => {
       <main className="pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center mb-16">
-            <h1 className="text-4xl font-bold text-foreground mb-4">
+            <h1 className="text-4xl font-bold text-foreground mb- font-sans">
               Our Healthcare Blog
             </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto font-sans">
               Stay informed with the latest insights, tips, and developments in healthcare and wellness.
             </p>
           </div>

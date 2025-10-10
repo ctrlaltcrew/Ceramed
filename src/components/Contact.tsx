@@ -214,8 +214,8 @@ Message: ${formData.message}
                 </div>
               </form>
 
-              <div className="mt-8 p-4 bg-accent/20 rounded-xl">
-                <p className="text-sm text-muted-foreground">
+              <div className="mt-8 p-4 bg-accent/20 rounded-xl font-sans">
+                <p className="text-sm text-muted-foreground font-medium">
                   <strong>Response Time:</strong> We typically respond within 24 hours during business days. 
                   For urgent inquiries, please call us directly.
                 </p>

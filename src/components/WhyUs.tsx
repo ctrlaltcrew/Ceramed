@@ -29,21 +29,21 @@ const WhyUs = () => {
   ];
 
   return (
-    <section id="why-us" className="section-padding bg-white">
+    <section id="why-us" className="section-padding bg-white font-sans">
       <div className="container mx-auto">
         {/* Heading */}
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
             Why Choose Us
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto font-sans">
             Discover what sets CERA MEDICAL apart in advancing healthcare and
             biomedical research.
           </p>
         </div>
 
         {/* Reasons Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 font-sans">
           {reasons.map((reason, index) => (
             <div
               key={index}

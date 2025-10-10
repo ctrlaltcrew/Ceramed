@@ -13,7 +13,7 @@ const Hero = () => {
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
-          src="/bannerimg.png"
+          src="/aboutusbanner.png"
           alt="Advanced biomedical research laboratory with cutting-edge equipment"
           className="w-full h-full object-cover"
         />
@@ -26,9 +26,9 @@ const Hero = () => {
         <div className="max-w-3xl mx-auto text-center text-white">
           <div className="animate-fade-in">
             {/* Heading */}
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold leading-tight mb-6">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl leading-tight mb-6 font-parka ">
               Advancing Health through
-              <span className="bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent font-bold text-[#008C8C]">
                 {" "}Rigorous Research
               </span>
               <br />
@@ -36,14 +36,14 @@ const Hero = () => {
             </h1>
 
             {/* Subheading */}
-            <p className="text-sm sm:text-base md:text-lg mb-8 text-white/90 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base md:text-lg mb-8 text-white/90 max-w-2xl mx-auto leading-relaxed font-semibold">
               CERA MEDICAL is dedicated to improving human health through innovative solutions. 
               We develop evidence-based natural health products and provide cutting-edge research 
               services.
             </p>
 
             {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 font-parka">
               <Button 
                 className="btn-medical text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 group"
                 onClick={() => navigate('/products')}
@@ -54,7 +54,7 @@ const Hero = () => {
 
               <Button 
                 variant="outline" 
-                className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 border border-white text-white bg-transparent focus:ring-0 focus:outline-none"
+                className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 border border-white text-white bg-transparent focus:ring-0 focus:outline-none font-parka"
                 onClick={() => navigate('/about')}
               >
                 Who We Are
