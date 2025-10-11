@@ -112,7 +112,8 @@ const HomeProductsPreview = () => {
                     alt={product.name}
                     className="max-h-full w-auto object-contain transition-transform duration-300 hover:scale-105"
                   />
-                  <Badge className="absolute top-2 left-2 bg-[#FFB84D] text-white text-xs font-semibold rounded-full px-3 py-1 shadow-md">
+                  <Badge className="absolute top-2 left-2 bg-[#FFB84D] text-white text-[10px] font-medium rounded-full px-2 py-[2px] shadow-sm">
+
                     {product.category || "Health"}
                   </Badge>
                 </div>
