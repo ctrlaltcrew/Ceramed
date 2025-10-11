@@ -150,16 +150,39 @@ const HomeProductsPreview = () => {
 
       {/* Custom Animation Styles */}
       <style>{`
-        @keyframes infinite-scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-infinite-scroll {
-          display: flex;
-          width: max-content;
-          animation: infinite-scroll 30s linear infinite;
-        }
-      `}</style>
+  @keyframes infinite-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .animate-infinite-scroll {
+    display: flex;
+    width: max-content;
+    animation: infinite-scroll 30s linear infinite;
+  }
+
+  /* Slower & smoother scroll on tablets */
+  @media (max-width: 1024px) {
+    .animate-infinite-scroll {
+      animation: infinite-scroll 40s linear infinite;
+    }
+  }
+
+  /* Even slower scroll on mobile for better visibility & performance */
+  @media (max-width: 768px) {
+    .animate-infinite-scroll {
+      animation: infinite-scroll 50s linear infinite;
+    }
+  }
+
+  /* Very slow for small screens (phones under 480px) */
+  @media (max-width: 480px) {
+    .animate-infinite-scroll {
+      animation: infinite-scroll 60s linear infinite;
+    }
+  }
+`}</style>
+
     </section>
   );
 };
