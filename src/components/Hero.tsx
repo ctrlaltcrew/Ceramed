@@ -26,18 +26,29 @@ const Hero = () => {
         <div className="max-w-3xl mx-auto text-center text-white">
           <div className="animate-fade-in">
             {/* Heading */}
-            <h1 className="text-2xl sm:text-4xl md:text-5xl leading-tight mb-6 font-parka ">
-              Advancing Health through
-              <span className="bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent font-bold text-[#008C8C]">
-                {" "}Rigorous Research
-              </span>
-              <br />
-              and Innovative Solutions
-            </h1>
+  <h1 className="text-3xl sm:text-5xl md:text-6xl leading-tight mb-6 font-parka font-bold text-center">
+  {/* Line 1 */}
+  <span className="text-white drop-shadow-md">
+    Advancing Health Through
+  </span>
+  <br />
+
+  {/* Line 2 */}
+  <span className="text-[#FFB84D] drop-shadow-lg">
+    Rigorous Research
+  </span>
+  <br />
+
+  {/* Line 3 */}
+  <span className="text-white font-semibold drop-shadow-md">
+    and Innovative Solutions
+  </span>
+</h1>
+
 
             {/* Subheading */}
-            <p className="text-sm sm:text-base md:text-lg mb-8 text-white/90 max-w-2xl mx-auto leading-relaxed font-semibold">
-              CERA MEDICAL is dedicated to improving human health through innovative solutions. 
+            <p className="text-sm sm:text-base md:text-lg mb-8 textgr max-w-2xl mx-auto leading-relaxed font-semibold">
+             <span className="text-[#FFB84D]"> CERA MEDICAL </span> is dedicated to improving human health through innovative solutions. 
               We develop evidence-based natural health products and provide cutting-edge research 
               services.
             </p>

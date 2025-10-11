@@ -50,7 +50,9 @@ const HomeProductsPreview = () => {
             const { data: publicUrlData } = supabase.storage
               .from("product-images")
               .getPublicUrl(p.image_url);
-            image = publicUrlData?.publicUrl || fallbackImages[i % fallbackImages.length];
+            image =
+              publicUrlData?.publicUrl ||
+              fallbackImages[i % fallbackImages.length];
           }
 
           return { ...p, image_url: image };
@@ -68,22 +70,24 @@ const HomeProductsPreview = () => {
 
   const handleAddToCart = async (product: Product) => {
     try {
-      await addToCart(product.id); // ✅ uses the same logic as Products page
+      await addToCart(product.id);
     } catch (err) {
       console.error("Add to cart failed:", err);
     }
   };
 
   return (
-    <section className="py-12 bg-gradient-to-b from-white to-accent/10 overflow-hidden">
+    <section className="py-12 bg-gradient-to-b from-white to-accent/10 overflow-hidden font-sans">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-2 font-parka">
-            Featured <span className="text-secondary font-bold">Products</span>
+            Featured{" "}
+            <span className="text-[#0b8686] font-bold">Products</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-base font-parka">
-            Explore our latest science-backed innovations — crafted to enhance wellness and performance.
+          <p className="text-gray-600 max-w-2xl mx-auto text-base font-parka">
+            Explore our latest science-backed innovations — crafted to enhance
+            wellness and performance.
           </p>
         </div>
 
@@ -93,33 +97,36 @@ const HomeProductsPreview = () => {
             {[...products, ...products].map((product, index) => (
               <div
                 key={`${product.id}-${index}`}
-                className="min-w-[220px] bg-white shadow-md rounded-xl overflow-hidden flex flex-col p-4 hover:shadow-lg transition-shadow duration-300"
+                className="min-w-[220px] bg-white shadow-md rounded-2xl overflow-hidden flex flex-col p-4 hover:shadow-xl transition-shadow duration-300 font-parka"
               >
                 {/* Image */}
                 <div
-                  className="relative mb-3 overflow-hidden rounded-lg h-40 flex items-center justify-center bg-gray-50 cursor-pointer"
+                  className="relative mb-3 overflow-hidden rounded-xl h-40 flex items-center justify-center bg-gray-50 cursor-pointer"
                   onClick={() => handleProductClick(product)}
                 >
                   <img
-                    src={product.image_url || fallbackImages[index % fallbackImages.length]}
+                    src={
+                      product.image_url ||
+                      fallbackImages[index % fallbackImages.length]
+                    }
                     alt={product.name}
                     className="max-h-full w-auto object-contain transition-transform duration-300 hover:scale-105"
                   />
-                  <Badge className="absolute top-2 left-2 bg-secondary text-white text-xs">
+                  <Badge className="absolute top-2 left-2 bg-[#FFB84D] text-white text-xs font-semibold rounded-full px-3 py-1 shadow-md">
                     {product.category || "Health"}
                   </Badge>
                 </div>
 
                 {/* Product Info */}
-                <div className="flex flex-col flex-grow text-center font-parka">
-                  <h3 className="text-md font-semibold text-gray-800 truncate mb-1 font-parka">
+                <div className="flex flex-col flex-grow text-center">
+                  <h3 className="text-md font-semibold text-gray-800 truncate mb-1">
                     {product.name}
                   </h3>
-                  <p className="text-primary font-bold text-base mb-2">
+                  <p className="text-[#0b8686] font-bold text-base mb-2">
                     ${product.price?.toFixed(2) || "0.00"}
                   </p>
                   <Button
-                    className="bg-secondary hover:bg-secondary/90 w-full text-white"
+                    className="bg-[#0b8686] hover:bg-[#097575] w-full text-white font-semibold transition-all"
                     onClick={() => handleAddToCart(product)}
                   >
                     Add to Cart
@@ -133,9 +140,9 @@ const HomeProductsPreview = () => {
         {/* View More Button */}
         <div className="text-center mt-10 font-semibold">
           <Link to="/products">
-            <Button className="group bg-secondary hover:bg-secondary/90 text-white px-6 py-3 font-semibold">
+            <Button className="group bg-[#0b8686] hover:bg-[#097575] text-white px-6 py-3 font-semibold">
               View More Products
-              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform " />
+              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
         </div>

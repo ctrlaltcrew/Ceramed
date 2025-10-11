@@ -14,7 +14,6 @@ const Footer = () => {
     { name: 'Contact', href: '/contact' },
   ];
 
-  // Scroll to top after navigating
   const handleNavigate = (e: React.MouseEvent, href: string) => {
     e.preventDefault();
     navigate(href);
@@ -26,15 +25,17 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#0b8686] text-[#FFB84D]">
+    <footer className="bg-[#0b8686] text-white font-poppins">
       <div className="container mx-auto px-6">
-        {/* Main Footer Content */}
+        {/* Main Footer */}
         <div className="py-16">
           <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-8">
+            
             {/* Company Info */}
-            <div className="lg:col-span-1">
-              <div className="text-2xl font-bold mb-6 text-white font-parka">
-                CERA <span className="text-secondary text-[#FFB84D]">MEDICAL</span>
+            <div>
+              <div className="text-2xl font-bold mb-6 font-parka">
+                <span className="text-white">CERA</span>{' '}
+                <span className="text-[#FFB84D]">MEDICAL</span>
               </div>
               <p className="text-white/80 leading-relaxed mb-6">
                 Advancing Health through Rigorous Research and Innovative Solutions.
@@ -43,30 +44,26 @@ const Footer = () => {
 
               {/* Social Links */}
               <div className="flex gap-3">
-                <Button size="icon" variant="ghost" className="bg-white/10 hover:bg-white/20 text-white">
-                  <Linkedin className="h-5 w-5" />
-                </Button>
-                <Button size="icon" variant="ghost" className="bg-white/10 hover:bg-white/20 text-white">
-                  <Twitter className="h-5 w-5" />
-                </Button>
-                <Button size="icon" variant="ghost" className="bg-white/10 hover:bg-white/20 text-white">
-                  <Facebook className="h-5 w-5" />
-                </Button>
+                {[Linkedin, Twitter, Facebook].map((Icon, i) => (
+                  <Button key={i} size="icon" variant="ghost" className="bg-white/10 hover:bg-white/20 text-white">
+                    <Icon className="h-5 w-5" />
+                  </Button>
+                ))}
               </div>
             </div>
 
             {/* Quick Links */}
             <div>
               <h3 className="text-lg font-semibold mb-6">Quick Links</h3>
-              <ul className="space-y-3 ">
+              <ul className="space-y-3">
                 {pageLinks.map((link, index) => (
                   <li key={index}>
                     <a
                       href={link.href}
                       onClick={(e) => handleNavigate(e, link.href)}
-                      className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer "
+                      className="text-white hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
                     >
-                      <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
+                      <span className="w-1 h-1 bg-[#FFB84D] rounded-full mr-3 group-hover:w-2 group-hover:shadow-[0_0_6px_#FFB84D] transition-all duration-200"></span>
                       {link.name}
                     </a>
                   </li>
@@ -78,46 +75,18 @@ const Footer = () => {
             <div>
               <h3 className="text-lg font-semibold mb-6">Our Services</h3>
               <ul className="space-y-3">
-                <li>
-                  <a
-                    href="/services"
-                    onClick={(e) => handleNavigate(e, '/services')}
-                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
-                  >
-                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200 "></span>
-                    Preclinical Studies
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/services"
-                    onClick={(e) => handleNavigate(e, '/services')}
-                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
-                  >
-                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
-                    Biochemical Testing
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/services"
-                    onClick={(e) => handleNavigate(e, '/services')}
-                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
-                  >
-                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
-                    Disease Modeling
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/services"
-                    onClick={(e) => handleNavigate(e, '/services')}
-                    className="text-white/80 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
-                  >
-                    <span className="w-1 h-1 bg-secondary rounded-full mr-3 group-hover:w-2 transition-all duration-200"></span>
-                    Molecular Research
-                  </a>
-                </li>
+                {['Preclinical Studies', 'Biochemical Testing', 'Disease Modeling', 'Molecular Research'].map((service, i) => (
+                  <li key={i}>
+                    <a
+                      href="/services"
+                      onClick={(e) => handleNavigate(e, '/services')}
+                      className="text-white hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
+                    >
+                      <span className="w-1 h-1 bg-[#FFB84D] rounded-full mr-3 group-hover:w-2 group-hover:shadow-[0_0_6px_#FFB84D] transition-all duration-200"></span>
+                      {service}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -126,40 +95,35 @@ const Footer = () => {
               <h3 className="text-lg font-semibold mb-6">Contact Info</h3>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-white/90 text-sm">
-                      PAF-IAST, Mang,<br />
-                      Haripur, Pakistan
-                    </p>
-                  </div>
+                  <MapPin className="h-5 w-5 text-[#FFB84D]" />
+                  <p className="text-sm text-white/90">
+                    PAF-IAST, Mang,<br />Haripur, Pakistan
+                  </p>
                 </div>
-
                 <div className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 text-secondary flex-shrink-0" />
-                  <a href="mailto:medicalcera@gmail.com" className="text-white/90 hover:text-white transition-colors duration-200 text-sm">
+                  <Mail className="h-5 w-5 text-[#FFB84D]" />
+                  <a href="mailto:medicalcera@gmail.com" className="text-sm text-white/90 hover:text-white">
                     medicalcera@gmail.com
                   </a>
                 </div>
-
                 <div className="flex items-center gap-3">
-                  <Phone className="h-5 w-5 text-secondary flex-shrink-0" />
-                  <a href="tel:+923409052244" className="text-white/90 hover:text-white transition-colors duration-200 text-sm">
+                  <Phone className="h-5 w-5 text-[#FFB84D]" />
+                  <a href="tel:+923409052244" className="text-sm text-white/90 hover:text-white">
                     +92-3409052244
                   </a>
                 </div>
               </div>
 
-              {/* Newsletter Signup */}
+              {/* Newsletter */}
               <div className="mt-8">
                 <h4 className="text-sm font-semibold mb-3">Stay Updated</h4>
                 <div className="flex gap-2">
                   <input
                     type="email"
                     placeholder="Your email"
-                    className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-secondary"
+                    className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFB84D]"
                   />
-                  <Button size="sm" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+                  <Button size="sm" className="bg-[#FFB84D] hover:bg-[#e6a43f] text-white font-semibold">
                     Subscribe
                   </Button>
                 </div>
@@ -172,29 +136,28 @@ const Footer = () => {
         <div className="border-t border-white/20 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
             <div className="text-center md:text-left">
-              <p className="text-white/80 text-sm">
-                © 2024 CERA MEDICAL. All rights reserved.
-              </p>
+              <p className="text-white/80 text-sm">© 2024 CERA MEDICAL. All rights reserved.</p>
               <p className="text-white/60 text-xs mt-1">
-                Developed by <a href="https://ctrlaltcrew.com" target="_blank" rel="noopener noreferrer" className="text-[#FFB84D] hover:underline">CtrlAltCrew</a>
+                Developed by{' '}
+                <a href="https://ctrlaltcrew.com" target="_blank" rel="noopener noreferrer" className="text-[#FFB84D] hover:underline">
+                  CtrlAltCrew
+                </a>
               </p>
             </div>
 
             <div className="flex items-center gap-6 text-sm">
-              <a href="#" className="text-white/80 hover:text-white transition-colors duration-200">Privacy Policy</a>
-              <a href="#" className="text-white/80 hover:text-white transition-colors duration-200">Terms of Service</a>
-              <a href="#" className="text-white/80 hover:text-white transition-colors duration-200">Cookie Policy</a>
+              <a href="#" className="text-white/80 hover:text-white">Privacy Policy</a>
+              <a href="#" className="text-white/80 hover:text-white">Terms of Service</a>
+              <a href="#" className="text-white/80 hover:text-white">Cookie Policy</a>
             </div>
 
-            {/* Back to Top */}
             <Button
               size="sm"
               variant="ghost"
               onClick={scrollToTop}
-              className="bg-white/10 hover:bg-white/20 text-white"
+              className="bg-white/10 hover:bg-white/20 text-[#FFB84D]"
             >
-              <ArrowUp className="h-4 w-4 mr-1" />
-              Top
+              <ArrowUp className="h-4 w-4 mr-1" /> Top
             </Button>
           </div>
         </div>

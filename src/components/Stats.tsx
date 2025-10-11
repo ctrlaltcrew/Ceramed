@@ -69,7 +69,7 @@ const Stats = () => {
     }, [hasAnimated, end, duration]);
 
     return (
-      <span className="stat-counter text-4xl font-bold text-gray-900 font-parka">
+      <span className="stat-counter text-4xl font-bold text-[#FFB84D] font-parka">
         {count}
         {suffix}
       </span>
@@ -103,7 +103,7 @@ const Stats = () => {
         {/* Heading */}
         <div className="text-center mb-16">
           <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Our Impact in Numbers
+            Our Impact in <span className="text-[#0b8686]">Numbers</span>
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Measurable results that demonstrate our commitment to advancing
@@ -132,7 +132,7 @@ const Stats = () => {
               </div>
 
               {/* Label */}
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              <h3 className="text-lg font-semibold text-[#0b8686] mb-2">
                 {stat.label}
               </h3>
 
