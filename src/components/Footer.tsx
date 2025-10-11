@@ -33,7 +33,7 @@ const Footer = () => {
           <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-8">
             {/* Company Info */}
             <div className="lg:col-span-1">
-              <div className="text-2xl font-bold mb-6 text-white">
+              <div className="text-2xl font-bold mb-6 text-white font-parka">
                 CERA <span className="text-secondary text-[#FFB84D]">MEDICAL</span>
               </div>
               <p className="text-white/80 leading-relaxed mb-6">
