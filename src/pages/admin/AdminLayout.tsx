@@ -48,11 +48,14 @@ const AdminLayout = () => {
 
   return (
     <div>
+      {/* 🔹 Header */}
       <header className="p-4 border-b shadow-sm bg-gray-50 flex justify-between items-center">
-        <h1 className="text-lg font-semibold">Admin Dashboard</h1>
+        <h1 className="text-lg font-semibold text-gray-800">
+          🧭 Admin Dashboard
+        </h1>
 
-        {/* 🔹 Navigation Links */}
-        <nav className="flex gap-4">
+        {/* 🔹 Navigation */}
+        <nav className="flex gap-5 text-sm">
           <NavLink
             to="/admin/dashboard"
             className={({ isActive }) =>
@@ -62,6 +65,17 @@ const AdminLayout = () => {
             }
           >
             Notifications
+          </NavLink>
+
+          <NavLink
+            to="/admin/orders"
+            className={({ isActive }) =>
+              isActive
+                ? "font-bold text-blue-600"
+                : "text-gray-600 hover:text-blue-600"
+            }
+          >
+            Orders
           </NavLink>
 
           <NavLink
@@ -87,7 +101,7 @@ const AdminLayout = () => {
           </NavLink>
         </nav>
 
-        {/* 🔹 Logout Button */}
+        {/* 🔹 Logout */}
         <button
           onClick={() =>
             supabase.auth.signOut().then(() => navigate("/admin/login"))
@@ -98,7 +112,7 @@ const AdminLayout = () => {
         </button>
       </header>
 
-      {/* 🔹 Page Outlet */}
+      {/* 🔹 Outlet */}
       <main className="p-6 bg-gray-50 min-h-screen">
         <Outlet />
       </main>

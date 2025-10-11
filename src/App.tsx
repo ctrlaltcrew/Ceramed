@@ -21,7 +21,8 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminBlogs from "./pages/admin/AdminBlogs";
 import AdminLogin from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard"; // ✅ NEW PAGE IMPORT
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminOrders from "./pages/admin/AdminOrders"; // ✅ NEW PAGE IMPORT
 
 // ---------------- QUERY CLIENT ----------------
 const queryClient = new QueryClient();
@@ -67,10 +68,9 @@ const App = () => {
                   {/* ✅ Default redirect to dashboard */}
                   <Route index element={<Navigate to="dashboard" replace />} />
 
-                  {/* ✅ Admin Notifications Dashboard */}
+                  {/* ✅ Admin Sections */}
                   <Route path="dashboard" element={<AdminDashboard />} />
-
-                  {/* ✅ Existing routes */}
+                  <Route path="orders" element={<AdminOrders />} /> {/* ✅ NEW */}
                   <Route path="products" element={<AdminProducts />} />
                   <Route path="blogs" element={<AdminBlogs />} />
                 </Route>

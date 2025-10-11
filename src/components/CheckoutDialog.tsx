@@ -1,15 +1,25 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCart } from '@/contexts/CartContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { CreditCard, Phone, Banknote } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface CartItem {
   id: string;
@@ -29,21 +39,23 @@ interface CheckoutDialogProps {
   totalAmount: number;
 }
 
-const CheckoutDialog: React.FC<CheckoutDialogProps> = ({ 
-  open, 
-  onOpenChange, 
-  cartItems, 
-  totalAmount 
+const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
+  open,
+  onOpenChange,
+  cartItems,
+  totalAmount,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [customerData, setCustomerData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    postalCode: '',
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    postalCode: "",
   });
 
   const { user } = useAuth();
@@ -51,83 +63,139 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
   const { toast } = useToast();
 
   const getSessionId = () => {
-    return localStorage.getItem('cart_session_id') || crypto.randomUUID();
+    const existing = localStorage.getItem("cart_session_id");
+    if (existing) return existing;
+    const newId = crypto.randomUUID();
+    localStorage.setItem("cart_session_id", newId);
+    return newId;
   };
 
+  // 📤 Upload receipt to Supabase Storage
+  const uploadReceipt = async (file: File) => {
+    const fileName = `${Date.now()}-${file.name}`;
+    const { data, error } = await supabase.storage
+      .from("receipts")
+      .upload(fileName, file);
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage
+      .from("receipts")
+      .getPublicUrl(fileName);
+    return urlData.publicUrl;
+  };
+
+  // 🧾 Handle Checkout
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!paymentMethod) {
       toast({
-        title: 'Payment method required',
-        description: 'Please select a payment method.',
-        variant: 'destructive',
+        title: "Payment method required",
+        description: "Please select a payment method.",
+        variant: "destructive",
       });
       return;
     }
 
     setLoading(true);
-
     try {
-      const orderData = {
-        user_id: user?.id || null,
-        session_id: user ? null : getSessionId(),
-        total_amount: totalAmount,
-        status: 'pending',
-        payment_method: paymentMethod,
-        customer_name: customerData.name,
-        customer_email: customerData.email,
-        customer_phone: customerData.phone,
-        shipping_address: {
-          address: customerData.address,
-          city: customerData.city,
-          postalCode: customerData.postalCode,
-        },
-        order_items: cartItems.map(item => ({
+      let receiptUrl: string | null = null;
+      if (receiptFile) {
+        receiptUrl = await uploadReceipt(receiptFile);
+      }
+
+      // 🧠 Make sure shipping_address is JSON string (for JSONB)
+      const shipping_address = {
+        address: customerData.address,
+        city: customerData.city,
+        postalCode: customerData.postalCode,
+      };
+
+      // ✅ Insert order (main table)
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
+        .insert([
+          {
+            user_id: user?.id || null,
+            session_id: user ? null : getSessionId(),
+            total_amount: totalAmount,
+            status: "pending",
+            payment_method: paymentMethod,
+            payment_receipt: receiptUrl || null,
+            customer_name: customerData.name,
+            customer_email: customerData.email,
+            customer_phone: customerData.phone,
+            shipping_address: shipping_address, // ✅ JSON handled properly
+          },
+        ])
+        .select("id")
+        .single();
+
+      if (orderError) throw orderError;
+
+      // 🛒 Insert items separately (if using order_items table)
+      if (orderData?.id) {
+        const items = cartItems.map((item) => ({
+          order_id: orderData.id,
           product_id: item.product_id,
           product_name: item.product.name,
           quantity: item.quantity,
           price: item.product.price,
           total: item.quantity * item.product.price,
-        })),
-      };
+        }));
 
-      const { error } = await supabase
-        .from('orders')
-        .insert(orderData);
+        const { error: itemsError } = await supabase
+          .from("order_items")
+          .insert(items);
 
-      if (error) throw error;
+        if (itemsError) throw itemsError;
+      }
 
       await clearCart();
-      
+
       toast({
-        title: 'Order placed successfully!',
-        description: `Your order has been placed. Total: $${totalAmount.toFixed(2)}`,
+        title: "Order placed successfully 🎉",
+        description: `Your order (total $${totalAmount.toFixed(
+          2
+        )}) has been placed successfully.`,
       });
 
       onOpenChange(false);
-      
-      // Reset form
       setCustomerData({
-        name: '',
-        email: '',
-        phone: '',
-        address: '',
-        city: '',
-        postalCode: '',
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+        city: "",
+        postalCode: "",
       });
-      setPaymentMethod('');
-
-    } catch (error) {
-      console.error('Error placing order:', error);
+      setPaymentMethod("");
+      setReceiptFile(null);
+      setReceiptPreview(null);
+    } catch (error: any) {
+      console.error("🔥 Order insert error:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to place order. Please try again.',
-        variant: 'destructive',
+        title: "Error placing order",
+        description: error.message || "Please try again.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setReceiptFile(file);
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      setReceiptPreview(previewUrl);
+    }
+  };
+
+  const requiresReceipt =
+    paymentMethod === "easypaisa" ||
+    paymentMethod === "jazzcash" ||
+    paymentMethod === "bank_transfer";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -142,8 +210,13 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
             <h3 className="font-semibold">Order Summary</h3>
             <div className="space-y-2 max-h-40 overflow-y-auto">
               {cartItems.map((item) => (
-                <div key={item.id} className="flex justify-between items-center text-sm">
-                  <span>{item.product.name} × {item.quantity}</span>
+                <div
+                  key={item.id}
+                  className="flex justify-between items-center text-sm"
+                >
+                  <span>
+                    {item.product.name} × {item.quantity}
+                  </span>
                   <span>${(item.product.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
@@ -153,7 +226,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
             </div>
           </div>
 
-          {/* Customer Information */}
+          {/* Customer Info */}
           <div className="space-y-4">
             <h3 className="font-semibold">Customer Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -162,7 +235,9 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
                 <Input
                   id="name"
                   value={customerData.name}
-                  onChange={(e) => setCustomerData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) =>
+                    setCustomerData((p) => ({ ...p, name: e.target.value }))
+                  }
                   required
                 />
               </div>
@@ -172,7 +247,9 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
                   id="email"
                   type="email"
                   value={customerData.email}
-                  onChange={(e) => setCustomerData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) =>
+                    setCustomerData((p) => ({ ...p, email: e.target.value }))
+                  }
                   required
                 />
               </div>
@@ -181,7 +258,9 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
                 <Input
                   id="phone"
                   value={customerData.phone}
-                  onChange={(e) => setCustomerData(prev => ({ ...prev, phone: e.target.value }))}
+                  onChange={(e) =>
+                    setCustomerData((p) => ({ ...p, phone: e.target.value }))
+                  }
                   required
                 />
               </div>
@@ -190,7 +269,9 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
                 <Input
                   id="city"
                   value={customerData.city}
-                  onChange={(e) => setCustomerData(prev => ({ ...prev, city: e.target.value }))}
+                  onChange={(e) =>
+                    setCustomerData((p) => ({ ...p, city: e.target.value }))
+                  }
                   required
                 />
               </div>
@@ -199,7 +280,9 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
                 <Textarea
                   id="address"
                   value={customerData.address}
-                  onChange={(e) => setCustomerData(prev => ({ ...prev, address: e.target.value }))}
+                  onChange={(e) =>
+                    setCustomerData((p) => ({ ...p, address: e.target.value }))
+                  }
                   required
                 />
               </div>
@@ -208,13 +291,18 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
                 <Input
                   id="postalCode"
                   value={customerData.postalCode}
-                  onChange={(e) => setCustomerData(prev => ({ ...prev, postalCode: e.target.value }))}
+                  onChange={(e) =>
+                    setCustomerData((p) => ({
+                      ...p,
+                      postalCode: e.target.value,
+                    }))
+                  }
                 />
               </div>
             </div>
           </div>
 
-          {/* Payment Method */}
+          {/* Payment Section */}
           <div className="space-y-4">
             <h3 className="font-semibold">Payment Method</h3>
             <Select value={paymentMethod} onValueChange={setPaymentMethod} required>
@@ -222,80 +310,37 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="easypaisa">
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    EasyPaisa
-                  </div>
-                </SelectItem>
-                <SelectItem value="jazzcash">
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    JazzCash
-                  </div>
-                </SelectItem>
-                <SelectItem value="bank_transfer">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Bank Transfer
-                  </div>
-                </SelectItem>
-                <SelectItem value="cash_on_delivery">
-                  <div className="flex items-center gap-2">
-                    <Banknote className="h-4 w-4" />
-                    Cash on Delivery
-                  </div>
-                </SelectItem>
+                <SelectItem value="easypaisa">EasyPaisa</SelectItem>
+                <SelectItem value="jazzcash">JazzCash</SelectItem>
+                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                <SelectItem value="cash_on_delivery">Cash on Delivery</SelectItem>
               </SelectContent>
             </Select>
 
-            {paymentMethod === 'easypaisa' && (
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm">
-                  <strong>EasyPaisa Payment Instructions:</strong><br />
-                  1. Send payment to: 03409052244<br />
-                  2. Include your order reference in the transaction<br />
-                  3. We'll confirm your order once payment is received
-                </p>
-              </div>
-            )}
-
-            {paymentMethod === 'jazzcash' && (
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm">
-                  <strong>JazzCash Payment Instructions:</strong><br />
-                  1. Send payment to: 03409052244<br />
-                  2. Include your order reference in the transaction<br />
-                  3. We'll confirm your order once payment is received
-                </p>
-              </div>
-            )}
-
-            {paymentMethod === 'bank_transfer' && (
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm">
-                  <strong>Bank Transfer Details:</strong><br />
-                  Account Title: CERA MEDICAL<br />
-                  Account Number: [To be provided]<br />
-                  Bank: [To be specified]<br />
-                  Please include your order reference in the transfer description.
-                </p>
-              </div>
-            )}
-
-            {paymentMethod === 'cash_on_delivery' && (
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm">
-                  <strong>Cash on Delivery:</strong><br />
-                  Pay when your order is delivered to your doorstep.<br />
-                  Additional delivery charges may apply.
-                </p>
+            {requiresReceipt && (
+              <div className="p-4 bg-muted rounded-lg space-y-3">
+                <Label htmlFor="receipt">Upload Payment Screenshot</Label>
+                <Input
+                  id="receipt"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
+                {receiptPreview && (
+                  <img
+                    src={receiptPreview}
+                    alt="Receipt Preview"
+                    className="mt-2 w-40 rounded-lg border"
+                  />
+                )}
               </div>
             )}
           </div>
 
           <Button type="submit" className="w-full" disabled={loading} size="lg">
-            {loading ? 'Placing Order...' : `Place Order - $${totalAmount.toFixed(2)}`}
+            {loading
+              ? "Placing Order..."
+              : `Place Order - $${totalAmount.toFixed(2)}`}
           </Button>
         </form>
       </DialogContent>

@@ -6,8 +6,7 @@ const SUPABASE_KEY =
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
+    persistSession: false, // 👈 no login session needed
+    autoRefreshToken: false, // 👈 disable token refresh
   },
 });
