@@ -76,17 +76,20 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     const { data, error } = await supabase.storage
       .from("receipts")
       .upload(fileName, file);
+
     if (error) throw error;
 
     const { data: urlData } = supabase.storage
       .from("receipts")
       .getPublicUrl(fileName);
+
     return urlData.publicUrl;
   };
 
   // 🧾 Handle Checkout
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!paymentMethod) {
       toast({
         title: "Payment method required",
@@ -97,21 +100,22 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     }
 
     setLoading(true);
+
     try {
       let receiptUrl: string | null = null;
       if (receiptFile) {
         receiptUrl = await uploadReceipt(receiptFile);
       }
 
-      // 🧠 Make sure shipping_address is JSON string (for JSONB)
+      // 🧠 Prepare shipping address JSON
       const shipping_address = {
         address: customerData.address,
         city: customerData.city,
         postalCode: customerData.postalCode,
       };
 
-      // ✅ Insert order (main table)
-      const { data: orderData, error: orderError } = await supabase
+      // ✅ Step 1: Insert order main record
+      const { data: newOrder, error: orderError } = await supabase
         .from("orders")
         .insert([
           {
@@ -124,7 +128,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
             customer_name: customerData.name,
             customer_email: customerData.email,
             customer_phone: customerData.phone,
-            shipping_address: shipping_address, // ✅ JSON handled properly
+            shipping_address, // JSON field
           },
         ])
         .select("id")
@@ -132,10 +136,10 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
       if (orderError) throw orderError;
 
-      // 🛒 Insert items separately (if using order_items table)
-      if (orderData?.id) {
-        const items = cartItems.map((item) => ({
-          order_id: orderData.id,
+      // 🛒 Step 2: Insert items into order_items table
+      if (newOrder?.id) {
+        const orderItems = cartItems.map((item) => ({
+          order_id: newOrder.id,
           product_id: item.product_id,
           product_name: item.product.name,
           quantity: item.quantity,
@@ -145,11 +149,12 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
         const { error: itemsError } = await supabase
           .from("order_items")
-          .insert(items);
+          .insert(orderItems);
 
         if (itemsError) throw itemsError;
       }
 
+      // 🧹 Step 3: Clear cart and show success message
       await clearCart();
 
       toast({
@@ -159,6 +164,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         )}) has been placed successfully.`,
       });
 
+      // Reset form
       onOpenChange(false);
       setCustomerData({
         name: "",
@@ -205,7 +211,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Order Summary */}
+          {/* 🧾 Order Summary */}
           <div className="space-y-4">
             <h3 className="font-semibold">Order Summary</h3>
             <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -226,7 +232,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
             </div>
           </div>
 
-          {/* Customer Info */}
+          {/* 👤 Customer Info */}
           <div className="space-y-4">
             <h3 className="font-semibold">Customer Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -302,10 +308,14 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
             </div>
           </div>
 
-          {/* Payment Section */}
+          {/* 💳 Payment Section */}
           <div className="space-y-4">
             <h3 className="font-semibold">Payment Method</h3>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod} required>
+            <Select
+              value={paymentMethod}
+              onValueChange={setPaymentMethod}
+              required
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
@@ -313,7 +323,9 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
                 <SelectItem value="easypaisa">EasyPaisa</SelectItem>
                 <SelectItem value="jazzcash">JazzCash</SelectItem>
                 <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                <SelectItem value="cash_on_delivery">Cash on Delivery</SelectItem>
+                <SelectItem value="cash_on_delivery">
+                  Cash on Delivery
+                </SelectItem>
               </SelectContent>
             </Select>
 
