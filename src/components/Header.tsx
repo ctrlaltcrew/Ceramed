@@ -1,59 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Menu, X, ShoppingCart, User, LogOut } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useCart } from '@/contexts/CartContext';
-import Cart from './Cart';
-import LoginPopup from './LoginPopup';
-import Logo from '../assets/logo.png';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Menu, X, ShoppingCart, User, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
+import Cart from "./Cart";
+import Logo from "../assets/logo.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [loginPopupOpen, setLoginPopupOpen] = useState(false);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const { user, signOut } = useAuth();
   const { getTotalItems } = useCart();
   const navigate = useNavigate();
 
-  // Show login prompt popup occasionally for non-authenticated users
-  useEffect(() => {
-    if (!user) {
-      const timer = setTimeout(() => {
-        const hasSeenPrompt = localStorage.getItem('loginPromptSeen');
-        if (!hasSeenPrompt) {
-          setShowLoginPrompt(true);
-          localStorage.setItem('loginPromptSeen', 'true');
-        }
-      }, 10000); // Show after 10 seconds
-
-      return () => clearTimeout(timer);
-    }
-  }, [user]);
-
   const navigation = [
-    { name: 'Home', href: '/' },
-    { name: 'About', href: '/about' },
-    { name: 'Products', href: '/products' },
-    { name: 'Services', href: '/services' },
-    { name: 'Blog', href: '/blog' },
-    { name: 'Team', href: '/team' },
-    { name: 'Contact', href: '/contact' },
-    ...(user ? [{ name: 'Admin', href: '/admin/products' }] : []),
+    { name: "Home", href: "/" },
+    { name: "About", href: "/about" },
+    { name: "Products", href: "/products" },
+    { name: "Services", href: "/services" },
+    { name: "Blog", href: "/blog" },
+    { name: "Team", href: "/team" },
+    { name: "Contact", href: "/contact" },
+    ...(user ? [{ name: "Admin", href: "/admin" }] : []),
   ];
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   const handleNavigate = (href: string) => {
     navigate(href);
     scrollToTop();
     setIsMenuOpen(false);
   };
-
-  const goToProducts = () => handleNavigate('/products');
 
   const handleSignOut = async () => {
     await signOut();
@@ -65,8 +43,9 @@ const Header = () => {
       <header className="fixed top-0 w-full bg-background/95 backdrop-blur-sm border-b border-border z-50 font-sans">
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between h-20">
+            {/* Logo */}
             <div className="flex-shrink-0">
-              <Link to="/" className="flex items-center" onClick={() => handleNavigate('/')}>
+              <Link to="/" className="flex items-center" onClick={() => handleNavigate("/")}>
                 <img src={Logo} alt="CERA Medical Logo" className="h-12 w-auto" />
               </Link>
             </div>
@@ -84,7 +63,7 @@ const Header = () => {
               ))}
             </nav>
 
-            {/* Cart & Shop Button */}
+            {/* Cart & User Actions */}
             <div className="hidden md:flex items-center space-x-4">
               <Cart>
                 <Button variant="ghost" size="icon" className="relative">
@@ -100,11 +79,11 @@ const Header = () => {
                 </Button>
               </Cart>
 
-              <Button className="btn-medical" onClick={goToProducts}>
+              <Button className="btn-medical" onClick={() => handleNavigate("/products")}>
                 Shop Products
               </Button>
 
-              {user ? (
+              {user && (
                 <div className="flex items-center space-x-2">
                   <Button variant="ghost" size="icon">
                     <User className="h-5 w-5" />
@@ -113,14 +92,10 @@ const Header = () => {
                     <LogOut className="h-5 w-5" />
                   </Button>
                 </div>
-              ) : (
-                <Button variant="outline" onClick={() => setLoginPopupOpen(true)}>
-                  Login
-                </Button>
               )}
             </div>
 
-            {/* Mobile menu button */}
+            {/* Mobile Menu Button */}
             <div className="md:hidden">
               <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>
                 {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -150,18 +125,19 @@ const Header = () => {
                     </Button>
                   </Cart>
 
-                  <Button className="btn-medical w-full" onClick={goToProducts}>
+                  <Button className="btn-medical w-full" onClick={() => handleNavigate("/products")}>
                     Shop Products
                   </Button>
 
-                  {user ? (
-                    <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleSignOut}>
+                  {user && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={handleSignOut}
+                    >
                       <LogOut className="h-4 w-4 mr-2" />
                       Sign Out
-                    </Button>
-                  ) : (
-                    <Button variant="outline" size="sm" className="w-full" onClick={() => setLoginPopupOpen(true)}>
-                      Login
                     </Button>
                   )}
                 </div>
@@ -170,14 +146,6 @@ const Header = () => {
           )}
         </div>
       </header>
-
-      <LoginPopup
-        open={loginPopupOpen || showLoginPrompt}
-        onOpenChange={(open) => {
-          setLoginPopupOpen(open);
-          setShowLoginPrompt(false);
-        }}
-      />
     </>
   );
 };

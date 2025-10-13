@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client"; // ✅ correct import
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminLayout = () => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -10,45 +10,31 @@ const AdminLayout = () => {
   useEffect(() => {
     const checkAdminAccess = async () => {
       try {
-        // ✅ Always get latest session
         const {
           data: { session },
           error: sessionError,
         } = await supabase.auth.getSession();
 
         if (sessionError || !session) {
-          console.warn("❌ No active session found");
-          navigate("/");
+          navigate("/admin/login");
           return;
         }
 
         const user = session.user;
-        console.log("✅ Logged in as:", user.email);
-
-        // ✅ Verify admin record
         const { data, error } = await supabase
           .from("admins")
           .select("email")
           .eq("email", user.email)
           .maybeSingle();
 
-        if (error) {
-          console.error("❌ Admin check error:", error.message);
-          navigate("/");
+        if (error || !data) {
+          navigate("/admin/login");
           return;
         }
 
-        if (!data) {
-          console.warn("⛔ Not an admin, redirecting...");
-          navigate("/");
-          return;
-        }
-
-        console.log("✅ Admin verified:", user.email);
         setIsAdmin(true);
-      } catch (err) {
-        console.error("❌ Unexpected error:", err);
-        navigate("/");
+      } catch {
+        navigate("/admin/login");
       } finally {
         setLoading(false);
       }
@@ -57,17 +43,63 @@ const AdminLayout = () => {
     checkAdminAccess();
   }, [navigate]);
 
-  if (loading)
-    return <div className="p-8 text-center">🔍 Checking admin access...</div>;
-
+  if (loading) return <div className="p-8 text-center">🔍 Checking admin access...</div>;
   if (!isAdmin) return null;
 
   return (
     <div>
-      <header className="p-4 border-b shadow-sm bg-gray-50">
+      <header className="p-4 border-b shadow-sm bg-gray-50 flex justify-between items-center">
         <h1 className="text-lg font-semibold">Admin Dashboard</h1>
+
+        {/* 🔹 Navigation Links */}
+        <nav className="flex gap-4">
+          <NavLink
+            to="/admin/dashboard"
+            className={({ isActive }) =>
+              isActive
+                ? "font-bold text-blue-600"
+                : "text-gray-600 hover:text-blue-600"
+            }
+          >
+            Notifications
+          </NavLink>
+
+          <NavLink
+            to="/admin/products"
+            className={({ isActive }) =>
+              isActive
+                ? "font-bold text-blue-600"
+                : "text-gray-600 hover:text-blue-600"
+            }
+          >
+            Products
+          </NavLink>
+
+          <NavLink
+            to="/admin/blogs"
+            className={({ isActive }) =>
+              isActive
+                ? "font-bold text-blue-600"
+                : "text-gray-600 hover:text-blue-600"
+            }
+          >
+            Blogs
+          </NavLink>
+        </nav>
+
+        {/* 🔹 Logout Button */}
+        <button
+          onClick={() =>
+            supabase.auth.signOut().then(() => navigate("/admin/login"))
+          }
+          className="text-sm text-red-600 hover:underline"
+        >
+          Logout
+        </button>
       </header>
-      <main className="p-6">
+
+      {/* 🔹 Page Outlet */}
+      <main className="p-6 bg-gray-50 min-h-screen">
         <Outlet />
       </main>
     </div>

@@ -2,8 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 
 // ---------------- PUBLIC PAGES ----------------
@@ -20,8 +20,17 @@ import NotFound from "./pages/NotFound";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminBlogs from "./pages/admin/AdminBlogs";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard"; // ✅ NEW PAGE IMPORT
 
+// ---------------- QUERY CLIENT ----------------
 const queryClient = new QueryClient();
+
+// ---------------- PROTECTED ADMIN ROUTE ----------------
+const ProtectedAdminRoute = ({ children }) => {
+  const { user } = useAuth();
+  return user ? <>{children}</> : <Navigate to="/admin/login" replace />;
+};
 
 const App = () => {
   return (
@@ -43,8 +52,25 @@ const App = () => {
                 <Route path="/blog" element={<BlogPage />} />
                 <Route path="/contact" element={<ContactPage />} />
 
-                {/* ---------------- ADMIN ROUTES ---------------- */}
-                <Route path="/admin" element={<AdminLayout />}>
+                {/* ---------------- ADMIN LOGIN ---------------- */}
+                <Route path="/admin/login" element={<AdminLogin />} />
+
+                {/* ---------------- PROTECTED ADMIN ROUTES ---------------- */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedAdminRoute>
+                      <AdminLayout />
+                    </ProtectedAdminRoute>
+                  }
+                >
+                  {/* ✅ Default redirect to dashboard */}
+                  <Route index element={<Navigate to="dashboard" replace />} />
+
+                  {/* ✅ Admin Notifications Dashboard */}
+                  <Route path="dashboard" element={<AdminDashboard />} />
+
+                  {/* ✅ Existing routes */}
                   <Route path="products" element={<AdminProducts />} />
                   <Route path="blogs" element={<AdminBlogs />} />
                 </Route>
