@@ -27,6 +27,10 @@ const AdminOrders = () => {
 
   useEffect(() => {
     fetchOrders();
+
+    // Optional auto-refresh every 10 seconds
+    const interval = setInterval(fetchOrders, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   // Fetch items for selected order
@@ -38,9 +42,17 @@ const AdminOrders = () => {
     return items || [];
   };
 
-  // Handle Verify / Cancel
+  // Handle Verify / Cancel (Instant UI update)
   const handleUpdateStatus = async (orderId: string, status: string) => {
     setUpdating(true);
+
+    // Optimistic UI update (instant change)
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.id === orderId ? { ...order, status } : order
+      )
+    );
+
     const { error } = await supabase
       .from("orders")
       .update({ status })
@@ -49,11 +61,15 @@ const AdminOrders = () => {
     if (error) {
       alert("❌ Failed to update order");
       console.error(error);
+      // revert if failed
+      fetchOrders();
     } else {
       alert(`✅ Order ${status} successfully`);
-      fetchOrders();
-      setSelectedOrder(null);
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, status });
+      }
     }
+
     setUpdating(false);
   };
 
