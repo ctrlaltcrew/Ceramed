@@ -76,15 +76,15 @@ const Hero = () => {
             <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-8 text-white/80 text-sm sm:text-base">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span>15+ Years Experience</span>
+                <span>1+ Years Experience</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                <span>50+ Research Projects</span>
+                <span>9+ Research Projects</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span>25+ Publications</span>
+                <span>10+ Publications</span>
               </div>
             </div>
           </div>
