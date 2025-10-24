@@ -8,7 +8,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Missing email" }), { status: 400 });
     }
 
-    const resend = new Resend(Deno.env.get("https://xpaqoturecevoyjjmwez.supabase.co/functions/v1/send-invoice-email"));
+    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
     const html = `
       <h2>🧾 Invoice for your Order #${orderId}</h2>
