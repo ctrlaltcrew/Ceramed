@@ -124,7 +124,7 @@ const HomeProductsPreview = () => {
                     {product.name}
                   </h3>
                   <p className="text-[#0b8686] font-bold text-base mb-2">
-                    ${product.price?.toFixed(2) || "0.00"}
+                    Rs{product.price?.toFixed(2) || "0.00"}
                   </p>
                   <Button
                     className="bg-[#0b8686] hover:bg-[#097575] w-full text-white font-semibold transition-all"

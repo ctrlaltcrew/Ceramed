@@ -65,7 +65,7 @@ const Cart: React.FC<CartProps> = ({ children }) => {
                       <div className="flex-1">
                         <h3 className="font-medium">{item.product.name}</h3>
                         <p className="text-sm text-muted-foreground">
-                          ${item.product.price.toFixed(2)}
+                          Rs{item.product.price.toFixed(2)}
                         </p>
                       </div>
                       <div className="flex items-center space-x-2">
