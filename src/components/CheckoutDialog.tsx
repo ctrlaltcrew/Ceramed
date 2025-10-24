@@ -159,7 +159,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
       toast({
         title: "Order placed successfully 🎉",
-        description: `Your order (total Rs.${totalAmount.toFixed(
+        description: `Your order (total Rs{totalAmount.toFixed(
           2
         )}) has been placed successfully.`,
       });
