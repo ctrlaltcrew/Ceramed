@@ -31,6 +31,11 @@ Deno.serve(async (req) => {
       <p><strong>Total:</strong> ₨${total}</p>
       <p>We hope to serve you again soon!</p>
     `;
+    const supabase = createClient(
+  "https://xpaqoturecevoyjjmwez.supabase.co",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
 
     const { data, error } = await resend.emails.send({
       from: "Cera Biomed Vision <support@ceramed.org>",

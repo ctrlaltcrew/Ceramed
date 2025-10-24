@@ -1,8 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 
@@ -12,7 +22,7 @@ const AdminOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [updating, setUpdating] = useState(false);
 
-  // Fetch all orders
+  // ✅ Fetch all orders
   const fetchOrders = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -20,32 +30,39 @@ const AdminOrders = () => {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error) console.error("Error fetching orders:", error);
+    if (error) console.error("❌ Error fetching orders:", error);
     else setOrders(data || []);
+
     setLoading(false);
   };
 
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(fetchOrders, 30000); // fetch every 30s
+    const interval = setInterval(fetchOrders, 30000); // Refresh every 30s
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch order items
+  // ✅ Fetch order items
   const fetchOrderDetails = async (orderId: string) => {
-    const { data: items } = await supabase
+    const { data: items, error } = await supabase
       .from("order_items")
       .select("*")
       .eq("order_id", orderId);
+
+    if (error) console.error("❌ Error fetching order items:", error);
     return items || [];
   };
 
-  // ✅ Handle verify / cancel + send email
+  // ✅ Update order status (verify or cancel)
   const handleUpdateStatus = async (orderId: string, status: string) => {
     setUpdating(true);
 
-    // Find current order (before update)
     const order = orders.find((o) => o.id === orderId);
+    if (!order) {
+      alert("Order not found!");
+      setUpdating(false);
+      return;
+    }
 
     const { error } = await supabase
       .from("orders")
@@ -54,13 +71,13 @@ const AdminOrders = () => {
 
     if (error) {
       alert("❌ Failed to update order");
-      console.error("Supabase Update Error:", error);
+      console.error("Supabase update error:", error);
     } else {
       alert(`✅ Order ${status} successfully`);
-      await fetchOrders(); // Re-fetch after update
+      await fetchOrders();
 
-      // 🔹 Send invoice email when verified
-      if (status === "verified" && order) {
+      // ✅ Send invoice email only when verified
+      if (status === "verified") {
         try {
           const response = await fetch(
             "https://xpaqoturecevoyjjmwez.supabase.co/functions/v1/send-invoice-email",
@@ -72,6 +89,8 @@ const AdminOrders = () => {
                 orderId: order.id,
                 name: order.customer_name,
                 total: order.total_amount,
+                // Fetch order items to include in email
+                items: await fetchOrderDetails(order.id),
               }),
             }
           );
@@ -87,7 +106,7 @@ const AdminOrders = () => {
         }
       }
 
-      // Update selected order if modal is open
+      // Update open modal order status
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status });
       }
@@ -96,7 +115,7 @@ const AdminOrders = () => {
     setUpdating(false);
   };
 
-  // View order details
+  // ✅ View order details in modal
   const handleViewOrder = async (order: any) => {
     const items = await fetchOrderDetails(order.id);
     setSelectedOrder({ ...order, items });
@@ -118,7 +137,7 @@ const AdminOrders = () => {
             orders.map((order) => (
               <Card key={order.id} className="shadow-sm border">
                 <CardHeader>
-                  <CardTitle className="flex justify-between">
+                  <CardTitle className="flex justify-between items-center">
                     <span>{order.customer_name}</span>
                     <Badge
                       className={
@@ -140,9 +159,8 @@ const AdminOrders = () => {
                   <p>
                     📧 <strong>Email:</strong> {order.customer_email}
                   </p>
-                  <p>
-                    📅 {new Date(order.created_at).toLocaleString()}
-                  </p>
+                  <p>📅 {new Date(order.created_at).toLocaleString()}</p>
+
                   <div className="mt-3 flex justify-between">
                     <Button size="sm" onClick={() => handleViewOrder(order)}>
                       View
@@ -150,7 +168,9 @@ const AdminOrders = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleUpdateStatus(order.id, "cancelled")}
+                      onClick={() =>
+                        handleUpdateStatus(order.id, "cancelled")
+                      }
                       disabled={updating}
                     >
                       Cancel
@@ -163,8 +183,11 @@ const AdminOrders = () => {
         </div>
       )}
 
-      {/* -------- Modal -------- */}
-      <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+      {/* ---------- Modal for order details ---------- */}
+      <Dialog
+        open={!!selectedOrder}
+        onOpenChange={() => setSelectedOrder(null)}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Order Details</DialogTitle>
