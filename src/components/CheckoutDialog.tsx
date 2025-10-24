@@ -72,7 +72,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
   // 📤 Upload receipt to Supabase Storage
   const uploadReceipt = async (file: File) => {
-    const fileName = `${Date.now()}-${file.name}`;
+    const fileName = `${Date.now()}-Rs{file.name}`;
     const { data, error } = await supabase.storage
       .from("receipts")
       .upload(fileName, file);
@@ -159,7 +159,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
       toast({
         title: "Order placed successfully 🎉",
-        description: `Your order (total $${totalAmount.toFixed(
+        description: `Your order (total Rs.${totalAmount.toFixed(
           2
         )}) has been placed successfully.`,
       });
@@ -223,7 +223,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
                   <span>
                     {item.product.name} × {item.quantity}
                   </span>
-                  <span>${(item.product.price * item.quantity).toFixed(2)}</span>
+                  <span>Rs{(item.product.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -352,7 +352,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
           <Button type="submit" className="w-full" disabled={loading} size="lg">
             {loading
               ? "Placing Order..."
-              : `Place Order - $${totalAmount.toFixed(2)}`}
+              : `Place Order - Rs{totalAmount.toFixed(2)}`}
           </Button>
         </form>
       </DialogContent>
