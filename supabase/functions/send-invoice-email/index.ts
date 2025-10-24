@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     `;
 
     const { data, error } = await resend.emails.send({
-      from: "Cera Biomed Vision <onboarding@resend.dev>",
+      from: "Cera Biomed Vision <support@ceramed.org>",
       to: [email],
       subject: `Your Order Invoice #${orderId}`,
       html,
