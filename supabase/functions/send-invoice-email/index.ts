@@ -1,4 +1,10 @@
 import { Resend } from "npm:resend@3.2.0";
+import { createClient } from '@supabase/supabase-js'
+
+export const supabase = createClient(
+  "https://xpaqoturecevoyjjmwez.supabase.co",
+  "<YOUR_PUBLIC_ANON_KEY>"
+);
 
 Deno.serve(async (req) => {
   try {
