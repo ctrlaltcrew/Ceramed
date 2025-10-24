@@ -27,13 +27,11 @@ const AdminOrders = () => {
 
   useEffect(() => {
     fetchOrders();
-
-    // Optional auto-refresh every 10 seconds
     const interval = setInterval(fetchOrders, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch items for selected order
+  // Fetch order items
   const fetchOrderDetails = async (orderId: string) => {
     const { data: items } = await supabase
       .from("order_items")
@@ -42,11 +40,11 @@ const AdminOrders = () => {
     return items || [];
   };
 
-  // Handle Verify / Cancel (Instant UI update)
+  // ✅ Handle verify / cancel + send email for verified orders
   const handleUpdateStatus = async (orderId: string, status: string) => {
     setUpdating(true);
 
-    // Optimistic UI update (instant change)
+    // Optimistic UI update
     setOrders((prev) =>
       prev.map((order) =>
         order.id === orderId ? { ...order, status } : order
@@ -61,10 +59,43 @@ const AdminOrders = () => {
     if (error) {
       alert("❌ Failed to update order");
       console.error(error);
-      // revert if failed
       fetchOrders();
     } else {
       alert(`✅ Order ${status} successfully`);
+
+      // 🔹 Send invoice email when verified
+      if (status === "verified") {
+        const order = orders.find((o) => o.id === orderId);
+        if (order) {
+          try {
+            const response = await fetch(
+              "https://xpaqoturecevoyjjmwez.supabase.co/functions/v1/send-invoice-email",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  email: order.customer_email,
+                  orderId: order.id,
+                  name: order.customer_name,
+                  total: order.total_amount,
+                }),
+              }
+            );
+
+            const data = await response.json();
+            if (response.ok) {
+              console.log("📩 Invoice email sent:", data);
+            } else {
+              console.error("❌ Email sending failed:", data);
+            }
+          } catch (err) {
+            console.error("💥 Error calling send-invoice-email:", err);
+          }
+        }
+      }
+
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status });
       }
@@ -73,7 +104,7 @@ const AdminOrders = () => {
     setUpdating(false);
   };
 
-  // Show order details in modal
+  // View order details
   const handleViewOrder = async (order: any) => {
     const items = await fetchOrderDetails(order.id);
     setSelectedOrder({ ...order, items });

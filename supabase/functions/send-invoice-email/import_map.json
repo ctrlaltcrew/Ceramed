@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "@supabase/functions": "https://esm.sh/@supabase/functions@2",
+    "resend": "https://esm.sh/resend@3"
+  }
+}
