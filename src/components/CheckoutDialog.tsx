@@ -228,7 +228,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
               ))}
             </div>
             <div className="border-t pt-2 font-semibold">
-              Total: Rs.${totalAmount.toFixed(2)}
+              Total: Rs{totalAmount.toFixed(2)}
             </div>
           </div>
 

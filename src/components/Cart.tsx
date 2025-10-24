@@ -101,7 +101,7 @@ const Cart: React.FC<CartProps> = ({ children }) => {
                 
                 <div className="border-t pt-4 space-y-4">
                   <div className="flex justify-between items-center text-lg font-semibold">
-                    <span>Total: ${getTotalPrice().toFixed(2)}</span>
+                    <span>Total: Rs{getTotalPrice().toFixed(2)}</span>
                   </div>
                   <Button 
                     className="w-full" 
