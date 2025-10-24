@@ -7,7 +7,7 @@ const Stats = () => {
   const stats = [
     {
       icon: Award,
-      value: 15,
+      value: 1,
       label: "Years of Experience",
       suffix: "+",
       description: "Dedicated to advancing medical research",
@@ -15,7 +15,7 @@ const Stats = () => {
     },
     {
       icon: FileText,
-      value: 50,
+      value: 9,
       label: "Research Projects",
       suffix: "+",
       description: "Successfully completed studies",
@@ -23,7 +23,7 @@ const Stats = () => {
     },
     {
       icon: FileText,
-      value: 25,
+      value: 10,
       label: "Publications",
       suffix: "+",
       description: "Peer-reviewed scientific papers",
@@ -31,7 +31,7 @@ const Stats = () => {
     },
     {
       icon: Building,
-      value: 10,
+      value: 5,
       label: "Industry Partners",
       suffix: "+",
       description: "Collaborative research relationships",
