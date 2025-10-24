@@ -143,7 +143,7 @@ const AdminOrders = () => {
                 </CardHeader>
                 <CardContent>
                   <p>
-                    💰 <strong>Total:</strong> ${order.total_amount}
+                    💰 <strong>Total:</strong> ₨{order.total_amount}
                   </p>
                   <p>
                     📧 <strong>Email:</strong> {order.customer_email}
@@ -183,7 +183,7 @@ const AdminOrders = () => {
               <p><strong>Name:</strong> {selectedOrder.customer_name}</p>
               <p><strong>Email:</strong> {selectedOrder.customer_email}</p>
               <p><strong>Phone:</strong> {selectedOrder.customer_phone}</p>
-              <p><strong>Total:</strong> ${selectedOrder.total_amount}</p>
+              <p><strong>Total:</strong> ₨{selectedOrder.total_amount}</p>
               <p><strong>Payment Method:</strong> {selectedOrder.payment_method}</p>
 
               {selectedOrder.payment_receipt && (
@@ -205,7 +205,7 @@ const AdminOrders = () => {
                 >
                   <span>{item.product_name}</span>
                   <span>
-                    {item.quantity} × ${item.price} = ${item.total}
+                    {item.quantity} × ₨{item.price} = ₨{item.total}
                   </span>
                 </div>
               ))}
