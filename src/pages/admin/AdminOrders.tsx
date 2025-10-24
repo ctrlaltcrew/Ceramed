@@ -53,24 +53,21 @@ const AdminOrders = () => {
     return items || [];
   };
 
-  // ✅ Update order status (verify or cancel)
+  // ✅ Updated order status function (detailed logging)
   const handleUpdateStatus = async (orderId: string, status: string) => {
     setUpdating(true);
 
-    const order = orders.find((o) => o.id === orderId);
-    if (!order) {
-      alert("Order not found!");
-      setUpdating(false);
-      return;
-    }
-
-    const { error } = await supabase
+    // attempt update (no optimistic UI here for diagnosis)
+    const { data, error } = await supabase
       .from("orders")
       .update({ status })
-      .eq("id", orderId);
+      .eq("id", orderId)
+      .select();
+
+    console.log("UPDATE result", { data, error });
 
     if (error) {
-      alert("❌ Failed to update order");
+      alert("❌ Failed to update order — see console for details");
       console.error("Supabase update error:", error);
     } else {
       alert(`✅ Order ${status} successfully`);
@@ -78,35 +75,39 @@ const AdminOrders = () => {
 
       // ✅ Send invoice email only when verified
       if (status === "verified") {
-        try {
-          const response = await fetch(
-            "https://xpaqoturecevoyjjmwez.supabase.co/functions/v1/send-invoice-email",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                email: order.customer_email,
-                orderId: order.id,
-                name: order.customer_name,
-                total: order.total_amount,
-                // Fetch order items to include in email
-                items: await fetchOrderDetails(order.id),
-              }),
-            }
-          );
+        const order = data?.[0];
+        if (order) {
+          try {
+            const items = await fetchOrderDetails(order.id);
 
-          const data = await response.json();
-          if (response.ok) {
-            console.log("📩 Invoice email sent:", data);
-          } else {
-            console.error("❌ Email sending failed:", data);
+            const response = await fetch(
+              "https://xpaqoturecevoyjjmwez.supabase.co/functions/v1/send-invoice-email",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  email: order.customer_email,
+                  orderId: order.id,
+                  name: order.customer_name,
+                  total: order.total_amount,
+                  items,
+                }),
+              }
+            );
+
+            const resData = await response.json();
+            if (response.ok) {
+              console.log("📩 Invoice email sent:", resData);
+            } else {
+              console.error("❌ Email sending failed:", resData);
+            }
+          } catch (err) {
+            console.error("💥 Error calling send-invoice-email:", err);
           }
-        } catch (err) {
-          console.error("💥 Error calling send-invoice-email:", err);
         }
       }
 
-      // Update open modal order status
+      // Update modal if open
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status });
       }
