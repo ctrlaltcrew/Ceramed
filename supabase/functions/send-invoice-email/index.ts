@@ -15,7 +15,12 @@ Deno.serve(async (req) => {
       <p>Hi ${name || "Customer"},</p>
       <p>Thank you for shopping with us! Here's your invoice:</p>
       <ul>
-        ${items?.map((item: any) => `<li>${item.product_name} x ${item.quantity} — ₨${item.price}</li>`).join("")}
+        ${
+          items?.map(
+            (item: any) =>
+              `<li>${item.name || item.product_name} × ${item.quantity} — ₨${item.price}</li>`
+          ).join("")
+        }
       </ul>
       <p><strong>Total:</strong> ₨${total}</p>
       <p>We hope to serve you again soon!</p>
