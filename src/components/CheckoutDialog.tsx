@@ -352,7 +352,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
           <Button type="submit" className="w-full" disabled={loading} size="lg">
             {loading
               ? "Placing Order..."
-              : `Place Order - Rs{totalAmount.toFixed(2)}`}
+              : `Place Order - Rs.${totalAmount.toFixed(2)}`}
           </Button>
         </form>
       </DialogContent>
