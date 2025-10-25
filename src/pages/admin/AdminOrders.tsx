@@ -85,12 +85,13 @@ const AdminOrders = () => {
 
             // wajahat khan marwat
             const response = await fetch(
-              "https://xpaqoturecevoyjjmwez.supabase.co/functions/v1/send-invoice-email",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json"
-                },
+  "https://xpaqoturecevoyjjmwez.supabase.co/functions/v1/send-invoice-email",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY}`,
+    },
                 body: JSON.stringify({
                   email: order.customer_email,
                   subject: `Invoice for Order #${order.id}`,
