@@ -2,7 +2,7 @@
 import { Resend } from "resend";
 
 // ✅ Use environment variable for security
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 Deno.serve(async (req) => {
   const startTime = Date.now();
