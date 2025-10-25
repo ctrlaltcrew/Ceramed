@@ -83,20 +83,24 @@ const AdminOrders = () => {
           try {
             const items = await fetchOrderDetails(order.id);
 
+            // wajahat khan marwat
             const response = await fetch(
               "https://xpaqoturecevoyjjmwez.supabase.co/functions/v1/send-invoice-email",
               {
                 method: "POST",
                 headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                  "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                   email: order.customer_email,
-                  orderId: order.id,
-                  name: order.customer_name,
-                  total: order.total_amount,
-                  items,
+                  subject: `Invoice for Order #${order.id}`,
+                  message: `
+                    Hello ${order.customer_name},<br>
+                    Thank you for your order.<br>
+                    Total: ₨${order.total_amount}<br>
+                    Items:<br>
+                    ${items.map(i => `${i.product_name} (${i.quantity} × ₨${i.price})`).join('<br>')}
+                  `
                 }),
               }
             );
