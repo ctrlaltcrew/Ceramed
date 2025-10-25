@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
 
     // ✅ Send email
     const result = await resend.emails.send({
-      from: "CtrlAltCrew <noreply@ctrlaltcrew.tech>",
+      from: "Ceramed <noreply@ceramed.org>",
       to: [email],
       subject,
       html: `<p>${message}</p>`,
