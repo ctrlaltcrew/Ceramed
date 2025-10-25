@@ -53,23 +53,26 @@ const AdminOrders = () => {
     return items || [];
   };
 
-  // ✅ Updated order status function (detailed logging)
+  // ✅ Update order status and send email when verified
   const handleUpdateStatus = async (orderId: string, status: string) => {
     setUpdating(true);
 
-    // attempt update (no optimistic UI here for diagnosis)
-    const { data, error } = await supabase
-      .from("orders")
-      .update({ status })
-      .eq("id", orderId)
-      .select();
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .update({ status })
+        .eq("id", orderId)
+        .select();
 
-    console.log("UPDATE result", { data, error });
+      console.log("UPDATE result", { data, error });
 
-    if (error) {
-      alert("❌ Failed to update order — see console for details");
-      console.error("Supabase update error:", error);
-    } else {
+      if (error) {
+        alert("❌ Failed to update order — see console for details");
+        console.error("Supabase update error:", error);
+        setUpdating(false);
+        return;
+      }
+
       alert(`✅ Order ${status} successfully`);
       await fetchOrders();
 
@@ -84,7 +87,10 @@ const AdminOrders = () => {
               "https://xpaqoturecevoyjjmwez.supabase.co/functions/v1/send-invoice-email",
               {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                },
                 body: JSON.stringify({
                   email: order.customer_email,
                   orderId: order.id,
@@ -95,25 +101,37 @@ const AdminOrders = () => {
               }
             );
 
-            const resData = await response.json();
+            const text = await response.text();
+            let resData;
+            try {
+              resData = JSON.parse(text);
+            } catch {
+              resData = text;
+            }
+
             if (response.ok) {
-              console.log("📩 Invoice email sent:", resData);
+              console.log("📩 Invoice email sent successfully:", resData);
+              alert("✅ Invoice email sent to customer!");
             } else {
-              console.error("❌ Email sending failed:", resData);
+              console.error("❌ Email send failed:", resData);
+              alert("⚠️ Email send failed. Check Supabase Edge Function logs.");
             }
           } catch (err) {
             console.error("💥 Error calling send-invoice-email:", err);
+            alert("Error connecting to email service.");
           }
         }
       }
 
-      // Update modal if open
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status });
       }
+    } catch (err) {
+      console.error("💥 Unexpected error:", err);
+      alert("Unexpected error occurred — check console.");
+    } finally {
+      setUpdating(false);
     }
-
-    setUpdating(false);
   };
 
   // ✅ View order details in modal
@@ -169,9 +187,7 @@ const AdminOrders = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
-                        handleUpdateStatus(order.id, "cancelled")
-                      }
+                      onClick={() => handleUpdateStatus(order.id, "cancelled")}
                       disabled={updating}
                     >
                       Cancel
@@ -233,7 +249,13 @@ const AdminOrders = () => {
                   }
                   disabled={updating}
                 >
-                  Verify Order
+                  {updating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Updating
+                    </>
+                  ) : (
+                    "Verify Order"
+                  )}
                 </Button>
                 <Button
                   variant="outline"

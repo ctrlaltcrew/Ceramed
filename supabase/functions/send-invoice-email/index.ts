@@ -1,52 +1,66 @@
-import { Resend } from "npm:resend@3.2.0";
-import { createClient } from '@supabase/supabase-js'
+// supabase/functions/send-invoice-email/index.ts
 
-export const supabase = createClient(
-  "https://xpaqoturecevoyjjmwez.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwYXFvdHVyZWNldm95amptd2V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzOTYzODIsImV4cCI6MjA3Mzk3MjM4Mn0.ohoFcJIiYeeZ3b16o_8U5OeKXgPez3JTMAD7maAtT7c"
-);
+import { Resend } from "npm:resend@3.2.0";
+
+// ✅ Directly add your API key here (for local/dev use)
+// In production, replace this with Supabase Secret for security
+const RESEND_API_KEY = "394bdcfc71cc742fb6e63f387c2c24794e0fdffb8768057e8c232d653c23ee5d";
+
+const resend = new Resend(RESEND_API_KEY);
 
 Deno.serve(async (req) => {
+  const startTime = Date.now();
+  console.log("Function start:", new Date().toISOString());
+
   try {
-    const { email, name, orderId, total, items } = await req.json();
-
-    if (!email) {
-      return new Response(JSON.stringify({ error: "Missing email" }), { status: 400 });
+    // Step 1: Parse request body safely
+    const bodyText = await req.text();
+    if (!bodyText) {
+      return new Response("Missing request body", { status: 400 });
     }
 
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
-    const html = `
-      <h2>🧾 Invoice for your Order #${orderId}</h2>
-      <p>Hi ${name || "Customer"},</p>
-      <p>Thank you for shopping with us! Here's your invoice:</p>
-      <ul>
-        ${
-          items?.map(
-            (item: any) =>
-              `<li>${item.name || item.product_name} × ${item.quantity} — ₨${item.price}</li>`
-          ).join("")
-        }
-      </ul>
-      <p><strong>Total:</strong> ₨${total}</p>
-      <p>We hope to serve you again soon!</p>
-    `;
-
-    const { data, error } = await resend.emails.send({
-      from: "Cera Biomed Vision <support@ceramed.org>",
-      to: [email],
-      subject: `Your Order Invoice #${orderId}`,
-      html,
-    });
-
-    if (error) {
-      console.error("Resend Error:", error);
-      return new Response(JSON.stringify({ error }), { status: 500 });
+    let data;
+    try {
+      data = JSON.parse(bodyText);
+    } catch (err) {
+      console.error("Invalid JSON:", err);
+      return new Response("Invalid JSON format", { status: 400 });
     }
 
-    return new Response(JSON.stringify({ success: true, data }), { status: 200 });
-  } catch (err) {
-    console.error("Function Error:", err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    const { email, subject, message } = data;
+
+    if (!email || !subject || !message) {
+      return new Response("Missing fields: email, subject, message", { status: 400 });
+    }
+
+    // Step 2: Send email via Resend with detailed error handling
+    try {
+      const result = await resend.emails.send({
+        from: "CtrlAltCrew <noreply@ctrlaltcrew.tech>",
+        to: [email],
+        subject,
+        html: `<p>${message}</p>`,
+      });
+
+      console.log("✅ Email send result:", result);
+
+      return new Response(JSON.stringify({ success: true, result }), { status: 200 });
+    } catch (sendError) {
+      console.error("❌ Error from Resend API:", sendError);
+      return new Response(
+        JSON.stringify({ success: false, error: sendError.message || sendError }),
+        { status: 500 }
+      );
+    }
+
+  } catch (error) {
+    console.error("⚠️ Unexpected function error:", error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message || error }),
+      { status: 500 }
+    );
+  } finally {
+    const endTime = Date.now();
+    console.log("Function end:", new Date().toISOString(), "Duration(ms):", endTime - startTime);
   }
 });
