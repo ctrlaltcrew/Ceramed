@@ -68,7 +68,6 @@ const AdminOrders = () => {
 
       if (error) {
         alert("❌ Failed to update order — see console for details");
-        console.error("Supabase update error:", error);
         setUpdating(false);
         return;
       }
@@ -82,26 +81,31 @@ const AdminOrders = () => {
         if (order) {
           try {
             const items = await fetchOrderDetails(order.id);
+            console.log("📧 Sending to:", order.customer_email);
 
-            // wajahat khan marwat
             const response = await fetch(
-  "https://xpaqoturecevoyjjmwez.supabase.co/functions/v1/send-invoice-email",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY}`,
-    },
+              "https://xpaqoturecevoyjjmwez.supabase.co/functions/v1/send-invoice-email",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY}`,
+                },
                 body: JSON.stringify({
-                  email: order.customer_email,
+                  to: order.customer_email || order.email, // ✅ recipient
                   subject: `Invoice for Order #${order.id}`,
-                  message: `
-                    Hello ${order.customer_name},<br>
-                    Thank you for your order.<br>
-                    Total: ₨${order.total_amount}<br>
-                    Items:<br>
-                    ${items.map(i => `${i.product_name} (${i.quantity} × ₨${i.price})`).join('<br>')}
-                  `
+                  html: `
+                    <h3>Hello ${order.customer_name || "Customer"},</h3>
+                    <p>Thank you for your order.</p>
+                    <p><strong>Total:</strong> ₨${order.total_amount}</p>
+                    <p><strong>Items:</strong></p>
+                    ${items
+                      .map(
+                        (i) =>
+                          `<p>${i.product_name} (${i.quantity} × ₨${i.price})</p>`
+                      )
+                      .join("")}
+                  `,
                 }),
               }
             );
@@ -192,7 +196,9 @@ const AdminOrders = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleUpdateStatus(order.id, "cancelled")}
+                      onClick={() =>
+                        handleUpdateStatus(order.id, "cancelled")
+                      }
                       disabled={updating}
                     >
                       Cancel
@@ -217,15 +223,27 @@ const AdminOrders = () => {
 
           {selectedOrder && (
             <div className="space-y-3">
-              <p><strong>Name:</strong> {selectedOrder.customer_name}</p>
-              <p><strong>Email:</strong> {selectedOrder.customer_email}</p>
-              <p><strong>Phone:</strong> {selectedOrder.customer_phone}</p>
-              <p><strong>Total:</strong> ₨{selectedOrder.total_amount}</p>
-              <p><strong>Payment Method:</strong> {selectedOrder.payment_method}</p>
+              <p>
+                <strong>Name:</strong> {selectedOrder.customer_name}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedOrder.customer_email}
+              </p>
+              <p>
+                <strong>Phone:</strong> {selectedOrder.customer_phone}
+              </p>
+              <p>
+                <strong>Total:</strong> ₨{selectedOrder.total_amount}
+              </p>
+              <p>
+                <strong>Payment Method:</strong> {selectedOrder.payment_method}
+              </p>
 
               {selectedOrder.payment_receipt && (
                 <div>
-                  <p><strong>Receipt:</strong></p>
+                  <p>
+                    <strong>Receipt:</strong>
+                  </p>
                   <img
                     src={selectedOrder.payment_receipt}
                     alt="Receipt"
