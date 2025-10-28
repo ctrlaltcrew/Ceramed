@@ -22,12 +22,13 @@ const AdminOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [updating, setUpdating] = useState(false);
 
-  // ✅ Fetch all orders
+  // ✅ Fetch only pending orders
   const fetchOrders = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("orders")
       .select("*")
+      .eq("status", "pending") // Only show pending orders
       .order("created_at", { ascending: false });
 
     if (error) console.error("❌ Error fetching orders:", error);
@@ -73,16 +74,22 @@ const AdminOrders = () => {
       }
 
       alert(`✅ Order ${status} successfully`);
-      await fetchOrders();
+
+      // ✅ Remove the order from the list immediately if verified or cancelled
+      if (status === "verified" || status === "cancelled") {
+        setOrders((prevOrders) =>
+          prevOrders.filter((o) => o.id !== orderId)
+        );
+      } else {
+        await fetchOrders(); // Fetch again if needed
+      }
 
       // ✅ Send invoice email only when verified
       if (status === "verified") {
         const order = data?.[0];
         if (order) {
+          const items = await fetchOrderDetails(order.id);
           try {
-            const items = await fetchOrderDetails(order.id);
-            console.log("📧 Sending to:", order.customer_email);
-
             const response = await fetch(
               "https://xpaqoturecevoyjjmwez.supabase.co/functions/v1/send-invoice-email",
               {
@@ -92,7 +99,7 @@ const AdminOrders = () => {
                   Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY}`,
                 },
                 body: JSON.stringify({
-                  to: order.customer_email || order.email, // ✅ recipient
+                  to: order.customer_email || order.email,
                   subject: `Invoice for Order #${order.id}`,
                   html: `
                     <h3>Hello ${order.customer_name || "Customer"},</h3>
@@ -110,30 +117,23 @@ const AdminOrders = () => {
               }
             );
 
-            const text = await response.text();
-            let resData;
-            try {
-              resData = JSON.parse(text);
-            } catch {
-              resData = text;
-            }
-
             if (response.ok) {
-              console.log("📩 Invoice email sent successfully:", resData);
+              console.log("📩 Invoice email sent successfully");
               alert("✅ Invoice email sent to customer!");
             } else {
-              console.error("❌ Email send failed:", resData);
-              alert("⚠️ Email send failed. Check Supabase Edge Function logs.");
+              console.error("❌ Email send failed");
+              alert("⚠️ Email send failed. Check Supabase logs.");
             }
           } catch (err) {
-            console.error("💥 Error calling send-invoice-email:", err);
+            console.error("💥 Error sending invoice:", err);
             alert("Error connecting to email service.");
           }
         }
       }
 
+      // ✅ Close modal after action
       if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, status });
+        setSelectedOrder(null);
       }
     } catch (err) {
       console.error("💥 Unexpected error:", err);
