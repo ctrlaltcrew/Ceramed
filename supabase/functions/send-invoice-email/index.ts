@@ -1,37 +1,50 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import nodemailer from "npm:nodemailer";
 
-serve(async (req) => {
+Deno.serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
+    });
+  }
+
   try {
     const { customerEmail, invoiceHtml } = await req.json();
 
-    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "api-key": Deno.env.get("BREVO_API_KEY"),
+    const transporter = nodemailer.createTransport({
+      host: "smtp-relay.brevo.com",
+      port: 587,
+      auth: {
+        user: Deno.env.get("BREVO_USER"),
+        pass: Deno.env.get("BREVO_PASS"),
       },
-      body: JSON.stringify({
-        sender: { name: "Ceramed", email: "no-reply@ceramed.org" },
-        to: [{ email: customerEmail }],
-        subject: "Your Invoice from Ceramed",
-        htmlContent:
-          invoiceHtml ||
-          "<h2>Thank you for your order!</h2><p>Your invoice is attached below.</p>",
-      }),
     });
 
-    const data = await res.json();
-
-    return new Response(JSON.stringify({ success: true, data }), {
-      headers: { "Content-Type": "application/json" },
-      status: 200,
+    await transporter.sendMail({
+      from: Deno.env.get("BREVO_USER"),
+      to: customerEmail,
+      subject: "Your Invoice",
+      html: invoiceHtml,
     });
-  } catch (error) {
-    console.error("Email send error:", error);
+
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      { headers: { "Content-Type": "application/json" }, status: 500 },
+      JSON.stringify({ message: "Email sent successfully" }),
+      {
+        headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    return new Response(
+      JSON.stringify({ error: err.message || "Email sending failed" }),
+      {
+        status: 500,
+        headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
+      }
     );
   }
 });
