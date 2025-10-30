@@ -47,7 +47,7 @@ const Hero = () => {
 
 
             {/* Subheading */}
-            <p className="text-sm sm:text-base md:text-lg mb-8 textgr max-w-2xl mx-auto leading-relaxed font-semibold">
+            <p className="text-sm sm:text-base md:text-lg mb-8 textgr max-w-2xl mx-auto leading-relaxed">
              <span className="text-[#FFB84D]"> CERA MEDICAL </span> is dedicated to improving human health through innovative solutions. 
               We develop evidence-based natural health products and provide cutting-edge research 
               services.
