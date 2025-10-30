@@ -13,7 +13,7 @@ const Hero = () => {
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
-          src="/aboutusbanner.png"
+          src="/servicesbanner.png"
           alt="Advanced biomedical research laboratory with cutting-edge equipment"
           className="w-full h-full object-cover"
         />
