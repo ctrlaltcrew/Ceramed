@@ -69,7 +69,7 @@ const ProductDetail = () => {
           <img
             src={product.image_url || "/placeholder.png"}
             alt={product.name}
-            className="rounded-lg shadow-md w-full max-w-md object-contain"
+            className="rounded-lg shadow-md w-full max-w-md h-[400px] object-contain bg-gray-50 transition-transform duration-300 hover:scale-105"
             onError={(e) => ((e.target as HTMLImageElement).src = "/placeholder.png")}
           />
         </div>
