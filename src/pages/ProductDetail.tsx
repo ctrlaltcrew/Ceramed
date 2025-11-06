@@ -1,73 +1,153 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Star } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 
 interface Product {
   id: string;
   name: string;
   description: string;
+  full_description?: string;
   price: number;
+  image_url: string | null;
+  category: string;
+  benefits: string[];
+  rating: number;
+  reviews_count: number;
+  stock_quantity: number;
   size?: string;
   color?: string;
-  image_url: string;
-  benefits?: string[];
 }
 
-export default function ProductDetail() {
-  const { id } = useParams();
+const ProductDetail = () => {
+  const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { addToCart } = useCart();
 
   useEffect(() => {
-    async function fetchProduct() {
+    if (id) fetchProduct(id);
+  }, [id]);
+
+  const fetchProduct = async (id: string) => {
+    try {
       const { data, error } = await supabase
         .from("products")
         .select("*")
         .eq("id", id)
         .single();
 
-      if (error) console.error("Error fetching product:", error);
-      else setProduct(data);
+      if (error) throw error;
+      setProduct(data);
+    } catch (error) {
+      console.error("Error fetching product:", error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    fetchProduct();
-  }, [id]);
+  if (loading) {
+    return <div className="text-center py-20 text-lg">Loading product...</div>;
+  }
 
-  if (!product) return <div className="text-center py-20">Loading...</div>;
+  if (!product) {
+    return <div className="text-center py-20 text-red-500">Product not found</div>;
+  }
 
   return (
-    <div className="container mx-auto px-6 py-10">
-      <Link
-        to="/products"
-        className="text-blue-600 hover:underline mb-6 inline-block"
-      >
+    <div className="container mx-auto px-6 py-12">
+      <Link to="/products" className="text-blue-600 hover:underline mb-6 inline-block">
         ← Back to Products
       </Link>
 
-      <div className="flex flex-col md:flex-row gap-10">
-        <img
-          src={product.image_url}
-          alt={product.name}
-          className="w-full md:w-1/2 rounded-xl shadow-md"
-        />
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-          <p className="text-gray-700 mb-6">{product.description}</p>
-          <p className="text-lg font-semibold mb-2">Price: ${product.price}</p>
-          {product.size && <p className="text-gray-600 mb-2">Size: {product.size}</p>}
-          {product.color && <p className="text-gray-600 mb-6">Color: {product.color}</p>}
-          {product.benefits && product.benefits.length > 0 && (
-            <ul className="list-disc pl-5 text-gray-700 mb-6">
-              {product.benefits.map((b, i) => (
-                <li key={i}>{b}</li>
-              ))}
-            </ul>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        {/* Image */}
+        <div className="flex justify-center">
+          <img
+            src={product.image_url || "/placeholder.png"}
+            alt={product.name}
+            className="rounded-lg shadow-md w-full max-w-md object-contain"
+            onError={(e) => ((e.target as HTMLImageElement).src = "/placeholder.png")}
+          />
+        </div>
+
+        {/* Product Info */}
+        <div>
+          <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+          <div className="flex items-center gap-2 mb-3">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`h-5 w-5 ${
+                  i < Math.floor(product.rating)
+                    ? "text-yellow-400 fill-current"
+                    : "text-gray-300"
+                }`}
+              />
+            ))}
+            <span className="text-sm text-muted-foreground">
+              ({product.reviews_count} reviews)
+            </span>
+          </div>
+
+          <p className="text-lg text-muted-foreground mb-4">
+            {product.description}
+          </p>
+
+          {product.full_description && (
+            <p className="text-base text-foreground leading-relaxed mb-6">
+              {product.full_description}
+            </p>
           )}
 
-          <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-            Add to Cart
-          </button>
+          {/* Size & Color */}
+          {(product.size || product.color) && (
+            <div className="flex gap-4 mb-6">
+              {product.size && (
+                <Badge variant="outline" className="text-md">
+                  Size: {product.size}
+                </Badge>
+              )}
+              {product.color && (
+                <Badge variant="outline" className="text-md">
+                  Color: {product.color}
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {/* Benefits */}
+          {product.benefits?.length > 0 && (
+            <div className="mb-6">
+              <h3 className="font-semibold mb-2 text-lg">Benefits:</h3>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                {product.benefits.map((b, i) => (
+                  <li key={i}>{b}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Price & Add to Cart */}
+          <div className="flex items-center justify-between border-t pt-4 mt-6">
+            <div className="text-3xl font-bold text-primary">
+              ₨{product.price.toLocaleString("en-PK")}
+            </div>
+            <Button
+              className="btn-medical"
+              onClick={() => addToCart(product.id)}
+              disabled={product.stock_quantity === 0}
+            >
+              {product.stock_quantity === 0 ? "Out of Stock" : "Add to Cart"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default ProductDetail;
