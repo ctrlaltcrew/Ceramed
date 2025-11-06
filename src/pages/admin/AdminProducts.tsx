@@ -44,6 +44,7 @@ const AdminProducts = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const { toast } = useToast();
 
+  const [imageFile, setImageFile] = useState<File | null>(null); // ✅ New state for image
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -59,7 +60,7 @@ const AdminProducts = () => {
     color: "",
   });
 
-  // Fetch all products
+  // Fetch products
   const fetchProducts = async () => {
     try {
       const { data, error } = await supabase
@@ -85,34 +86,55 @@ const AdminProducts = () => {
     fetchProducts();
   }, []);
 
-  // Handle add/update
+  // Add or update product
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const productData = {
-      name: formData.name,
-      description: formData.description,
-      full_description: formData.full_description,
-      price: parseFloat(formData.price),
-      image_url: formData.image_url,
-      category: formData.category,
-      benefits: formData.benefits
-        .split(",")
-        .map((b) => b.trim())
-        .filter((b) => b),
-      rating: parseFloat(formData.rating),
-      reviews_count: parseInt(formData.reviews_count),
-      stock_quantity: parseInt(formData.stock_quantity),
-      size: formData.size,
-      color: formData.color,
-    };
-
     try {
+      let imageUrl = formData.image_url;
+
+      // ✅ Upload to Supabase Storage if a new image is selected
+      if (imageFile) {
+        const fileName = `${Date.now()}-${imageFile.name}`;
+        const { data, error: uploadError } = await supabase.storage
+          .from("product-images") // ⚠️ Change to your bucket name
+          .upload(fileName, imageFile);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from("product-images")
+          .getPublicUrl(fileName);
+
+        imageUrl = publicUrlData.publicUrl;
+      }
+
+      const productData = {
+        name: formData.name,
+        description: formData.description,
+        full_description: formData.full_description,
+        price: parseFloat(formData.price),
+        image_url: imageUrl,
+        category: formData.category,
+        benefits: formData.benefits
+          .split(",")
+          .map((b) => b.trim())
+          .filter((b) => b),
+        rating: parseFloat(formData.rating),
+        reviews_count: parseInt(formData.reviews_count),
+        stock_quantity: parseInt(formData.stock_quantity),
+        size: formData.size,
+        color: formData.color,
+      };
+
       if (editingProduct) {
         const { error } = await supabase
           .from("products")
           .update(productData)
           .eq("id", editingProduct.id);
+
         if (error) throw error;
         toast({ title: "Success", description: "Product updated successfully" });
       } else {
@@ -134,41 +156,16 @@ const AdminProducts = () => {
     }
   };
 
-  // Delete a product
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
-
     try {
       const { error } = await supabase.from("products").delete().eq("id", id);
       if (error) throw error;
-      toast({ title: "Success", description: "Product deleted successfully" });
+      toast({ title: "Deleted", description: "Product removed successfully" });
       fetchProducts();
     } catch (error) {
       console.error("Error deleting product:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete product",
-        variant: "destructive",
-      });
     }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      full_description: "",
-      price: "",
-      image_url: "",
-      category: "",
-      benefits: "",
-      rating: "5",
-      reviews_count: "0",
-      stock_quantity: "10",
-      size: "",
-      color: "",
-    });
-    setEditingProduct(null);
   };
 
   const handleEdit = (product: Product) => {
@@ -190,20 +187,35 @@ const AdminProducts = () => {
     setDialogOpen(true);
   };
 
-  if (loading) {
-    return <div className="text-center py-8">Loading products...</div>;
-  }
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      full_description: "",
+      price: "",
+      image_url: "",
+      category: "",
+      benefits: "",
+      rating: "5",
+      reviews_count: "0",
+      stock_quantity: "10",
+      size: "",
+      color: "",
+    });
+    setImageFile(null);
+    setEditingProduct(null);
+  };
+
+  if (loading) return <div className="text-center py-8">Loading...</div>;
 
   return (
     <div className="space-y-6">
-      {/* Header + Add Button */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Products Management</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Product
+              <Plus className="h-4 w-4 mr-2" /> Add Product
             </Button>
           </DialogTrigger>
 
@@ -214,7 +226,6 @@ const AdminProducts = () => {
               </DialogTitle>
             </DialogHeader>
 
-            {/* Product Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -240,12 +251,13 @@ const AdminProducts = () => {
                 </div>
               </div>
 
+              {/* ✅ Size & Color */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="size">Size</Label>
                   <Input
                     id="size"
-                    placeholder="e.g., S, M, L, XL"
+                    placeholder="e.g., S, M, L"
                     value={formData.size}
                     onChange={(e) =>
                       setFormData({ ...formData, size: e.target.value })
@@ -256,13 +268,33 @@ const AdminProducts = () => {
                   <Label htmlFor="color">Color</Label>
                   <Input
                     id="color"
-                    placeholder="e.g., Blue, Black"
+                    placeholder="e.g., Blue, Red"
                     value={formData.color}
                     onChange={(e) =>
                       setFormData({ ...formData, color: e.target.value })
                     }
                   />
                 </div>
+              </div>
+
+              {/* ✅ Image Upload */}
+              <div>
+                <Label htmlFor="image">Upload Image</Label>
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setImageFile(e.target.files ? e.target.files[0] : null)
+                  }
+                />
+                {formData.image_url && (
+                  <img
+                    src={formData.image_url}
+                    alt="Preview"
+                    className="mt-2 w-32 h-32 object-cover rounded-md"
+                  />
+                )}
               </div>
 
               <div>
@@ -273,7 +305,6 @@ const AdminProducts = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  rows={2}
                 />
               </div>
 
@@ -288,20 +319,6 @@ const AdminProducts = () => {
                       full_description: e.target.value,
                     })
                   }
-                  rows={4}
-                  placeholder="Detailed product information..."
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="image_url">Image URL</Label>
-                <Input
-                  id="image_url"
-                  value={formData.image_url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image_url: e.target.value })
-                  }
-                  placeholder="https://example.com/image.jpg"
                 />
               </div>
 
@@ -313,17 +330,15 @@ const AdminProducts = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, benefits: e.target.value })
                   }
-                  placeholder="Benefit 1, Benefit 2, Benefit 3"
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="price">Price (₨)</Label>
+                  <Label htmlFor="price">Price</Label>
                   <Input
                     id="price"
                     type="number"
-                    step="0.01"
                     value={formData.price}
                     onChange={(e) =>
                       setFormData({ ...formData, price: e.target.value })
@@ -385,16 +400,10 @@ const AdminProducts = () => {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-lg">{product.name}</CardTitle>
+                  <CardTitle>{product.name}</CardTitle>
                   <CardDescription>{product.category}</CardDescription>
-                  {(product.size || product.color) && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {product.size && `Size: ${product.size}`}{" "}
-                      {product.color && `• Color: ${product.color}`}
-                    </p>
-                  )}
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
@@ -418,10 +427,10 @@ const AdminProducts = () => {
                 <img
                   src={product.image_url}
                   alt={product.name}
-                  className="w-full h-32 object-cover rounded-md mb-3"
+                  className="w-full h-40 object-cover rounded-md mb-3"
                 />
               )}
-              <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+              <p className="text-sm text-muted-foreground mb-2">
                 {product.description}
               </p>
               <div className="flex justify-between items-center text-sm">
