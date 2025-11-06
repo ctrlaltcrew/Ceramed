@@ -15,6 +15,8 @@ import TeamPage from "./pages/Team";
 import BlogPage from "./pages/Blog";
 import ContactPage from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import ProductDetail from "./pages/ProductDetail";
+
 
 // ---------------- ADMIN PAGES ----------------
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -52,6 +54,8 @@ const App = () => {
                 <Route path="/team" element={<TeamPage />} />
                 <Route path="/blog" element={<BlogPage />} />
                 <Route path="/contact" element={<ContactPage />} />
+                <Route path="/products/:id" element={<ProductDetail />} />
+
 
                 {/* ---------------- ADMIN LOGIN ---------------- */}
                 <Route path="/admin/login" element={<AdminLogin />} />

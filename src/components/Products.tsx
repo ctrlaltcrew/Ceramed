@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
+import { useNavigate } from "react-router-dom";
 
 interface Product {
   id: string;
@@ -24,6 +25,7 @@ const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
@@ -104,7 +106,8 @@ const Products = () => {
           {products.map((product, index) => (
             <div
               key={product.id}
-              className="flex flex-col justify-between h-full bg-background rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all animate-slide-up"
+              onClick={() => navigate(`/products/${product.id}`)} // 👈 Navigate to detail page
+              className="flex flex-col justify-between h-full bg-background rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all animate-slide-up cursor-pointer"
               style={{ animationDelay: `${index * 0.15}s` }}
             >
               {/* Product Image */}
@@ -138,7 +141,10 @@ const Products = () => {
               </div>
 
               {/* Product Info */}
-              <div className="flex flex-col flex-grow justify-between p-6">
+              <div
+                className="flex flex-col flex-grow justify-between p-6"
+                onClick={(e) => e.stopPropagation()} // 🧠 Prevents card click from interfering when pressing Add to Cart
+              >
                 <div>
                   <h3 className="text-2xl font-semibold text-foreground mb-2 line-clamp-2">
                     {product.name}
@@ -181,11 +187,17 @@ const Products = () => {
                 {/* Price & Add to Cart */}
                 <div className="flex items-center justify-between pt-4 border-t border-border mt-6">
                   <div className="text-2xl font-bold text-primary">
-  ₨{product.price.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
-</div>
+                    ₨
+                    {product.price.toLocaleString("en-PK", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </div>
                   <Button
                     className="btn-medical group"
-                    onClick={() => handleAddToCart(product.id)}
+                    onClick={(e) => {
+                      e.stopPropagation(); // 🧠 Prevent navigation when adding to cart
+                      handleAddToCart(product.id);
+                    }}
                     disabled={product.stock_quantity === 0}
                   >
                     <ShoppingCart className="h-4 w-4 mr-2" />
