@@ -73,27 +73,31 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
   // 📤 Upload receipt image to Supabase
   const uploadReceipt = async (file: File) => {
-    try {
-      // Sanitize file name (remove spaces/special chars)
-      const cleanName = file.name.replace(/[^\w.-]/g, "_");
-      const fileName = `${Date.now()}-Receipt-${cleanName}`;
+  // ✅ Always make a clean, safe file name
+  const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  const fileName = `${Date.now()}_Receipt_${cleanFileName}`;
 
-      const { data, error } = await supabase.storage
-        .from("receipts")
-        .upload(fileName, file);
+  console.log("Uploading file as:", fileName); // helps debug
 
-      if (error) throw error;
+  const { data, error } = await supabase.storage
+    .from("receipts")
+    .upload(fileName, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
 
-      const { data: urlData } = supabase.storage
-        .from("receipts")
-        .getPublicUrl(fileName);
+  if (error) {
+    console.error("❌ Supabase Upload Error:", error.message);
+    throw new Error("Failed to upload receipt. " + error.message);
+  }
 
-      return urlData.publicUrl;
-    } catch (error: any) {
-      console.error("Upload error:", error);
-      throw new Error("Failed to upload receipt image.");
-    }
-  };
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("receipts").getPublicUrl(fileName);
+
+  return publicUrl;
+};
+
 
   // 🧾 Handle checkout
   const handleSubmit = async (e: React.FormEvent) => {
