@@ -62,6 +62,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
   const { clearCart } = useCart();
   const { toast } = useToast();
 
+  // 🧠 Get or create local session ID
   const getSessionId = () => {
     const existing = localStorage.getItem("cart_session_id");
     if (existing) return existing;
@@ -70,23 +71,31 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     return newId;
   };
 
-  // 📤 Upload receipt to Supabase Storage
+  // 📤 Upload receipt image to Supabase
   const uploadReceipt = async (file: File) => {
-    const fileName = `${Date.now()}-Rs{file.name}`;
-    const { data, error } = await supabase.storage
-      .from("receipts")
-      .upload(fileName, file);
+    try {
+      // Sanitize file name (remove spaces/special chars)
+      const cleanName = file.name.replace(/[^\w.-]/g, "_");
+      const fileName = `${Date.now()}-Receipt-${cleanName}`;
 
-    if (error) throw error;
+      const { data, error } = await supabase.storage
+        .from("receipts")
+        .upload(fileName, file);
 
-    const { data: urlData } = supabase.storage
-      .from("receipts")
-      .getPublicUrl(fileName);
+      if (error) throw error;
 
-    return urlData.publicUrl;
+      const { data: urlData } = supabase.storage
+        .from("receipts")
+        .getPublicUrl(fileName);
+
+      return urlData.publicUrl;
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      throw new Error("Failed to upload receipt image.");
+    }
   };
 
-  // 🧾 Handle Checkout
+  // 🧾 Handle checkout
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -103,18 +112,19 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
     try {
       let receiptUrl: string | null = null;
+
+      // Upload file if provided
       if (receiptFile) {
         receiptUrl = await uploadReceipt(receiptFile);
       }
 
-      // 🧠 Prepare shipping address JSON
       const shipping_address = {
         address: customerData.address,
         city: customerData.city,
         postalCode: customerData.postalCode,
       };
 
-      // ✅ Step 1: Insert order main record
+      // Step 1: Create order record
       const { data: newOrder, error: orderError } = await supabase
         .from("orders")
         .insert([
@@ -128,7 +138,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
             customer_name: customerData.name,
             customer_email: customerData.email,
             customer_phone: customerData.phone,
-            shipping_address, // JSON field
+            shipping_address,
           },
         ])
         .select("id")
@@ -136,7 +146,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
       if (orderError) throw orderError;
 
-      // 🛒 Step 2: Insert items into order_items table
+      // Step 2: Insert order items
       if (newOrder?.id) {
         const orderItems = cartItems.map((item) => ({
           order_id: newOrder.id,
@@ -154,7 +164,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         if (itemsError) throw itemsError;
       }
 
-      // 🧹 Step 3: Clear cart and show success message
+      // Step 3: Clear cart + success toast
       await clearCart();
 
       toast({
@@ -164,7 +174,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         )}) has been placed successfully.`,
       });
 
-      // Reset form
+      // Reset all fields
       onOpenChange(false);
       setCustomerData({
         name: "",
@@ -178,7 +188,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
       setReceiptFile(null);
       setReceiptPreview(null);
     } catch (error: any) {
-      console.error("🔥 Order insert error:", error);
+      console.error("🔥 Order error:", error);
       toast({
         title: "Error placing order",
         description: error.message || "Please try again.",
@@ -189,6 +199,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     }
   };
 
+  // 🖼 Handle file input + preview
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setReceiptFile(file);
@@ -342,7 +353,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
                   <img
                     src={receiptPreview}
                     alt="Receipt Preview"
-                    className="mt-2 w-40 rounded-lg border"
+                    className="mt-2 w-40 h-40 object-contain rounded-lg border"
                   />
                 )}
               </div>
