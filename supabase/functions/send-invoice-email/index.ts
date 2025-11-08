@@ -1,7 +1,6 @@
 import nodemailer from "npm:nodemailer";
 
 Deno.serve(async (req) => {
-  // ✅ Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: {
@@ -15,10 +14,9 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
 
-    // ✅ Extract order data
     const to = body.to || body.customerEmail;
     const customerName = body.customerName || "Valued Customer";
-    const orderId = body.orderId || "000000";
+    const orderId = body.orderId || Math.floor(Math.random() * 900000 + 100000);
     const items = body.items || [];
     const total = body.total || "0.00";
     const shippingAddress = body.shippingAddress || "Not Provided";
@@ -26,23 +24,33 @@ Deno.serve(async (req) => {
 
     if (!to) throw new Error("No recipient email provided");
 
-    // ✅ Setup your mail transporter (SMTP)
+    // ✅ Use your SMTP settings (for ceramed.org)
     const transporter = nodemailer.createTransport({
-      host: "mail.ceramed.org", // replace with your SMTP host
+      host: "mail.ceramed.org",
       port: 465,
       secure: true,
       auth: {
-        user: Deno.env.get("EMAIL_USER"), // e.g. info@ceramed.org
+        user: Deno.env.get("EMAIL_USER"),
         pass: Deno.env.get("EMAIL_PASS"),
       },
     });
 
-    // ✅ Inline-styled HTML email (Gmail compatible)
+    // ✅ Build order item rows
+    const itemsHTML = items.map(
+      (item) => `
+        <tr>
+          <td style="padding:8px 0;color:#333;">${item.name} ${item.size ? `(${item.size})` : ""}</td>
+          <td style="padding:8px 0;text-align:right;color:#333;">₨${item.price}</td>
+        </tr>
+      `
+    ).join("");
+
+    // ✅ Modern responsive HTML email
     const html = `
 <!DOCTYPE html>
 <html>
   <body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
-    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background:#f5f5f5;padding:20px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:20px 0;">
       <tr>
         <td align="center">
           <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
@@ -72,23 +80,15 @@ Deno.serve(async (req) => {
                 <div style="margin-top:30px;background:#f4f4f4;border-radius:8px;padding:15px;">
                   <h3 style="margin:0 0 10px 0;color:#222;">Order Summary</h3>
                   <table width="100%" cellpadding="0" cellspacing="0">
-                    ${items
-                      .map(
-                        (item) => `
-                        <tr>
-                          <td style="padding:8px 0;color:#333;">${item.name} ${item.size ? `(${item.size})` : ""}</td>
-                          <td style="padding:8px 0;text-align:right;color:#333;">Rs. ${item.price}</td>
-                        </tr>`
-                      )
-                      .join("")}
+                    ${itemsHTML}
                     <tr>
                       <td style="padding-top:10px;border-top:1px solid #ddd;font-weight:bold;">Total</td>
-                      <td style="padding-top:10px;border-top:1px solid #ddd;text-align:right;font-weight:bold;">Rs. ${total} PKR</td>
+                      <td style="padding-top:10px;border-top:1px solid #ddd;text-align:right;font-weight:bold;">₨${total}</td>
                     </tr>
                   </table>
                 </div>
 
-                <!-- Addresses -->
+                <!-- Customer Info -->
                 <h3 style="margin-top:25px;color:#222;">Customer Information</h3>
                 <p style="font-size:14px;color:#333;line-height:1.5;">
                   <b>Shipping address:</b><br>${shippingAddress.replace(/\n/g, "<br>")}<br><br>
@@ -122,38 +122,32 @@ Deno.serve(async (req) => {
       from: "DIVERSITY <info@ceramed.org>",
       to,
       subject: `Order #${orderId} Confirmation - DIVERSITY`,
-      html,
+      html, // ensure we send HTML, not plain text
     });
 
     console.log("✅ Email sent successfully:", info.messageId);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Email sent successfully",
-        messageId: info.messageId,
-      }),
-      {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    return new Response(JSON.stringify({
+      success: true,
+      message: "Email sent successfully",
+      messageId: info.messageId,
+    }), {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
+    });
   } catch (err) {
     console.error("💥 Email send failed:", err);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: err.message || "Internal Server Error",
-      }),
-      {
-        status: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    return new Response(JSON.stringify({
+      success: false,
+      error: err.message || "Internal Server Error",
+    }), {
+      status: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "application/json",
+      },
+    });
   }
 });
