@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 
 // Swiper imports
 import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay } from "swiper";
 import "swiper/css";
 import "swiper/css/navigation";
-import { Navigation } from "swiper/modules";
+import "swiper/css/pagination";
 
 interface Product {
   id: string;
@@ -42,7 +42,7 @@ const HomeProductsPreview = () => {
       const { data, error } = await supabase
         .from("products")
         .select("id, name, price, image_url, category")
-        .limit(10); // get more for carousel
+        .limit(10);
 
       if (error) throw error;
 
@@ -70,67 +70,57 @@ const HomeProductsPreview = () => {
     }
   };
 
-  const handleProductClick = (product: Product) => {
-    navigate(`/products/${product.id}`);
-  };
-
-  const handleAddToCart = async (product: Product) => {
-    try {
-      await addToCart(product.id);
-    } catch (err) {
-      console.error("Add to cart failed:", err);
-    }
-  };
+  const handleProductClick = (product: Product) => navigate(`/products/${product.id}`);
+  const handleAddToCart = async (product: Product) => await addToCart(product.id);
 
   return (
-    <section className="py-12 bg-gradient-to-b from-white to-accent/10 overflow-hidden font-sans">
+    <section className="py-12 bg-gradient-to-b from-white to-accent/10 font-sans">
       <div className="container mx-auto px-4">
-        {/* Section Header */}
         <div className="text-center mb-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-2 font-parka">
-            Featured <span className="text-[#0b8686] font-bold">Products</span>
+            Featured <span className="text-[#0b8686]">Products</span>
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto text-base font-parka">
             Explore our latest science-backed innovations — crafted to enhance wellness and performance.
           </p>
         </div>
 
-        {/* Swiper Carousel */}
-        <Swiper
-          modules={[Navigation]}
-          spaceBetween={20}
-          slidesPerView={1}
-          navigation
-          breakpoints={{
-            640: { slidesPerView: 1.5 },
-            768: { slidesPerView: 2 },
-            1024: { slidesPerView: 3 },
-            1280: { slidesPerView: 4 },
-          }}
-        >
-          {products.map((product, index) => (
-            <SwiperSlide key={product.id}>
-              <div className="bg-white shadow-md rounded-2xl overflow-hidden flex flex-col p-4 hover:shadow-xl transition-shadow duration-300 font-parka">
+        {products.length > 0 && (
+          <Swiper
+            modules={[Navigation, Pagination, Autoplay]}
+            spaceBetween={20}
+            slidesPerView={1}
+            navigation
+            pagination={{ clickable: true }}
+            autoplay={{ delay: 3500, disableOnInteraction: false }}
+            breakpoints={{
+              640: { slidesPerView: 1 },
+              768: { slidesPerView: 2 },
+              1024: { slidesPerView: 3 },
+              1280: { slidesPerView: 4 },
+            }}
+          >
+            {products.map((product) => (
+              <SwiperSlide key={product.id}>
                 <div
-                  className="relative mb-3 overflow-hidden rounded-xl h-40 flex items-center justify-center bg-gray-50 cursor-pointer"
+                  className="bg-white shadow-lg rounded-2xl overflow-hidden p-4 flex flex-col items-center cursor-pointer hover:scale-105 transition-transform duration-300"
                   onClick={() => handleProductClick(product)}
                 >
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="max-h-full w-auto object-contain transition-transform duration-300 hover:scale-105"
-                  />
-                  <Badge className="absolute top-2 left-2 bg-[#FFB84D] text-white text-[10px] font-medium rounded-full px-2 py-[2px] shadow-sm">
-                    {product.category || "Health"}
-                  </Badge>
-                </div>
-
-                <div className="flex flex-col flex-grow text-center">
-                  <h3 className="text-md font-semibold text-gray-800 truncate mb-1">
+                  <div className="relative mb-3 h-56 w-full flex items-center justify-center bg-gray-50 rounded-xl">
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="max-h-full w-auto object-contain"
+                    />
+                    <Badge className="absolute top-2 left-2 bg-[#FFB84D] text-white text-[10px] px-2 py-[2px] shadow-sm">
+                      {product.category || "Health"}
+                    </Badge>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-800 truncate mb-1 text-center">
                     {product.name}
                   </h3>
                   <p className="text-[#0b8686] font-bold text-base mb-2">
-                    Rs{product.price?.toFixed(2) || "0.00"}
+                    Rs{product.price?.toFixed(2)}
                   </p>
                   <Button
                     className="bg-[#0b8686] hover:bg-[#097575] w-full text-white font-semibold transition-all"
@@ -139,20 +129,10 @@ const HomeProductsPreview = () => {
                     Add to Cart
                   </Button>
                 </div>
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-
-        {/* View More Button */}
-        <div className="text-center mt-10 font-semibold">
-          <Link to="/products">
-            <Button className="group bg-[#0b8686] hover:bg-[#097575] text-white px-6 py-3 font-semibold">
-              View More Products
-              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </Link>
-        </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        )}
       </div>
     </section>
   );
