@@ -3,13 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
+
+// Swiper imports (fixed for Vite / Swiper v9+)
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Autoplay } from "swiper";
+import { Navigation } from "swiper/modules/navigation";
+import { Pagination } from "swiper/modules/pagination";
+import { Autoplay } from "swiper/modules/autoplay";
+
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-import ProductDetail, { Product } from "../pages/ProductDetail"; // ✅ correct import
+// Import ProductDetail modal
+import ProductDetail, { Product } from "../pages/ProductDetail";
 
 const fallbackImages = [
   "/Active-P.png",
@@ -92,7 +98,7 @@ const HomeProductsPreview = () => {
                   <Button
                     className="bg-[#0b8686] hover:bg-[#097575] w-full text-white font-semibold transition-all"
                     onClick={(e) => {
-                      e.stopPropagation();
+                      e.stopPropagation(); // prevent modal opening
                       addToCart(product.id);
                     }}
                   >
@@ -105,7 +111,7 @@ const HomeProductsPreview = () => {
         </div>
       </section>
 
-      {/* Product Modal */}
+      {/* Show Product Detail Modal */}
       {selectedProduct && <ProductDetail product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
     </>
   );
