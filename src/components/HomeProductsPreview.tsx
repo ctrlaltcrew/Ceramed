@@ -4,11 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 
-// Swiper imports (fixed for Vite / Swiper v9+)
+// Swiper imports (correct for Vite)
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules/navigation";
-import { Pagination } from "swiper/modules/pagination";
-import { Autoplay } from "swiper/modules/autoplay";
+import SwiperCore, { Navigation, Pagination, Autoplay } from "swiper";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -16,6 +14,9 @@ import "swiper/css/pagination";
 
 // Import ProductDetail modal
 import ProductDetail, { Product } from "../pages/ProductDetail";
+
+// install Swiper modules
+SwiperCore.use([Navigation, Pagination, Autoplay]);
 
 const fallbackImages = [
   "/Active-P.png",
@@ -72,7 +73,6 @@ const HomeProductsPreview = () => {
           </div>
 
           <Swiper
-            modules={[Navigation, Pagination, Autoplay]}
             slidesPerView={3}
             spaceBetween={20}
             loop
@@ -111,7 +111,6 @@ const HomeProductsPreview = () => {
         </div>
       </section>
 
-      {/* Show Product Detail Modal */}
       {selectedProduct && <ProductDetail product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
     </>
   );
