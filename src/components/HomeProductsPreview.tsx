@@ -4,19 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 
-// Swiper imports (correct for Vite)
+// Swiper imports for v10+
 import { Swiper, SwiperSlide } from "swiper/react";
-import SwiperCore, { Navigation, Pagination, Autoplay } from "swiper";
+import { Navigation } from "swiper/modules/navigation";
+import { Pagination } from "swiper/modules/pagination";
+import { Autoplay } from "swiper/modules/autoplay";
 
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-// Import ProductDetail modal
+// ProductDetail modal import
 import ProductDetail, { Product } from "../pages/ProductDetail";
-
-// install Swiper modules
-SwiperCore.use([Navigation, Pagination, Autoplay]);
 
 const fallbackImages = [
   "/Active-P.png",
@@ -63,6 +62,7 @@ const HomeProductsPreview = () => {
     <>
       <section className="py-12 bg-gradient-to-b from-white to-accent/10 font-sans">
         <div className="container mx-auto px-4">
+          {/* Section Header */}
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold mb-2 font-parka">
               Featured <span className="text-[#0b8686]">Products</span>
@@ -72,14 +72,20 @@ const HomeProductsPreview = () => {
             </p>
           </div>
 
+          {/* Swiper Carousel */}
           <Swiper
+            modules={[Navigation, Pagination, Autoplay]}
             slidesPerView={3}
             spaceBetween={20}
             loop
             autoplay={{ delay: 3000, disableOnInteraction: false }}
             navigation
             pagination={{ clickable: true }}
-            breakpoints={{ 640: { slidesPerView: 1 }, 768: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } }}
+            breakpoints={{
+              640: { slidesPerView: 1 },
+              768: { slidesPerView: 2 },
+              1024: { slidesPerView: 3 },
+            }}
           >
             {products.map((product) => (
               <SwiperSlide key={product.id}>
@@ -111,6 +117,7 @@ const HomeProductsPreview = () => {
         </div>
       </section>
 
+      {/* Product Detail Modal */}
       {selectedProduct && <ProductDetail product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
     </>
   );
