@@ -1,150 +1,119 @@
-import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 
-interface Product {
+export interface Product {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   full_description?: string;
   price: number;
   image_url: string | null;
-  category: string;
-  benefits: string[];
-  rating: number;
-  reviews_count: number;
-  stock_quantity: number;
+  category?: string;
+  benefits?: string[];
+  rating?: number;
+  reviews_count?: number;
+  stock_quantity?: number;
   size?: string;
   color?: string;
 }
 
-const ProductDetail = () => {
-  const { id } = useParams<{ id: string }>();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+interface ProductDetailProps {
+  product: Product;
+  onClose: () => void;
+}
+
+const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }) => {
   const { addToCart } = useCart();
+  const [added, setAdded] = useState(false);
 
-  useEffect(() => {
-    if (id) fetchProduct(id);
-  }, [id]);
-
-  const fetchProduct = async (id: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error) throw error;
-      setProduct(data);
-    } catch (error) {
-      console.error("Error fetching product:", error);
-    } finally {
-      setLoading(false);
-    }
+  const handleAddToCart = async () => {
+    await addToCart(product.id);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000); // hide notification after 2s
   };
 
-  if (loading) {
-    return <div className="text-center py-20 text-lg">Loading product...</div>;
-  }
-
-  if (!product) {
-    return <div className="text-center py-20 text-red-500">Product not found</div>;
-  }
-
   return (
-    <div className="container mx-auto px-6 py-12">
-      <Link to="/products" className="text-blue-600 hover:underline mb-6 inline-block">
-        ← Back to Products
-      </Link>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl p-6 relative">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 font-bold text-lg"
+        >
+          ×
+        </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        {/* Image */}
-        <div className="flex justify-center">
+        {/* Product Image */}
+        <div className="flex justify-center mb-4">
           <img
             src={product.image_url || "/placeholder.png"}
             alt={product.name}
-            className="rounded-lg shadow-md w-full max-w-md h-[400px] object-contain bg-gray-50 transition-transform duration-300 hover:scale-105"
-            onError={(e) => ((e.target as HTMLImageElement).src = "/placeholder.png")}
+            className="w-full max-w-sm h-64 object-contain rounded-lg"
           />
         </div>
 
         {/* Product Info */}
-        <div>
-          <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-          <div className="flex items-center gap-2 mb-3">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`h-5 w-5 ${
-                  i < Math.floor(product.rating)
-                    ? "text-yellow-400 fill-current"
-                    : "text-gray-300"
-                }`}
-              />
-            ))}
-            <span className="text-sm text-muted-foreground">
-              ({product.reviews_count} reviews)
-            </span>
-          </div>
+        <h2 className="text-2xl font-bold mb-2">{product.name}</h2>
 
-          <p className="text-lg text-muted-foreground mb-4">
-            {product.description}
-          </p>
-
-          {product.full_description && (
-            <p className="text-base text-foreground leading-relaxed mb-6">
-              {product.full_description}
-            </p>
-          )}
-
-          {/* Size & Color */}
-          {(product.size || product.color) && (
-            <div className="flex gap-4 mb-6">
-              {product.size && (
-                <Badge variant="outline" className="text-md">
-                  Size: {product.size}
-                </Badge>
-              )}
-              {product.color && (
-                <Badge variant="outline" className="text-md">
-                  Color: {product.color}
-                </Badge>
-              )}
-            </div>
-          )}
-
-          {/* Benefits */}
-          {product.benefits?.length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-semibold mb-2 text-lg">Benefits:</h3>
-              <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                {product.benefits.map((b, i) => (
-                  <li key={i}>{b}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Price & Add to Cart */}
-          <div className="flex items-center justify-between border-t pt-4 mt-6">
-            <div className="text-3xl font-bold text-primary">
-              ₨{product.price.toLocaleString("en-PK")}
-            </div>
-            <Button
-              className="btn-medical"
-              onClick={() => addToCart(product.id)}
-              disabled={product.stock_quantity === 0}
-            >
-              {product.stock_quantity === 0 ? "Out of Stock" : "Add to Cart"}
-            </Button>
-          </div>
+        <div className="flex items-center gap-2 mb-2">
+          {[...Array(5)].map((_, i) => (
+            <Star
+              key={i}
+              className={`h-5 w-5 ${
+                i < Math.floor(product.rating || 0)
+                  ? "text-yellow-400 fill-current"
+                  : "text-gray-300"
+              }`}
+            />
+          ))}
+          <span className="text-sm text-gray-500">
+            ({product.reviews_count || 0} reviews)
+          </span>
         </div>
+
+        <p className="text-gray-700 mb-4">{product.description}</p>
+        {product.full_description && (
+          <p className="text-gray-600 mb-4">{product.full_description}</p>
+        )}
+
+        {(product.size || product.color) && (
+          <div className="flex gap-4 mb-4">
+            {product.size && <Badge variant="outline">Size: {product.size}</Badge>}
+            {product.color && <Badge variant="outline">Color: {product.color}</Badge>}
+          </div>
+        )}
+
+        {product.benefits && product.benefits.length > 0 && (
+          <ul className="list-disc list-inside text-gray-600 mb-4">
+            {product.benefits.map((b, i) => (
+              <li key={i}>{b}</li>
+            ))}
+          </ul>
+        )}
+
+        {/* Price and Add to Cart */}
+        <div className="flex items-center justify-between mt-4 border-t pt-4">
+          <span className="text-2xl font-bold text-[#0b8686]">
+            ₨{product.price.toLocaleString("en-PK")}
+          </span>
+          <Button
+            onClick={handleAddToCart}
+            disabled={product.stock_quantity === 0}
+            className="bg-[#0b8686] hover:bg-[#097575] text-white"
+          >
+            {product.stock_quantity === 0 ? "Out of Stock" : "Add to Cart"}
+          </Button>
+        </div>
+
+        {/* Added to Cart Notification */}
+        {added && (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded shadow-lg">
+            Product added to cart!
+          </div>
+        )}
       </div>
     </div>
   );
