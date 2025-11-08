@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
 
-    // ✅ Extract data from payload
+    // ✅ Extract order data
     const to = body.to || body.customerEmail;
     const customerName = body.customerName || "Valued Customer";
     const orderId = body.orderId || "000000";
@@ -26,96 +26,100 @@ Deno.serve(async (req) => {
 
     if (!to) throw new Error("No recipient email provided");
 
-    // ✅ Gmail / SMTP transporter
+    // ✅ Setup your mail transporter (SMTP)
     const transporter = nodemailer.createTransport({
-      service: "gmail", // you can replace this with "smtp.hostinger.com" etc.
+      host: "mail.ceramed.org", // replace with your SMTP host
+      port: 465,
+      secure: true,
       auth: {
-        user: Deno.env.get("EMAIL_USER"),
+        user: Deno.env.get("EMAIL_USER"), // e.g. info@ceramed.org
         pass: Deno.env.get("EMAIL_PASS"),
       },
     });
 
-    // ✅ Build items HTML dynamically
-    const itemsHTML = items
-      .map(
-        (item) => `
-          <tr>
-            <td style="padding:8px 0;">${item.name} (${item.size || ""})</td>
-            <td style="text-align:right; padding:8px 0;">Rs. ${item.price}</td>
-          </tr>
-        `
-      )
-      .join("");
-
-    // ✅ Responsive HTML Email Template
+    // ✅ Inline-styled HTML email (Gmail compatible)
     const html = `
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DIVERSITY Order Confirmation</title>
-  <style>
-    /* Base Styles */
-    body { font-family: 'Segoe UI', sans-serif; background: #f8f8f8; margin: 0; padding: 0; }
-    .container { max-width: 600px; background: #fff; margin: 20px auto; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 8px rgba(0,0,0,0.08); }
-    .header { background: #111; color: #fff; text-align: center; padding: 25px 10px; font-size: 20px; font-weight: 600; letter-spacing: 1px; }
-    .content { padding: 25px; line-height: 1.6; }
-    .content h2 { color: #222; font-size: 18px; margin-bottom: 10px; }
-    .order-summary { background: #f4f4f4; padding: 15px; border-radius: 8px; margin: 20px 0; }
-    .order-summary table { width: 100%; border-collapse: collapse; }
-    .order-summary th, .order-summary td { text-align: left; }
-    .total { font-weight: bold; border-top: 2px solid #ddd; padding-top: 10px; }
-    .btn { display: inline-block; background: #111; color: #fff; text-decoration: none; padding: 12px 22px; border-radius: 6px; font-weight: 500; margin-top: 15px; }
-    .btn-secondary { background: #444; }
-    .footer { text-align: center; padding: 15px; color: #777; font-size: 13px; background: #fafafa; }
+  <body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background:#f5f5f5;padding:20px 0;">
+      <tr>
+        <td align="center">
+          <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <tr>
+              <td align="center" style="background:#111;color:#ffffff;padding:25px 10px;font-size:22px;font-weight:bold;letter-spacing:1px;">
+                DIVERSITY — Order #${orderId}
+              </td>
+            </tr>
+            
+            <!-- Content -->
+            <tr>
+              <td style="padding:30px;">
+                <h2 style="color:#222;margin-bottom:10px;">Thank you for your purchase!</h2>
+                <p style="font-size:15px;color:#333;line-height:1.6;">
+                  Hi <b>${customerName}</b>, we're getting your order ready to be shipped.<br>
+                  We’ll notify you when it has been sent.
+                </p>
+                
+                <div style="margin-top:20px;">
+                  <a href="#" style="background:#111;color:#fff;text-decoration:none;padding:12px 20px;border-radius:6px;display:inline-block;margin-right:10px;">View your order</a>
+                  <a href="https://diversity.pk" style="background:#555;color:#fff;text-decoration:none;padding:12px 20px;border-radius:6px;display:inline-block;">Visit our store</a>
+                </div>
 
-    /* Responsive Styles */
-    @media only screen and (max-width: 600px) {
-      .container { width: 95%; margin: 10px auto; }
-      .content { padding: 20px; }
-      .btn, .btn-secondary { display: block; width: 100%; text-align: center; margin-top: 10px; }
-      .order-summary table td { display: block; text-align: left; }
-      .order-summary td:last-child { text-align: left; margin-bottom: 10px; }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">DIVERSITY — Order #${orderId}</div>
-    <div class="content">
-      <h2>Thank you for your purchase!</h2>
-      <p>Hi <b>${customerName}</b>, we're getting your order ready to be shipped.<br>
-      We’ll notify you when it has been sent.</p>
+                <!-- Order Summary -->
+                <div style="margin-top:30px;background:#f4f4f4;border-radius:8px;padding:15px;">
+                  <h3 style="margin:0 0 10px 0;color:#222;">Order Summary</h3>
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    ${items
+                      .map(
+                        (item) => `
+                        <tr>
+                          <td style="padding:8px 0;color:#333;">${item.name} ${item.size ? `(${item.size})` : ""}</td>
+                          <td style="padding:8px 0;text-align:right;color:#333;">Rs. ${item.price}</td>
+                        </tr>`
+                      )
+                      .join("")}
+                    <tr>
+                      <td style="padding-top:10px;border-top:1px solid #ddd;font-weight:bold;">Total</td>
+                      <td style="padding-top:10px;border-top:1px solid #ddd;text-align:right;font-weight:bold;">Rs. ${total} PKR</td>
+                    </tr>
+                  </table>
+                </div>
 
-      <a href="#" class="btn">View your order</a>
-      <a href="https://diversity.pk" class="btn btn-secondary">Visit our store</a>
+                <!-- Addresses -->
+                <h3 style="margin-top:25px;color:#222;">Customer Information</h3>
+                <p style="font-size:14px;color:#333;line-height:1.5;">
+                  <b>Shipping address:</b><br>${shippingAddress.replace(/\n/g, "<br>")}<br><br>
+                  <b>Billing address:</b><br>${billingAddress.replace(/\n/g, "<br>")}<br><br>
+                  <b>Shipping method:</b> 🚚 Free Delivery (2 - 4 Working Days)
+                </p>
 
-      <div class="order-summary">
-        <table>
-          <tr><th>Item</th><th style="text-align:right;">Price</th></tr>
-          ${itemsHTML}
-          <tr class="total"><td>Total</td><td style="text-align:right;">Rs. ${total} PKR</td></tr>
-        </table>
-      </div>
+                <p style="font-size:14px;color:#555;">
+                  If you have any questions, reply to this email or contact us at 
+                  <a href="mailto:support@diversity.pk" style="color:#111;">support@diversity.pk</a>
+                </p>
+              </td>
+            </tr>
 
-      <h3>Customer Information</h3>
-      <p><b>Shipping address:</b><br>${shippingAddress.replace(/\n/g, "<br>")}</p>
-      <p><b>Billing address:</b><br>${billingAddress.replace(/\n/g, "<br>")}</p>
-      <p><b>Shipping method:</b> 🚚 Free Delivery (2 - 4 Working Days)</p>
-
-      <p>If you have any questions, reply to this email or contact us at 
-      <a href="mailto:support@diversity.pk">support@diversity.pk</a></p>
-    </div>
-    <div class="footer">© 2025 DIVERSITY. All rights reserved.</div>
-  </div>
-</body>
+            <!-- Footer -->
+            <tr>
+              <td align="center" style="background:#fafafa;padding:15px;color:#777;font-size:13px;">
+                © 2025 DIVERSITY. All rights reserved.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>
 `;
 
     // ✅ Send the email
     const info = await transporter.sendMail({
-      from: "DIVERSITY <ctrlaltcreww@gmail.com>",
+      from: "DIVERSITY <info@ceramed.org>",
       to,
       subject: `Order #${orderId} Confirmation - DIVERSITY`,
       html,
