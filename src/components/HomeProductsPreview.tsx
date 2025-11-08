@@ -6,6 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 
+// Swiper imports
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/navigation";
+import { Navigation } from "swiper/modules";
+
 interface Product {
   id: string;
   name: string;
@@ -36,7 +42,7 @@ const HomeProductsPreview = () => {
       const { data, error } = await supabase
         .from("products")
         .select("id, name, price, image_url, category")
-        .limit(5);
+        .limit(10); // get more for carousel
 
       if (error) throw error;
 
@@ -82,43 +88,43 @@ const HomeProductsPreview = () => {
         {/* Section Header */}
         <div className="text-center mb-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-2 font-parka">
-            Featured{" "}
-            <span className="text-[#0b8686] font-bold">Products</span>
+            Featured <span className="text-[#0b8686] font-bold">Products</span>
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto text-base font-parka">
-            Explore our latest science-backed innovations — crafted to enhance
-            wellness and performance.
+            Explore our latest science-backed innovations — crafted to enhance wellness and performance.
           </p>
         </div>
 
-        {/* Infinite Scroll Animation */}
-        <div className="relative w-full overflow-hidden">
-          <div className="flex gap-6 animate-infinite-scroll">
-            {[...products, ...products].map((product, index) => (
-              <div
-                key={`${product.id}-${index}`}
-                className="min-w-[220px] bg-white shadow-md rounded-2xl overflow-hidden flex flex-col p-4 hover:shadow-xl transition-shadow duration-300 font-parka"
-              >
-                {/* Image */}
+        {/* Swiper Carousel */}
+        <Swiper
+          modules={[Navigation]}
+          spaceBetween={20}
+          slidesPerView={1}
+          navigation
+          breakpoints={{
+            640: { slidesPerView: 1.5 },
+            768: { slidesPerView: 2 },
+            1024: { slidesPerView: 3 },
+            1280: { slidesPerView: 4 },
+          }}
+        >
+          {products.map((product, index) => (
+            <SwiperSlide key={product.id}>
+              <div className="bg-white shadow-md rounded-2xl overflow-hidden flex flex-col p-4 hover:shadow-xl transition-shadow duration-300 font-parka">
                 <div
                   className="relative mb-3 overflow-hidden rounded-xl h-40 flex items-center justify-center bg-gray-50 cursor-pointer"
                   onClick={() => handleProductClick(product)}
                 >
                   <img
-                    src={
-                      product.image_url ||
-                      fallbackImages[index % fallbackImages.length]
-                    }
+                    src={product.image_url}
                     alt={product.name}
                     className="max-h-full w-auto object-contain transition-transform duration-300 hover:scale-105"
                   />
                   <Badge className="absolute top-2 left-2 bg-[#FFB84D] text-white text-[10px] font-medium rounded-full px-2 py-[2px] shadow-sm">
-
                     {product.category || "Health"}
                   </Badge>
                 </div>
 
-                {/* Product Info */}
                 <div className="flex flex-col flex-grow text-center">
                   <h3 className="text-md font-semibold text-gray-800 truncate mb-1">
                     {product.name}
@@ -134,9 +140,9 @@ const HomeProductsPreview = () => {
                   </Button>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
 
         {/* View More Button */}
         <div className="text-center mt-10 font-semibold">
@@ -148,42 +154,6 @@ const HomeProductsPreview = () => {
           </Link>
         </div>
       </div>
-
-      {/* Custom Animation Styles */}
-      <style>{`
-  @keyframes infinite-scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  .animate-infinite-scroll {
-    display: flex;
-    width: max-content;
-    animation: infinite-scroll 30s linear infinite;
-  }
-
-  /* Slower & smoother scroll on tablets */
-  @media (max-width: 1024px) {
-    .animate-infinite-scroll {
-      animation: infinite-scroll 40s linear infinite;
-    }
-  }
-
-  /* Even slower scroll on mobile for better visibility & performance */
-  @media (max-width: 768px) {
-    .animate-infinite-scroll {
-      animation: infinite-scroll 50s linear infinite;
-    }
-  }
-
-  /* Very slow for small screens (phones under 480px) */
-  @media (max-width: 480px) {
-    .animate-infinite-scroll {
-      animation: infinite-scroll 60s linear infinite;
-    }
-  }
-`}</style>
-
     </section>
   );
 };
