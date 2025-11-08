@@ -4,17 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 
-// Swiper imports for v10+
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper/modules/navigation";
-import { Pagination } from "swiper/modules/pagination";
-import { Autoplay } from "swiper/modules/autoplay";
-
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
-
-// ProductDetail modal import
+// Import the ProductDetail page
 import ProductDetail, { Product } from "../pages/ProductDetail";
 
 const fallbackImages = [
@@ -62,7 +52,6 @@ const HomeProductsPreview = () => {
     <>
       <section className="py-12 bg-gradient-to-b from-white to-accent/10 font-sans">
         <div className="container mx-auto px-4">
-          {/* Section Header */}
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold mb-2 font-parka">
               Featured <span className="text-[#0b8686]">Products</span>
@@ -72,52 +61,38 @@ const HomeProductsPreview = () => {
             </p>
           </div>
 
-          {/* Swiper Carousel */}
-          <Swiper
-            modules={[Navigation, Pagination, Autoplay]}
-            slidesPerView={3}
-            spaceBetween={20}
-            loop
-            autoplay={{ delay: 3000, disableOnInteraction: false }}
-            navigation
-            pagination={{ clickable: true }}
-            breakpoints={{
-              640: { slidesPerView: 1 },
-              768: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 },
-            }}
-          >
+          {/* Product Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {products.map((product) => (
-              <SwiperSlide key={product.id}>
-                <div
-                  className="bg-white shadow-lg rounded-2xl overflow-hidden p-4 flex flex-col items-center cursor-pointer hover:scale-105 transition-transform duration-300"
-                  onClick={() => setSelectedProduct(product)}
-                >
-                  <div className="relative mb-3 h-56 w-full flex items-center justify-center bg-gray-50 rounded-xl">
-                    <img src={product.image_url} alt={product.name} className="max-h-full w-auto object-contain" />
-                    <Badge className="absolute top-2 left-2 bg-[#FFB84D] text-white text-[10px] px-2 py-[2px] shadow-sm">
-                      {product.category || "Health"}
-                    </Badge>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-800 truncate mb-1 text-center">{product.name}</h3>
-                  <p className="text-[#0b8686] font-bold text-base mb-2">Rs{product.price?.toFixed(2)}</p>
-                  <Button
-                    className="bg-[#0b8686] hover:bg-[#097575] w-full text-white font-semibold transition-all"
-                    onClick={(e) => {
-                      e.stopPropagation(); // prevent modal opening
-                      addToCart(product.id);
-                    }}
-                  >
-                    Add to Cart
-                  </Button>
+              <div
+                key={product.id}
+                className="bg-white shadow-lg rounded-2xl overflow-hidden p-4 flex flex-col items-center cursor-pointer hover:scale-105 transition-transform duration-300"
+                onClick={() => setSelectedProduct(product)}
+              >
+                <div className="relative mb-3 h-56 w-full flex items-center justify-center bg-gray-50 rounded-xl">
+                  <img src={product.image_url} alt={product.name} className="max-h-full w-auto object-contain" />
+                  <Badge className="absolute top-2 left-2 bg-[#FFB84D] text-white text-[10px] px-2 py-[2px] shadow-sm">
+                    {product.category || "Health"}
+                  </Badge>
                 </div>
-              </SwiperSlide>
+                <h3 className="text-lg font-semibold text-gray-800 truncate mb-1 text-center">{product.name}</h3>
+                <p className="text-[#0b8686] font-bold text-base mb-2">Rs{product.price?.toFixed(2)}</p>
+                <Button
+                  className="bg-[#0b8686] hover:bg-[#097575] w-full text-white font-semibold transition-all"
+                  onClick={(e) => {
+                    e.stopPropagation(); // prevent modal open
+                    addToCart(product.id);
+                  }}
+                >
+                  Add to Cart
+                </Button>
+              </div>
             ))}
-          </Swiper>
+          </div>
         </div>
       </section>
 
-      {/* Product Detail Modal */}
+      {/* Show Product Detail Modal */}
       {selectedProduct && <ProductDetail product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
     </>
   );
