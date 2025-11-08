@@ -3,16 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
-
-// Swiper imports
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-// Correct import for ProductDetail
-import ProductDetail, { Product } from "../pages/ProductDetail";
+import ProductDetail, { Product } from "../pages/ProductDetail"; // ✅ correct import
 
 const fallbackImages = [
   "/Active-P.png",
@@ -72,7 +69,7 @@ const HomeProductsPreview = () => {
             modules={[Navigation, Pagination, Autoplay]}
             slidesPerView={3}
             spaceBetween={20}
-            loop={true}
+            loop
             autoplay={{ delay: 3000, disableOnInteraction: false }}
             navigation
             pagination={{ clickable: true }}
@@ -95,7 +92,7 @@ const HomeProductsPreview = () => {
                   <Button
                     className="bg-[#0b8686] hover:bg-[#097575] w-full text-white font-semibold transition-all"
                     onClick={(e) => {
-                      e.stopPropagation(); // prevent modal open
+                      e.stopPropagation();
                       addToCart(product.id);
                     }}
                   >
@@ -108,7 +105,7 @@ const HomeProductsPreview = () => {
         </div>
       </section>
 
-      {/* Show Product Modal */}
+      {/* Product Modal */}
       {selectedProduct && <ProductDetail product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
     </>
   );

@@ -37,8 +37,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-3xl p-6 relative max-h-[90vh] overflow-y-auto">
-        {/* Close Button */}
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl p-6 relative">
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 font-bold text-lg"
@@ -46,7 +45,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }) => {
           ×
         </button>
 
-        {/* Product Image */}
         <div className="flex justify-center mb-4">
           <img
             src={product.image_url || "/placeholder.png"}
@@ -55,7 +53,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }) => {
           />
         </div>
 
-        {/* Product Info */}
         <h2 className="text-2xl font-bold mb-2">{product.name}</h2>
 
         <div className="flex items-center gap-2 mb-2">
@@ -86,7 +83,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }) => {
           </div>
         )}
 
-        {product.benefits && product.benefits.length > 0 && (
+        {product.benefits && (
           <ul className="list-disc list-inside text-gray-600 mb-4">
             {product.benefits.map((b, i) => (
               <li key={i}>{b}</li>
@@ -94,7 +91,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }) => {
           </ul>
         )}
 
-        {/* Price and Add to Cart */}
         <div className="flex items-center justify-between mt-4 border-t pt-4">
           <span className="text-2xl font-bold text-[#0b8686]">
             ₨{product.price.toLocaleString("en-PK")}
@@ -108,7 +104,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }) => {
           </Button>
         </div>
 
-        {/* Added to Cart Notification */}
         {added && (
           <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded shadow-lg">
             Product added to cart!
