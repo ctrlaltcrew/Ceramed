@@ -11,8 +11,8 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-// Import the ProductDetail modal
-import ProductDetail, { Product } from "./ProductDetail";
+// Correct import for ProductDetail
+import ProductDetail, { Product } from "../pages/ProductDetail";
 
 const fallbackImages = [
   "/Active-P.png",

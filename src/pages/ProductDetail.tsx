@@ -32,12 +32,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onClose }) => {
   const handleAddToCart = async () => {
     await addToCart(product.id);
     setAdded(true);
-    setTimeout(() => setAdded(false), 2000); // hide notification after 2s
+    setTimeout(() => setAdded(false), 2000);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl p-6 relative">
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-3xl p-6 relative max-h-[90vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
