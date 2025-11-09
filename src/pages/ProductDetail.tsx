@@ -20,19 +20,31 @@ interface Product {
   stock_quantity: number;
 }
 
+interface ProductDetailProps {
+  modal?: boolean; // true = full-screen modal, false = inline card
+  product?: Product; // pass full product if available
+  productId?: string; // pass only id if you want component to fetch
+}
+
 const localImages = ["/Active-P.png", "/zest.png", "/Mossent.png"];
 
-const ProductDetail = () => {
-  const { id } = useParams<{ id: string }>();
+const ProductDetail: React.FC<ProductDetailProps> = ({
+  modal = true,
+  product: initialProduct,
+  productId,
+}) => {
+  const { id: routeId } = useParams<{ id: string }>();
+  const id = productId || routeId;
   const navigate = useNavigate();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [product, setProduct] = useState<Product | null>(initialProduct || null);
+  const [loading, setLoading] = useState(!initialProduct && !!id);
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
 
   useEffect(() => {
-    if (id) fetchProduct();
-  }, [id]);
+    if (!product && id) fetchProduct();
+    else setLoading(false);
+  }, [id, product]);
 
   const fetchProduct = async () => {
     try {
@@ -58,6 +70,7 @@ const ProductDetail = () => {
       setProduct({ ...data, image_url: image });
     } catch (error) {
       console.error("Error fetching product:", error);
+      setProduct(null);
     } finally {
       setLoading(false);
     }
@@ -71,40 +84,76 @@ const ProductDetail = () => {
   };
 
   if (loading) {
-    return (
+    return modal ? (
       <div className="fixed inset-0 flex justify-center items-center bg-white/60 backdrop-blur-md z-[9999]">
         <p className="text-gray-700 text-lg font-medium">Loading product...</p>
       </div>
+    ) : (
+      <p className="text-gray-500">Loading...</p>
     );
   }
 
   if (!product) {
-    return (
+    return modal ? (
       <div className="fixed inset-0 flex justify-center items-center bg-white/60 backdrop-blur-md z-[9999]">
         <div className="bg-background p-10 rounded-2xl text-center shadow-xl">
-          <p className="text-lg text-muted-foreground mb-4">
-            Product not found
-          </p>
+          <p className="text-lg text-muted-foreground mb-4">Product not found</p>
           <Button onClick={() => navigate(-1)}>Go Back</Button>
         </div>
+      </div>
+    ) : (
+      <p className="text-red-500">Product not found</p>
+    );
+  }
+
+  // --- Inline mode: home page card ---
+  if (!modal) {
+    return (
+      <div className="relative bg-white shadow-md rounded-xl p-4 flex flex-col items-center">
+        <img
+          src={product.image_url || localImages[0]}
+          alt={product.name}
+          className="h-40 object-contain"
+        />
+        <h3 className="font-bold mt-2">{product.name}</h3>
+        <p className="text-[#0b8686] font-semibold">
+          ₨{product.price.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
+        </p>
+        <Button
+          className="mt-2 bg-[#0b8686] hover:bg-[#097575] text-white"
+          onClick={handleAddToCart}
+          disabled={product.stock_quantity === 0}
+        >
+          <ShoppingCart className="h-5 w-5 mr-2" />
+          {product.stock_quantity === 0 ? "Out of Stock" : "Add to Cart"}
+        </Button>
+
+        {/* Add-to-Cart Toast */}
+        {added && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.3 }}
+            className="absolute bottom-2 right-2 bg-white text-gray-800 px-3 py-2 rounded-lg shadow-md border border-gray-200"
+          >
+            ✅ Added!
+          </motion.div>
+        )}
       </div>
     );
   }
 
+  // --- Modal mode ---
   return (
     <AnimatePresence>
-      {/* Overlay */}
       <motion.div
         key="overlay"
         initial={{ opacity: 0 }}
-        animate={{
-          opacity: 1,
-          transition: { duration: 0.4, ease: "easeOut" },
-        }}
+        animate={{ opacity: 1, transition: { duration: 0.4, ease: "easeOut" } }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-white/60 backdrop-blur-md flex justify-center items-center z-[9999]"
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm flex justify-center items-center z-[9999]"
       >
-        {/* Close Button */}
         <button
           onClick={() => navigate(-1)}
           className="absolute top-6 right-6 text-gray-700 hover:text-gray-900 transition-colors"
@@ -112,7 +161,6 @@ const ProductDetail = () => {
           <X size={28} />
         </button>
 
-        {/* Product Card */}
         <motion.div
           key="modal"
           initial={{ opacity: 0, y: 30, scale: 0.97 }}
@@ -121,7 +169,6 @@ const ProductDetail = () => {
           transition={{ duration: 0.3 }}
           className="max-w-5xl w-[95%] bg-white rounded-2xl shadow-2xl overflow-hidden grid md:grid-cols-2 gap-8 p-8 relative"
         >
-          {/* Product Image */}
           <div className="flex items-center justify-center bg-gray-50 rounded-xl p-6">
             <img
               src={product.image_url || localImages[0]}
@@ -133,18 +180,14 @@ const ProductDetail = () => {
             />
           </div>
 
-          {/* Details Section */}
           <div className="flex flex-col justify-between">
             <div>
               <Badge className="mb-4 bg-secondary text-secondary-foreground">
                 {product.category}
               </Badge>
               <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
-              <p className="text-muted-foreground mb-6 leading-relaxed">
-                {product.description}
-              </p>
+              <p className="text-muted-foreground mb-6 leading-relaxed">{product.description}</p>
 
-              {/* Benefits */}
               {product.benefits?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-6">
                   {product.benefits.map((b, i) => (
@@ -155,15 +198,12 @@ const ProductDetail = () => {
                 </div>
               )}
 
-              {/* Rating */}
               <div className="flex items-center gap-2 mb-6">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
                     className={`h-5 w-5 ${
-                      i < Math.floor(product.rating)
-                        ? "text-yellow-400 fill-current"
-                        : "text-gray-300"
+                      i < Math.floor(product.rating) ? "text-yellow-400 fill-current" : "text-gray-300"
                     }`}
                   />
                 ))}
@@ -173,13 +213,9 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Price & Add to Cart */}
             <div className="flex items-center justify-between pt-6 border-t border-border">
               <div className="text-3xl font-bold text-[#0b8686]">
-                ₨
-                {product.price.toLocaleString("en-PK", {
-                  minimumFractionDigits: 2,
-                })}
+                ₨{product.price.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
               </div>
               <Button
                 className="bg-[#0b8686] hover:bg-[#097575] text-white"
@@ -191,20 +227,19 @@ const ProductDetail = () => {
               </Button>
             </div>
           </div>
-        </motion.div>
 
-        {/* ✅ Add-to-Cart Toast (Bottom Right, White Background) */}
-        {added && (
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 50 }}
-            transition={{ duration: 0.3 }}
-            className="fixed bottom-6 right-6 bg-white text-gray-800 px-6 py-3 rounded-lg shadow-lg border border-gray-200 z-[10000]"
-          >
-            ✅ Product added to cart!
-          </motion.div>
-        )}
+          {added && (
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 50 }}
+              transition={{ duration: 0.3 }}
+              className="fixed bottom-6 right-6 bg-white text-gray-800 px-6 py-3 rounded-lg shadow-lg border border-gray-200 z-[10000]"
+            >
+              ✅ Product added to cart!
+            </motion.div>
+          )}
+        </motion.div>
       </motion.div>
     </AnimatePresence>
   );
