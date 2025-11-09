@@ -27,7 +27,7 @@ const Hero = () => {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
-          className="max-w-3xl mx-auto text-center text-white mt-20 sm:mt-24"
+          className="max-w-3xl mx-auto text-center text-white mt-[14rem] sm:mt-20"
         >
           {/* Heading */}
           <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl leading-snug sm:leading-tight md:leading-tight font-parka font-bold mb-6">
