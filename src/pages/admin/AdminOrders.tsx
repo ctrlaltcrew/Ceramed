@@ -6,17 +6,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 
-const ADMIN_ORDERS_REFRESH_INTERVAL = 30000; // 30s
+const ADMIN_ORDERS_REFRESH_INTERVAL = 30000; // 30 seconds
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
-  // ----------------------
-  // Fetch Orders
-  // ----------------------
+  // Fetch pending orders
   const fetchOrders = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -37,9 +36,7 @@ const AdminOrders = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // ----------------------
-  // Fetch Order Items
-  // ----------------------
+  // Fetch order items
   const fetchOrderDetails = async (orderId: string) => {
     const { data: items, error } = await supabase
       .from("order_items")
@@ -50,15 +47,14 @@ const AdminOrders = () => {
     return items || [];
   };
 
-  // ----------------------
-  // Send Invoice Email
-  // ----------------------
+  // Send invoice email
   const sendInvoiceEmail = async (order: any) => {
+    setSendingEmail(true);
     try {
       console.log("📧 Sending invoice email for order:", order.id);
 
       const response = await fetch(
-        "https://xpaqoturecevoyjjmwez.functions.supabase.co/send-invoice-email", // <-- your Supabase function URL
+        "https://xpaqoturecevoyjjmwez.functions.supabase.co/send-invoice-email",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -82,17 +78,20 @@ const AdminOrders = () => {
       const data = await response.json();
       console.log("📧 Email function response:", data);
 
-      if (data.success) alert("✅ Invoice email sent successfully!");
-      else alert("⚠️ Failed to send email: " + data.error);
+      if (data.success) {
+        alert(`✅ Invoice email sent for order #${order.id}`);
+      } else {
+        alert(`⚠️ Failed to send email: ${data.error}`);
+      }
     } catch (err) {
       console.error("💥 Error sending invoice email:", err);
-      alert("💥 Error connecting to email service.");
+      alert("💥 Unable to connect to email service.");
+    } finally {
+      setSendingEmail(false);
     }
   };
 
-  // ----------------------
-  // Update Order Status
-  // ----------------------
+  // Update order status
   const handleUpdateStatus = async (orderId: string, status: string) => {
     setUpdating(true);
     try {
@@ -104,8 +103,6 @@ const AdminOrders = () => {
 
       if (error) throw error;
 
-      alert(`✅ Order ${status} successfully`);
-
       // Remove order from list if verified or cancelled
       if (status === "verified" || status === "cancelled") {
         setOrders((prev) => prev.filter((o) => o.id !== orderId));
@@ -113,7 +110,7 @@ const AdminOrders = () => {
         await fetchOrders();
       }
 
-      // Send invoice email if verified
+      // Send invoice if verified
       if (status === "verified") {
         const order = data?.[0];
         if (order) {
@@ -122,7 +119,6 @@ const AdminOrders = () => {
         }
       }
 
-      // Close modal if open
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder(null);
       }
@@ -134,17 +130,12 @@ const AdminOrders = () => {
     }
   };
 
-  // ----------------------
-  // View Order Details
-  // ----------------------
+  // View order details
   const handleViewOrder = async (order: any) => {
     const items = await fetchOrderDetails(order.id);
     setSelectedOrder({ ...order, items });
   };
 
-  // ----------------------
-  // Loading State
-  // ----------------------
   if (loading)
     return (
       <div className="flex justify-center py-10">
@@ -152,9 +143,6 @@ const AdminOrders = () => {
       </div>
     );
 
-  // ----------------------
-  // Render
-  // ----------------------
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold mb-4">🧾 Orders Management</h1>
@@ -193,7 +181,7 @@ const AdminOrders = () => {
                     size="sm"
                     variant="outline"
                     onClick={() => handleUpdateStatus(order.id, "cancelled")}
-                    disabled={updating}
+                    disabled={updating || sendingEmail}
                   >
                     Cancel
                   </Button>
@@ -204,9 +192,7 @@ const AdminOrders = () => {
         )}
       </div>
 
-      {/* ----------------------
-          Order Details Modal
-      ---------------------- */}
+      {/* Order Details Modal */}
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -240,11 +226,11 @@ const AdminOrders = () => {
               <div className="flex justify-end gap-3 mt-4">
                 <Button
                   onClick={() => handleUpdateStatus(selectedOrder.id, "verified")}
-                  disabled={updating}
+                  disabled={updating || sendingEmail}
                 >
-                  {updating ? (
+                  {updating || sendingEmail ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Updating
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing
                     </>
                   ) : (
                     "Verify Order"
@@ -253,7 +239,7 @@ const AdminOrders = () => {
                 <Button
                   variant="outline"
                   onClick={() => handleUpdateStatus(selectedOrder.id, "cancelled")}
-                  disabled={updating}
+                  disabled={updating || sendingEmail}
                 >
                   Cancel
                 </Button>
