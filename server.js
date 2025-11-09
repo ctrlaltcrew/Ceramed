@@ -2,28 +2,29 @@ import express from "express";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
 
-dotenv.config(); // load .env file
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 
+// Health check
+app.get("/", (req, res) => res.send("Server is running"));
+
+// ✅ Endpoint to send invoice email
 app.post("/api/send-invoice", async (req, res) => {
   const payload = req.body;
 
-  if (!payload?.to) {
-    return res.status(400).json({ message: "'to' email is required" });
-  }
+  if (!payload?.to) return res.status(400).json({ message: "'to' email is required" });
 
   try {
     const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // must be server key
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    // Call the Supabase Edge Function
     const supRes = await fetch(`${supabaseUrl}/functions/v1/send-invoice-email`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${serviceKey}`, // correct header
+        Authorization: `Bearer ${serviceKey}`,
       },
       body: JSON.stringify(payload),
     });
@@ -32,10 +33,10 @@ app.post("/api/send-invoice", async (req, res) => {
 
     if (!supRes.ok) {
       console.error("Supabase function error:", supRes.status, data);
-      return res.status(500).json({ message: "Failed to call email function", error: data });
+      return res.status(500).json({ message: "Failed to send invoice email", error: data });
     }
 
-    return res.status(200).json({ message: "Email sent successfully", data });
+    return res.status(200).json({ message: "Invoice email sent successfully", data });
   } catch (err) {
     console.error("Server error:", err);
     return res.status(500).json({ message: "Server error", error: err.message });
