@@ -67,20 +67,20 @@ const ProductDetail = () => {
     if (!product) return;
     await addToCart(product.id);
     setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    setTimeout(() => setAdded(false), 2500);
   };
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex justify-center items-center bg-black/50 backdrop-blur-sm z-[9999]">
-        <p className="text-white text-lg">Loading product...</p>
+      <div className="fixed inset-0 flex justify-center items-center bg-white/60 backdrop-blur-md z-[9999]">
+        <p className="text-gray-700 text-lg font-medium">Loading product...</p>
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="fixed inset-0 flex justify-center items-center bg-black/50 backdrop-blur-sm z-[9999]">
+      <div className="fixed inset-0 flex justify-center items-center bg-white/60 backdrop-blur-md z-[9999]">
         <div className="bg-background p-10 rounded-2xl text-center shadow-xl">
           <p className="text-lg text-muted-foreground mb-4">
             Product not found
@@ -93,17 +93,21 @@ const ProductDetail = () => {
 
   return (
     <AnimatePresence>
+      {/* Overlay */}
       <motion.div
         key="overlay"
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        animate={{
+          opacity: 1,
+          transition: { duration: 0.4, ease: "easeOut" },
+        }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[9999]"
+        className="fixed inset-0 bg-white/60 backdrop-blur-md flex justify-center items-center z-[9999]"
       >
         {/* Close Button */}
         <button
           onClick={() => navigate(-1)}
-          className="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors"
+          className="absolute top-6 right-6 text-gray-700 hover:text-gray-900 transition-colors"
         >
           <X size={28} />
         </button>
@@ -111,11 +115,11 @@ const ProductDetail = () => {
         {/* Product Card */}
         <motion.div
           key="modal"
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
+          initial={{ opacity: 0, y: 30, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 30 }}
           transition={{ duration: 0.3 }}
-          className="max-w-5xl w-[95%] bg-background rounded-2xl shadow-2xl overflow-hidden grid md:grid-cols-2 gap-8 p-8 relative"
+          className="max-w-5xl w-[95%] bg-white rounded-2xl shadow-2xl overflow-hidden grid md:grid-cols-2 gap-8 p-8 relative"
         >
           {/* Product Image */}
           <div className="flex items-center justify-center bg-gray-50 rounded-xl p-6">
@@ -129,7 +133,7 @@ const ProductDetail = () => {
             />
           </div>
 
-          {/* Details */}
+          {/* Details Section */}
           <div className="flex flex-col justify-between">
             <div>
               <Badge className="mb-4 bg-secondary text-secondary-foreground">
@@ -171,7 +175,7 @@ const ProductDetail = () => {
 
             {/* Price & Add to Cart */}
             <div className="flex items-center justify-between pt-6 border-t border-border">
-              <div className="text-3xl font-bold text-primary">
+              <div className="text-3xl font-bold text-[#0b8686]">
                 ₨
                 {product.price.toLocaleString("en-PK", {
                   minimumFractionDigits: 2,
@@ -189,15 +193,16 @@ const ProductDetail = () => {
           </div>
         </motion.div>
 
-        {/* Add-to-Cart Toast */}
+        {/* ✅ Add-to-Cart Toast (Bottom Right, White Background) */}
         {added && (
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-[10000]"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            transition={{ duration: 0.3 }}
+            className="fixed bottom-6 right-6 bg-white text-gray-800 px-6 py-3 rounded-lg shadow-lg border border-gray-200 z-[10000]"
           >
-            Product added to cart!
+            ✅ Product added to cart!
           </motion.div>
         )}
       </motion.div>
