@@ -21,9 +21,9 @@ interface Product {
 }
 
 interface ProductDetailProps {
-  modal?: boolean; // true = full-screen modal, false = inline card
-  product?: Product; // pass full product if available
-  productId?: string; // pass only id if you want component to fetch
+  modal?: boolean;
+  product?: Product;
+  productId?: string;
 }
 
 const localImages = ["/Active-P.png", "/zest.png", "/Mossent.png"];
@@ -85,8 +85,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
 
   if (loading) {
     return modal ? (
-      <div className="fixed inset-0 flex justify-center items-center bg-white/60 backdrop-blur-md z-[9999]">
-        <p className="text-gray-700 text-lg font-medium">Loading product...</p>
+      <div className="fixed inset-0 flex justify-center items-center z-[9999]">
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-md" />
+        <p className="relative text-gray-700 text-lg font-medium">Loading product...</p>
       </div>
     ) : (
       <p className="text-gray-500">Loading...</p>
@@ -95,8 +96,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
 
   if (!product) {
     return modal ? (
-      <div className="fixed inset-0 flex justify-center items-center bg-white/60 backdrop-blur-md z-[9999]">
-        <div className="bg-background p-10 rounded-2xl text-center shadow-xl">
+      <div className="fixed inset-0 flex justify-center items-center z-[9999]">
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-md" />
+        <div className="relative bg-background p-6 sm:p-10 rounded-2xl text-center shadow-xl max-w-sm sm:max-w-lg w-full">
           <p className="text-lg text-muted-foreground mb-4">Product not found</p>
           <Button onClick={() => navigate(-1)}>Go Back</Button>
         </div>
@@ -106,21 +108,21 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     );
   }
 
-  // --- Inline mode: home page card ---
+  // Inline/home card
   if (!modal) {
     return (
-      <div className="relative bg-white shadow-md rounded-xl p-4 flex flex-col items-center">
+      <div className="relative bg-white shadow-md rounded-xl p-4 flex flex-col items-center w-full">
         <img
           src={product.image_url || localImages[0]}
           alt={product.name}
           className="h-40 object-contain"
         />
-        <h3 className="font-bold mt-2">{product.name}</h3>
+        <h3 className="font-bold mt-2 text-center">{product.name}</h3>
         <p className="text-[#0b8686] font-semibold">
           ₨{product.price.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
         </p>
         <Button
-          className="mt-2 bg-[#0b8686] hover:bg-[#097575] text-white"
+          className="mt-2 bg-[#0b8686] hover:bg-[#097575] text-white w-full flex justify-center"
           onClick={handleAddToCart}
           disabled={product.stock_quantity === 0}
         >
@@ -128,7 +130,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
           {product.stock_quantity === 0 ? "Out of Stock" : "Add to Cart"}
         </Button>
 
-        {/* Add-to-Cart Toast */}
         {added && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -144,7 +145,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     );
   }
 
-  // --- Modal mode ---
+  // Modal/detail page
   return (
     <AnimatePresence>
       <motion.div
@@ -152,14 +153,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1, transition: { duration: 0.4, ease: "easeOut" } }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm flex justify-center items-center z-[9999]"
+        className="fixed inset-0 flex justify-center items-center z-[9999] p-4 sm:p-6"
       >
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-6 right-6 text-gray-700 hover:text-gray-900 transition-colors"
-        >
-          <X size={28} />
-        </button>
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-md" />
 
         <motion.div
           key="modal"
@@ -167,29 +163,39 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30 }}
           transition={{ duration: 0.3 }}
-          className="max-w-5xl w-[95%] bg-white rounded-2xl shadow-2xl overflow-hidden grid md:grid-cols-2 gap-8 p-8 relative"
+          className="relative w-full max-w-3xl sm:max-w-4xl md:max-w-5xl bg-white rounded-2xl shadow-2xl overflow-auto max-h-[90vh] grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 p-4 sm:p-8"
         >
-          <div className="flex items-center justify-center bg-gray-50 rounded-xl p-6">
+          {/* Close button */}
+          <button
+            onClick={() => navigate(-1)}
+            className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 transition-colors z-10"
+          >
+            <X size={28} />
+          </button>
+
+          {/* Product Image */}
+          <div className="flex items-center justify-center bg-gray-50 rounded-xl p-4 sm:p-6">
             <img
               src={product.image_url || localImages[0]}
               alt={product.name}
-              className="max-h-96 w-auto object-contain"
+              className="max-h-80 sm:max-h-96 w-auto object-contain"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = localImages[0];
               }}
             />
           </div>
 
+          {/* Product Details */}
           <div className="flex flex-col justify-between">
             <div>
               <Badge className="mb-4 bg-secondary text-secondary-foreground">
                 {product.category}
               </Badge>
-              <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
-              <p className="text-muted-foreground mb-6 leading-relaxed">{product.description}</p>
+              <h1 className="text-2xl sm:text-4xl font-bold mb-4">{product.name}</h1>
+              <p className="text-muted-foreground mb-4 sm:mb-6 leading-relaxed">{product.description}</p>
 
               {product.benefits?.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-6">
+                <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
                   {product.benefits.map((b, i) => (
                     <Badge key={i} variant="outline" className="text-xs">
                       {b}
@@ -198,7 +204,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
                 </div>
               )}
 
-              <div className="flex items-center gap-2 mb-6">
+              <div className="flex items-center gap-2 mb-4 sm:mb-6">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
@@ -213,12 +219,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-6 border-t border-border">
-              <div className="text-3xl font-bold text-[#0b8686]">
+            {/* Price & Add to Cart */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-border gap-4 sm:gap-0">
+              <div className="text-2xl sm:text-3xl font-bold text-[#0b8686]">
                 ₨{product.price.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
               </div>
               <Button
-                className="bg-[#0b8686] hover:bg-[#097575] text-white"
+                className="bg-[#0b8686] hover:bg-[#097575] text-white w-full sm:w-auto flex justify-center items-center"
                 onClick={handleAddToCart}
                 disabled={product.stock_quantity === 0}
               >
@@ -228,6 +235,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
             </div>
           </div>
 
+          {/* Add-to-cart toast */}
           {added && (
             <motion.div
               initial={{ opacity: 0, x: 50 }}
