@@ -163,11 +163,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1, transition: { duration: 0.4, ease: "easeOut" } }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 flex justify-center items-center z-[9999] p-4 sm:p-6"
+        className="fixed inset-0 z-[9999] flex justify-center items-start sm:items-center overflow-auto"
         onClick={handleOverlayClick}
       >
-        <div className="absolute inset-0 bg-black/20 backdrop-blur-md pointer-events-auto" />
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm pointer-events-auto" />
 
+        {/* Modal */}
         <motion.div
           ref={modalRef}
           key="modal"
@@ -175,18 +177,18 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30 }}
           transition={{ duration: 0.3 }}
-          className="relative w-full max-w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl 
-                     bg-white rounded-2xl shadow-2xl overflow-auto max-h-[calc(100vh-2rem)] p-4 sm:p-6 md:p-8"
+          className="relative w-full max-w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl
+                     bg-white rounded-2xl shadow-xl overflow-auto max-h-screen p-4 sm:p-6 md:p-8"
           style={{
             paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)",
             paddingTop: "calc(env(safe-area-inset-top) + 1rem)",
           }}
         >
-          {/* Close button */}
+          {/* Fixed Close Button */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-700 hover:text-gray-900 transition-colors z-50
-                       w-12 h-12 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-md"
+            className="fixed top-4 right-4 sm:top-6 sm:right-6 w-12 h-12 flex items-center justify-center
+                       bg-white/90 backdrop-blur-sm rounded-full shadow-md z-[10000] touch-manipulation"
           >
             <X size={28} />
           </button>
@@ -256,6 +258,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
             </div>
           </div>
 
+          {/* Add-to-cart toast */}
           {added && (
             <motion.div
               initial={{ opacity: 0, x: 50 }}
