@@ -27,7 +27,7 @@ const Hero = () => {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
-          className="max-w-3xl mx-auto text-center text-white mt-16 sm:mt-20"
+          className="max-w-3xl mx-auto text-center text-white mt-20 sm:mt-24"
         >
           {/* Heading */}
           <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl leading-snug sm:leading-tight md:leading-tight font-parka font-bold mb-6">
@@ -43,23 +43,23 @@ const Hero = () => {
           </h1>
 
           {/* Subheading */}
-          <p className="text-sm sm:text-base md:text-lg mb-12 textgr max-w-xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base md:text-lg mb-16 textgr max-w-xl mx-auto leading-relaxed">
             <span className="text-[#FFB84D]">CERA MEDICAL</span> is dedicated to improving human health through innovative solutions. We develop evidence-based natural health products and provide cutting-edge research services.
           </p>
 
-          {/* Buttons: left & right */}
-          <div className="flex justify-between max-w-sm mx-auto w-full">
+          {/* Buttons: stacked on mobile, side by side on md+ */}
+          <div className="flex flex-col md:flex-row justify-center items-center gap-3 mb-12 max-w-sm mx-auto">
             <Button
-              className="btn-medical text-base sm:text-lg px-5 py-3 flex justify-center items-center w-[48%]"
+              className="btn-medical text-sm sm:text-base px-4 py-2 flex justify-center items-center w-full md:w-[48%]"
               onClick={() => navigate('/products')}
             >
               Shop Products
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
 
             <Button
               variant="outline"
-              className="text-base sm:text-lg px-5 py-3 border border-white text-white bg-transparent w-[48%] focus:ring-0 focus:outline-none"
+              className="text-sm sm:text-base px-4 py-2 border border-white text-white bg-transparent focus:ring-0 focus:outline-none w-full md:w-[48%]"
               onClick={() => navigate('/about')}
             >
               Who We Are
@@ -67,7 +67,7 @@ const Hero = () => {
           </div>
 
           {/* Trust Indicators */}
-          <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 mt-12 text-white/80 text-xs sm:text-sm md:text-base">
+          <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 mt-4 text-white/80 text-xs sm:text-sm md:text-base">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               <span>1+ Years Experience</span>
@@ -84,8 +84,8 @@ const Hero = () => {
         </motion.div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 animate-bounce">
+      {/* Scroll Indicator (only on md+ screens) */}
+      <div className="hidden md:block absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
         <div className="w-4 h-8 sm:w-5 sm:h-10 border-2 border-white/30 rounded-full flex justify-center">
           <div className="w-1 h-3 bg-white/60 rounded-full mt-1 animate-pulse"></div>
         </div>
