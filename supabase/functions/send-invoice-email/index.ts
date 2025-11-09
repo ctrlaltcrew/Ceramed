@@ -13,30 +13,38 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // ✅ Parse request
     const body = await req.json();
+
+    // ✅ Recipient & basic info
     const to = body.to || body.customerEmail;
+    if (!to) throw new Error("No recipient email provided");
+
     const customerName = body.customerName || "Valued Customer";
+    const invoiceId = body.invoiceId;
     const orderId = body.orderId || Math.floor(Math.random() * 900000 + 100000);
     const items = body.items || [];
     const total = body.total || "0.00";
     const shippingAddress = body.shippingAddress || "Not Provided";
     const billingAddress = body.billingAddress || "Not Provided";
 
-    if (!to) throw new Error("No recipient email provided");
+    // ✅ SMTP config (from environment variables)
+    const host = Deno.env.get("SMTP_HOST") || "mail.ceramed.org";
+    const port = parseInt(Deno.env.get("SMTP_PORT") || "465");
+    const user = Deno.env.get("SMTP_USER") || Deno.env.get("EMAIL_USER");
+    const pass = Deno.env.get("SMTP_PASS") || Deno.env.get("EMAIL_PASS");
 
-    // ✅ SMTP config for Hostinger
+    if (!host || !user || !pass) {
+      throw new Error("SMTP credentials not configured in Edge Function secrets");
+    }
+
     const transporter = nodemailer.createTransport({
-      host: "mail.ceramed.org",
-      port: 465,
-      secure: true,
-      auth: {
-        user: Deno.env.get("EMAIL_USER"),
-        pass: Deno.env.get("EMAIL_PASS"),
-      },
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
     });
 
-    // ✅ Build order item table
+    // ✅ Build items table if order email
     const itemsHTML = items
       .map(
         (item) => `
@@ -50,8 +58,18 @@ Deno.serve(async (req) => {
       )
       .join("");
 
-    // ✅ Email HTML
-    const html = `
+    // ✅ Generate HTML
+    let html: string;
+    let subject: string;
+
+    if (invoiceId) {
+      // Invoice email
+      subject = `Invoice #${invoiceId}`;
+      html = `<p>Dear ${customerName},</p><p>Your invoice #${invoiceId} is ready.</p>`;
+    } else {
+      // Order confirmation email
+      subject = `Order #${orderId} Confirmation - DIVERSITY`;
+      html = `
 <!DOCTYPE html>
 <html>
   <body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
@@ -86,14 +104,8 @@ Deno.serve(async (req) => {
                 </div>
                 <h3 style="margin-top:25px;color:#222;">Customer Information</h3>
                 <p style="font-size:14px;color:#333;line-height:1.5;">
-                  <b>Shipping address:</b><br>${shippingAddress.replace(
-                    /\n/g,
-                    "<br>"
-                  )}<br><br>
-                  <b>Billing address:</b><br>${billingAddress.replace(
-                    /\n/g,
-                    "<br>"
-                  )}<br><br>
+                  <b>Shipping address:</b><br>${shippingAddress.replace(/\n/g, "<br>")}<br><br>
+                  <b>Billing address:</b><br>${billingAddress.replace(/\n/g, "<br>")}<br><br>
                   <b>Shipping method:</b> 🚚 Free Delivery (2 - 4 Working Days)
                 </p>
                 <p style="font-size:14px;color:#555;">
@@ -113,12 +125,13 @@ Deno.serve(async (req) => {
   </body>
 </html>
 `;
+    }
 
-    // ✅ Send mail
+    // ✅ Send email
     const info = await transporter.sendMail({
-      from: "DIVERSITY <info@ceramed.org>",
+      from: `"Ceramed / DIVERSITY" <${user}>`,
       to,
-      subject: `Order #${orderId} Confirmation - DIVERSITY`,
+      subject,
       html,
     });
 
