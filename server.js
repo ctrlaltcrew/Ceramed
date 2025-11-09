@@ -10,19 +10,22 @@ app.use(express.json());
 app.post("/api/send-invoice", async (req, res) => {
   const payload = req.body;
 
-  if (!payload?.to) return res.status(400).json({ message: "'to' email is required" });
+  if (!payload?.to) {
+    return res.status(400).json({ message: "'to' email is required" });
+  }
 
   try {
     const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // server-only secret
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // must be server key
 
+    // Call the Supabase Edge Function
     const supRes = await fetch(`${supabaseUrl}/functions/v1/send-invoice-email`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${serviceKey}`
+        "Authorization": `Bearer ${serviceKey}`, // correct header
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     const data = await supRes.json().catch(() => null);
