@@ -1,17 +1,25 @@
 import nodemailer from "npm:nodemailer";
 
 Deno.serve(async (req) => {
+  // ✅ CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key",
       },
     });
   }
 
   try {
+    // ✅ Optional: simple key protection
+    const API_KEY = Deno.env.get("PRIVATE_API_KEY");
+    const reqKey = req.headers.get("x-api-key");
+    if (API_KEY && reqKey !== API_KEY) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
     const body = await req.json();
 
     const to = body.to || body.customerEmail;
@@ -24,28 +32,29 @@ Deno.serve(async (req) => {
 
     if (!to) throw new Error("No recipient email provided");
 
-    // ✅ Use your SMTP settings (for ceramed.org)
+    // ✅ Use Hostinger’s SMTP settings
     const transporter = nodemailer.createTransport({
-      host: "mail.ceramed.org",
+      host: "smtp.hostinger.com", // ✅ not mail.ceramed.org
       port: 465,
       secure: true,
       auth: {
-        user: Deno.env.get("EMAIL_USER"),
+        user: Deno.env.get("EMAIL_USER"), // info@ceramed.org
         pass: Deno.env.get("EMAIL_PASS"),
       },
     });
 
-    // ✅ Build order item rows
-    const itemsHTML = items.map(
-      (item) => `
+    const itemsHTML = items
+      .map(
+        (item) => `
         <tr>
-          <td style="padding:8px 0;color:#333;">${item.name} ${item.size ? `(${item.size})` : ""}</td>
+          <td style="padding:8px 0;color:#333;">${item.name} ${
+          item.size ? `(${item.size})` : ""
+        }</td>
           <td style="padding:8px 0;text-align:right;color:#333;">₨${item.price}</td>
-        </tr>
-      `
-    ).join("");
+        </tr>`
+      )
+      .join("");
 
-    // ✅ Modern responsive HTML email
     const html = `
 <!DOCTYPE html>
 <html>
@@ -55,28 +64,24 @@ Deno.serve(async (req) => {
         <td align="center">
           <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
             
-            <!-- Header -->
             <tr>
-              <td align="center" style="background:#111;color:#ffffff;padding:25px 10px;font-size:22px;font-weight:bold;letter-spacing:1px;">
+              <td align="center" style="background:#111;color:#ffffff;padding:25px 10px;font-size:22px;font-weight:bold;">
                 DIVERSITY — Order #${orderId}
               </td>
             </tr>
             
-            <!-- Content -->
             <tr>
               <td style="padding:30px;">
                 <h2 style="color:#222;margin-bottom:10px;">Thank you for your purchase!</h2>
                 <p style="font-size:15px;color:#333;line-height:1.6;">
-                  Hi <b>${customerName}</b>, we're getting your order ready to be shipped.<br>
+                  Hi <b>${customerName}</b>, we’re getting your order ready to be shipped.
                   We’ll notify you when it has been sent.
                 </p>
-                
+
                 <div style="margin-top:20px;">
-                  <a href="#" style="background:#111;color:#fff;text-decoration:none;padding:12px 20px;border-radius:6px;display:inline-block;margin-right:10px;">View your order</a>
-                  <a href="https://diversity.pk" style="background:#555;color:#fff;text-decoration:none;padding:12px 20px;border-radius:6px;display:inline-block;">Visit our store</a>
+                  <a href="#" style="background:#111;color:#fff;text-decoration:none;padding:12px 20px;border-radius:6px;">View your order</a>
                 </div>
 
-                <!-- Order Summary -->
                 <div style="margin-top:30px;background:#f4f4f4;border-radius:8px;padding:15px;">
                   <h3 style="margin:0 0 10px 0;color:#222;">Order Summary</h3>
                   <table width="100%" cellpadding="0" cellspacing="0">
@@ -88,7 +93,6 @@ Deno.serve(async (req) => {
                   </table>
                 </div>
 
-                <!-- Customer Info -->
                 <h3 style="margin-top:25px;color:#222;">Customer Information</h3>
                 <p style="font-size:14px;color:#333;line-height:1.5;">
                   <b>Shipping address:</b><br>${shippingAddress.replace(/\n/g, "<br>")}<br><br>
@@ -97,13 +101,12 @@ Deno.serve(async (req) => {
                 </p>
 
                 <p style="font-size:14px;color:#555;">
-                  If you have any questions, reply to this email or contact us at 
-                  <a href="mailto:support@diversity.pk" style="color:#111;">support@diversity.pk</a>
+                  Questions? Contact us at 
+                  <a href="mailto:info@ceramed.org" style="color:#111;">info@ceramed.org</a>
                 </p>
               </td>
             </tr>
 
-            <!-- Footer -->
             <tr>
               <td align="center" style="background:#fafafa;padding:15px;color:#777;font-size:13px;">
                 © 2025 DIVERSITY. All rights reserved.
@@ -117,37 +120,42 @@ Deno.serve(async (req) => {
 </html>
 `;
 
-    // ✅ Send the email
     const info = await transporter.sendMail({
       from: "DIVERSITY <info@ceramed.org>",
       to,
       subject: `Order #${orderId} Confirmation - DIVERSITY`,
-      html, // ensure we send HTML, not plain text
+      html,
     });
 
     console.log("✅ Email sent successfully:", info.messageId);
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: "Email sent successfully",
-      messageId: info.messageId,
-    }), {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json",
-      },
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Email sent successfully",
+        messageId: info.messageId,
+      }),
+      {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        },
+      }
+    );
   } catch (err) {
     console.error("💥 Email send failed:", err);
-    return new Response(JSON.stringify({
-      success: false,
-      error: err.message || "Internal Server Error",
-    }), {
-      status: 500,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json",
-      },
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: err.message || "Internal Server Error",
+      }),
+      {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+        },
+      }
+    );
   }
 });
