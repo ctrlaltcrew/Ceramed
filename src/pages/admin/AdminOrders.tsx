@@ -6,84 +6,92 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 
-const AdminOrders = () => {
-  const [orders, setOrders] = useState<any[]>([]);
+interface Order {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  total_amount: number;
+  status: "pending" | "verified" | "cancelled";
+  payment_method?: string;
+  payment_receipt?: string;
+  created_at: string;
+}
+
+interface OrderItem {
+  id: string;
+  product_name: string;
+  quantity: number;
+  price: number;
+  total: number;
+}
+
+const AdminOrders: React.FC = () => {
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order & { items?: OrderItem[] } | null>(null);
   const [updating, setUpdating] = useState(false);
 
-  // Fetch only pending orders
+  // Fetch pending orders
   const fetchOrders = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("orders")
+      .from<Order>("orders")
       .select("*")
       .eq("status", "pending")
       .order("created_at", { ascending: false });
 
     if (error) console.error("❌ Error fetching orders:", error);
     else setOrders(data || []);
-
     setLoading(false);
   };
 
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(fetchOrders, 30000); // Refresh every 30s
+    const interval = setInterval(fetchOrders, 30000); // refresh every 30s
     return () => clearInterval(interval);
   }, []);
 
   // Fetch order items
-  const fetchOrderDetails = async (orderId: string) => {
-    const { data: items, error } = await supabase
-      .from("order_items")
+  const fetchOrderItems = async (orderId: string): Promise<OrderItem[]> => {
+    const { data, error } = await supabase
+      .from<OrderItem>("order_items")
       .select("*")
       .eq("order_id", orderId);
 
     if (error) console.error("❌ Error fetching order items:", error);
-    return items || [];
+    return data || [];
   };
 
-  // ✅ Update order status and send invoice
-const handleUpdateStatus = async (orderId: string, status: string) => {
-  setUpdating(true);
+  // Update order status & send invoice if verified
+  const handleUpdateStatus = async (orderId: string, status: "verified" | "cancelled") => {
+    setUpdating(true);
 
-  try {
-    // 1️⃣ Update order status in Supabase
-    const { data, error } = await supabase
-      .from("orders")
-      .update({ status })
-      .eq("id", orderId)
-      .select();
+    try {
+      // 1️⃣ Update order status
+      const { data, error } = await supabase
+        .from<Order>("orders")
+        .update({ status })
+        .eq("id", orderId)
+        .select();
 
-    if (error) {
-      alert("❌ Failed to update order — see console for details");
-      console.error(error);
-      setUpdating(false);
-      return;
-    }
-
-    alert(`✅ Order ${status} successfully`);
-
-    // 2️⃣ Remove the order from the list if verified or cancelled
-    if (status === "verified" || status === "cancelled") {
-      setOrders((prevOrders) => prevOrders.filter((o) => o.id !== orderId));
-    } else {
-      await fetchOrders();
-    }
-
-    // 3️⃣ Send invoice email only when verified
-    if (status === "verified") {
+      if (error) throw error;
       const order = data?.[0];
-      if (order) {
-        const items = await fetchOrderDetails(order.id);
+      if (!order) throw new Error("Order not found after update");
+
+      // 2️⃣ Remove from list if verified/cancelled
+      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+
+      alert(`✅ Order ${status} successfully`);
+
+      // 3️⃣ Send invoice email if verified
+      if (status === "verified") {
+        const items = await fetchOrderItems(order.id);
 
         try {
-          const response = await fetch("/functions/v1/send-invoice", {
+          const response = await fetch("/functions/v1/send-invoice-email", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               to: order.customer_email,
               subject: `Invoice for Order #${order.id}`,
@@ -92,46 +100,31 @@ const handleUpdateStatus = async (orderId: string, status: string) => {
                 <p>Thank you for your order.</p>
                 <p><strong>Total:</strong> ₨${order.total_amount}</p>
                 <p><strong>Items:</strong></p>
-                ${items
-                  .map(
-                    (i) =>
-                      `<p>${i.product_name} (${i.quantity} × ₨${i.price})</p>`
-                  )
-                  .join("")}
+                ${items.map((i) => `<p>${i.product_name} (${i.quantity} × ₨${i.price})</p>`).join("")}
               `,
             }),
           });
 
-          if (response.ok) {
-            console.log("📩 Invoice email sent successfully");
-            alert("✅ Invoice email sent to customer!");
-          } else {
-            console.error("❌ Email send failed", response.statusText);
-            alert("⚠️ Email send failed. Check Supabase logs.");
-          }
+          if (!response.ok) throw new Error("Email send failed");
+          console.log("📩 Invoice email sent successfully");
         } catch (err) {
           console.error("💥 Error sending invoice:", err);
-          alert("Error connecting to email service.");
+          alert("⚠️ Failed to send invoice email. Check logs.");
         }
       }
+
+      // 4️⃣ Close modal if open
+      if (selectedOrder?.id === orderId) setSelectedOrder(null);
+    } catch (err) {
+      console.error("💥 Error updating order:", err);
+      alert("Unexpected error occurred — check console.");
+    } finally {
+      setUpdating(false);
     }
+  };
 
-    // 4️⃣ Close modal if open
-    if (selectedOrder && selectedOrder.id === orderId) {
-      setSelectedOrder(null);
-    }
-  } catch (err) {
-    console.error("💥 Unexpected error:", err);
-    alert("Unexpected error occurred — check console.");
-  } finally {
-    setUpdating(false);
-  }
-};
-
-
-  // View order details in modal
-  const handleViewOrder = async (order: any) => {
-    const items = await fetchOrderDetails(order.id);
+  const handleViewOrder = async (order: Order) => {
+    const items = await fetchOrderItems(order.id);
     setSelectedOrder({ ...order, items });
   };
 
@@ -143,48 +136,46 @@ const handleUpdateStatus = async (orderId: string, status: string) => {
         <div className="flex justify-center py-10">
           <Loader2 className="animate-spin" />
         </div>
+      ) : orders.length === 0 ? (
+        <p>No pending orders found</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {orders.length === 0 ? (
-            <p>No orders found</p>
-          ) : (
-            orders.map(order => (
-              <Card key={order.id} className="shadow-sm border">
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    <span>{order.customer_name}</span>
-                    <Badge
-                      className={
-                        order.status === "verified"
-                          ? "bg-green-500"
-                          : order.status === "cancelled"
-                          ? "bg-red-500"
-                          : "bg-yellow-500"
-                      }
-                    >
-                      {order.status}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>💰 <strong>Total:</strong> ₨{order.total_amount}</p>
-                  <p>📧 <strong>Email:</strong> {order.customer_email}</p>
-                  <p>📅 {new Date(order.created_at).toLocaleString()}</p>
-                  <div className="mt-3 flex justify-between">
-                    <Button size="sm" onClick={() => handleViewOrder(order)}>View</Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleUpdateStatus(order.id, "cancelled")}
-                      disabled={updating}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+          {orders.map((order) => (
+            <Card key={order.id} className="shadow-sm border">
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  <span>{order.customer_name}</span>
+                  <Badge
+                    className={
+                      order.status === "verified"
+                        ? "bg-green-500"
+                        : order.status === "cancelled"
+                        ? "bg-red-500"
+                        : "bg-yellow-500"
+                    }
+                  >
+                    {order.status}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>💰 <strong>Total:</strong> ₨{order.total_amount}</p>
+                <p>📧 <strong>Email:</strong> {order.customer_email}</p>
+                <p>📅 {new Date(order.created_at).toLocaleString()}</p>
+                <div className="mt-3 flex justify-between">
+                  <Button size="sm" onClick={() => handleViewOrder(order)}>View</Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleUpdateStatus(order.id, "cancelled")}
+                    disabled={updating}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
@@ -215,7 +206,7 @@ const handleUpdateStatus = async (orderId: string, status: string) => {
               )}
 
               <h3 className="font-semibold mt-4">🛍️ Items:</h3>
-              {selectedOrder.items?.map((item: any) => (
+              {selectedOrder.items?.map((item) => (
                 <div
                   key={item.id}
                   className="border p-2 rounded-md text-sm flex justify-between"
