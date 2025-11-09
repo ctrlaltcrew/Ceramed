@@ -108,7 +108,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     );
   }
 
-  // Inline/home card
+  // Inline card for homepage
   if (!modal) {
     return (
       <div className="relative bg-white shadow-md rounded-xl p-4 flex flex-col items-center w-full">
@@ -155,15 +155,23 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         exit={{ opacity: 0 }}
         className="fixed inset-0 flex justify-center items-center z-[9999] p-4 sm:p-6"
       >
+        {/* Blurred background */}
         <div className="absolute inset-0 bg-black/20 backdrop-blur-md" />
 
+        {/* Modal container */}
         <motion.div
           key="modal"
           initial={{ opacity: 0, y: 30, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30 }}
           transition={{ duration: 0.3 }}
-          className="relative w-full max-w-3xl sm:max-w-4xl md:max-w-5xl bg-white rounded-2xl shadow-2xl overflow-auto max-h-[90vh] grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 p-4 sm:p-8"
+          className="relative w-full max-w-3xl sm:max-w-4xl md:max-w-5xl bg-white rounded-2xl shadow-2xl
+                     overflow-auto max-h-[calc(100vh-2rem)] grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8
+                     p-4 sm:p-8"
+          style={{
+            paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)",
+            paddingTop: "calc(env(safe-area-inset-top) + 1rem)",
+          }}
         >
           {/* Close button */}
           <button
@@ -192,7 +200,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
                 {product.category}
               </Badge>
               <h1 className="text-2xl sm:text-4xl font-bold mb-4">{product.name}</h1>
-              <p className="text-muted-foreground mb-4 sm:mb-6 leading-relaxed">{product.description}</p>
+              <p className="text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                {product.description}
+              </p>
 
               {product.benefits?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
@@ -235,7 +245,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
             </div>
           </div>
 
-          {/* Add-to-cart toast */}
+          {/* Toast notification */}
           {added && (
             <motion.div
               initial={{ opacity: 0, x: 50 }}
