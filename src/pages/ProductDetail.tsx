@@ -40,7 +40,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
   const [loading, setLoading] = useState(!initialProduct && !!id);
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
-
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -87,16 +86,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
 
   const handleClose = () => navigate(-1);
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-      handleClose();
-    }
-  };
-
+  // Loading State
   if (loading) {
     return modal ? (
       <div className="fixed inset-0 flex justify-center items-center z-[9999]">
-        <div className="absolute inset-0 bg-black/20 backdrop-blur-md" />
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
         <p className="relative text-gray-700 text-lg font-medium">Loading product...</p>
       </div>
     ) : (
@@ -104,11 +98,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     );
   }
 
+  // Product Not Found
   if (!product) {
     return modal ? (
       <div className="fixed inset-0 flex justify-center items-center z-[9999]">
-        <div className="absolute inset-0 bg-black/20 backdrop-blur-md" />
-        <div className="relative bg-background p-6 sm:p-10 rounded-2xl text-center shadow-xl max-w-sm sm:max-w-lg w-full">
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+        <div className="relative bg-white p-6 sm:p-10 rounded-2xl text-center shadow-xl max-w-sm sm:max-w-lg w-full">
           <p className="text-lg text-muted-foreground mb-4">Product not found</p>
           <Button onClick={handleClose}>Go Back</Button>
         </div>
@@ -155,21 +150,20 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     );
   }
 
-  // Modal overlay
+  // Modal
   return (
     <AnimatePresence>
       <motion.div
         key="overlay"
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1, transition: { duration: 0.4, ease: "easeOut" } }}
+        animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[9999] flex justify-center items-start sm:items-center overflow-auto"
-        onClick={handleOverlayClick}
       >
         {/* Backdrop */}
-        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm pointer-events-auto" />
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm pointer-events-none" />
 
-        {/* Modal */}
+        {/* Modal Card */}
         <motion.div
           ref={modalRef}
           key="modal"
@@ -179,32 +173,27 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
           transition={{ duration: 0.3 }}
           className="relative w-full max-w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl
                      bg-white rounded-2xl shadow-xl overflow-auto max-h-screen p-4 sm:p-6 md:p-8"
-          style={{
-            paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)",
-            paddingTop: "calc(env(safe-area-inset-top) + 1rem)",
-          }}
         >
-          {/* Fixed Close Button */}
+          {/* Close Button */}
           <button
             onClick={handleClose}
             className="fixed top-4 right-4 sm:top-6 sm:right-6 w-12 h-12 flex items-center justify-center
-                       bg-white/90 backdrop-blur-sm rounded-full shadow-md z-[10000] touch-manipulation"
+                       bg-white/90 backdrop-blur-sm rounded-full shadow-md z-[10000]"
           >
             <X size={28} />
           </button>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            {/* Image */}
             <div className="flex items-center justify-center bg-gray-50 rounded-xl p-4 sm:p-6">
               <img
                 src={product.image_url || localImages[0]}
                 alt={product.name}
                 className="w-full h-auto max-h-96 object-contain"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = localImages[0];
-                }}
               />
             </div>
 
+            {/* Details */}
             <div className="flex flex-col justify-between">
               <div>
                 <Badge className="mb-4 bg-secondary text-secondary-foreground">
@@ -242,6 +231,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
                 </div>
               </div>
 
+              {/* Price & Add-to-Cart */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-border gap-4 sm:gap-0">
                 <div className="text-2xl sm:text-3xl font-bold text-[#0b8686]">
                   ₨{product.price.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
@@ -258,7 +248,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
             </div>
           </div>
 
-          {/* Add-to-cart toast */}
+          {/* Toast */}
           {added && (
             <motion.div
               initial={{ opacity: 0, x: 50 }}
