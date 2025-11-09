@@ -44,79 +44,90 @@ const AdminOrders = () => {
     return items || [];
   };
 
-  // Update order status and send invoice email via backend
-  const handleUpdateStatus = async (orderId: string, status: string) => {
-    setUpdating(true);
+  // ✅ Update order status and send invoice
+const handleUpdateStatus = async (orderId: string, status: string) => {
+  setUpdating(true);
 
-    try {
-      const { data, error } = await supabase
-        .from("orders")
-        .update({ status })
-        .eq("id", orderId)
-        .select();
+  try {
+    // Update the order status in Supabase
+    const { data, error } = await supabase
+      .from("orders")
+      .update({ status })
+      .eq("id", orderId)
+      .select();
 
-      if (error) {
-        alert("❌ Failed to update order — see console for details");
-        setUpdating(false);
-        return;
-      }
+    if (error) {
+      alert("❌ Failed to update order — see console for details");
+      console.error(error);
+      setUpdating(false);
+      return;
+    }
 
-      alert(`✅ Order ${status} successfully`);
+    alert(`✅ Order ${status} successfully`);
 
-      // Remove from list if verified or cancelled
-      if (status === "verified" || status === "cancelled") {
-        setOrders(prevOrders => prevOrders.filter(o => o.id !== orderId));
-      } else {
-        await fetchOrders();
-      }
+    // Remove order from the list if verified or cancelled
+    if (status === "verified" || status === "cancelled") {
+      setOrders((prevOrders) => prevOrders.filter((o) => o.id !== orderId));
+    } else {
+      await fetchOrders();
+    }
 
-      // Send invoice email only when verified
-      if (status === "verified") {
-        const order = data?.[0];
-        if (order) {
-          const items = await fetchOrderDetails(order.id);
-          try {
-            const response = await fetch("/api/send-invoice", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                to: order.customer_email,
-                subject: `Invoice for Order #${order.id}`,
-                html: `
-                  <h3>Hello ${order.customer_name}</h3>
-                  <p>Thank you for your order.</p>
-                  <p><strong>Total:</strong> ₨${order.total_amount}</p>
-                  <p><strong>Items:</strong></p>
-                  ${items.map(
-                    (i) => `<p>${i.product_name} (${i.quantity} × ₨${i.price})</p>`
-                  ).join("")}
-                `,
-              }),
-            });
+    // ✅ Send invoice email only when verified
+    if (status === "verified") {
+      const order = data?.[0];
+      if (order) {
+        const items = await fetchOrderDetails(order.id);
 
-            if (response.ok) {
-              alert("✅ Invoice email sent successfully!");
-            } else {
-              alert("⚠️ Email failed. Check server logs.");
-            }
-          } catch (err) {
-            console.error("💥 Error sending invoice email:", err);
-            alert("❌ Error sending invoice email.");
+        try {
+          // Call your Edge Function
+          const response = await fetch("/functions/v1/send-invoice", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              to: order.customer_email || order.email,
+              subject: `Invoice for Order #${order.id}`,
+              html: `
+                <h3>Hello ${order.customer_name || "Customer"},</h3>
+                <p>Thank you for your order.</p>
+                <p><strong>Total:</strong> ₨${order.total_amount}</p>
+                <p><strong>Items:</strong></p>
+                ${items
+                  .map(
+                    (i) =>
+                      `<p>${i.product_name} (${i.quantity} × ₨${i.price})</p>`
+                  )
+                  .join("")}
+              `,
+            }),
+          });
+
+          if (response.ok) {
+            alert("✅ Invoice email sent to customer!");
+            console.log("📩 Invoice email sent successfully");
+          } else {
+            alert("⚠️ Email send failed. Check Supabase logs.");
+            console.error("❌ Email send failed", await response.text());
           }
+        } catch (err) {
+          console.error("💥 Error sending invoice:", err);
+          alert("❌ Error connecting to email service");
         }
       }
-
-      // Close modal if needed
-      if (selectedOrder?.id === orderId) {
-        setSelectedOrder(null);
-      }
-    } catch (err) {
-      console.error("💥 Unexpected error:", err);
-      alert("Unexpected error occurred — check console.");
-    } finally {
-      setUpdating(false);
     }
-  };
+
+    if (selectedOrder && selectedOrder.id === orderId) {
+      setSelectedOrder(null);
+    }
+  } catch (err) {
+    console.error("💥 Unexpected error:", err);
+    alert("Unexpected error occurred — check console.");
+  } finally {
+    setUpdating(false);
+  }
+};
+
 
   // View order details in modal
   const handleViewOrder = async (order: any) => {
