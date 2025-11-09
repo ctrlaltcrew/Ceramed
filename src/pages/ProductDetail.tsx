@@ -21,7 +21,7 @@ interface Product {
 }
 
 interface ProductDetailProps {
-  modal?: boolean; // true = modal overlay, false = full page
+  modal?: boolean;
   product?: Product;
   productId?: string;
 }
@@ -85,10 +85,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     setTimeout(() => setAdded(false), 2500);
   };
 
-  // Close modal
   const handleClose = () => navigate(-1);
 
-  // Close modal if click outside
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
       handleClose();
@@ -120,7 +118,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     );
   }
 
-  // Inline/homepage card mode
+  // Inline / homepage card
   if (!modal) {
     return (
       <div className="relative bg-white shadow-md rounded-xl p-4 flex flex-col items-center w-full">
@@ -157,7 +155,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     );
   }
 
-  // Modal / overlay mode
+  // Modal overlay
   return (
     <AnimatePresence>
       <motion.div
@@ -166,12 +164,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         animate={{ opacity: 1, transition: { duration: 0.4, ease: "easeOut" } }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 flex justify-center items-center z-[9999] p-4 sm:p-6"
-        onClick={handleOverlayClick} // close on outside click
+        onClick={handleOverlayClick}
       >
-        {/* Blurred background */}
-        <div className="absolute inset-0 bg-black/20 backdrop-blur-md" />
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-md pointer-events-auto" />
 
-        {/* Modal container */}
         <motion.div
           ref={modalRef}
           key="modal"
@@ -180,8 +176,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
           exit={{ opacity: 0, y: 30 }}
           transition={{ duration: 0.3 }}
           className="relative w-full max-w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl 
-                     bg-white rounded-2xl shadow-2xl overflow-auto 
-                     max-h-[calc(100vh-2rem)] p-4 sm:p-6 md:p-8"
+                     bg-white rounded-2xl shadow-2xl overflow-auto max-h-[calc(100vh-2rem)] p-4 sm:p-6 md:p-8"
           style={{
             paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)",
             paddingTop: "calc(env(safe-area-inset-top) + 1rem)",
@@ -190,14 +185,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 transition-colors z-10"
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-700 hover:text-gray-900 transition-colors z-50
+                       w-12 h-12 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-md"
           >
             <X size={28} />
           </button>
 
-          {/* Content grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            {/* Product image */}
             <div className="flex items-center justify-center bg-gray-50 rounded-xl p-4 sm:p-6">
               <img
                 src={product.image_url || localImages[0]}
@@ -209,7 +203,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
               />
             </div>
 
-            {/* Product details */}
             <div className="flex flex-col justify-between">
               <div>
                 <Badge className="mb-4 bg-secondary text-secondary-foreground">
@@ -247,7 +240,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
                 </div>
               </div>
 
-              {/* Price & Add to cart */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-border gap-4 sm:gap-0">
                 <div className="text-2xl sm:text-3xl font-bold text-[#0b8686]">
                   ₨{product.price.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
@@ -264,7 +256,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
             </div>
           </div>
 
-          {/* Toast notification */}
           {added && (
             <motion.div
               initial={{ opacity: 0, x: 50 }}
