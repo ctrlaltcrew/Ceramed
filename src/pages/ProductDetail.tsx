@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ interface Product {
 }
 
 interface ProductDetailProps {
-  modal?: boolean;
+  modal?: boolean; // true = modal overlay, false = full page
   product?: Product;
   productId?: string;
 }
@@ -40,6 +40,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
   const [loading, setLoading] = useState(!initialProduct && !!id);
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
+
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!product && id) fetchProduct();
@@ -83,6 +85,16 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     setTimeout(() => setAdded(false), 2500);
   };
 
+  // Close modal
+  const handleClose = () => navigate(-1);
+
+  // Close modal if click outside
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      handleClose();
+    }
+  };
+
   if (loading) {
     return modal ? (
       <div className="fixed inset-0 flex justify-center items-center z-[9999]">
@@ -100,7 +112,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         <div className="absolute inset-0 bg-black/20 backdrop-blur-md" />
         <div className="relative bg-background p-6 sm:p-10 rounded-2xl text-center shadow-xl max-w-sm sm:max-w-lg w-full">
           <p className="text-lg text-muted-foreground mb-4">Product not found</p>
-          <Button onClick={() => navigate(-1)}>Go Back</Button>
+          <Button onClick={handleClose}>Go Back</Button>
         </div>
       </div>
     ) : (
@@ -108,7 +120,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     );
   }
 
-  // Inline card for homepage
+  // Inline/homepage card mode
   if (!modal) {
     return (
       <div className="relative bg-white shadow-md rounded-xl p-4 flex flex-col items-center w-full">
@@ -145,7 +157,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     );
   }
 
-  // Modal/detail page
+  // Modal / overlay mode
   return (
     <AnimatePresence>
       <motion.div
@@ -154,20 +166,22 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         animate={{ opacity: 1, transition: { duration: 0.4, ease: "easeOut" } }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 flex justify-center items-center z-[9999] p-4 sm:p-6"
+        onClick={handleOverlayClick} // close on outside click
       >
         {/* Blurred background */}
         <div className="absolute inset-0 bg-black/20 backdrop-blur-md" />
 
         {/* Modal container */}
         <motion.div
+          ref={modalRef}
           key="modal"
           initial={{ opacity: 0, y: 30, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 30 }}
           transition={{ duration: 0.3 }}
-          className="relative w-full max-w-3xl sm:max-w-4xl md:max-w-5xl bg-white rounded-2xl shadow-2xl
-                     overflow-auto max-h-[calc(100vh-2rem)] grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8
-                     p-4 sm:p-8"
+          className="relative w-full max-w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl 
+                     bg-white rounded-2xl shadow-2xl overflow-auto 
+                     max-h-[calc(100vh-2rem)] p-4 sm:p-6 md:p-8"
           style={{
             paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)",
             paddingTop: "calc(env(safe-area-inset-top) + 1rem)",
@@ -175,73 +189,78 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         >
           {/* Close button */}
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleClose}
             className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 transition-colors z-10"
           >
             <X size={28} />
           </button>
 
-          {/* Product Image */}
-          <div className="flex items-center justify-center bg-gray-50 rounded-xl p-4 sm:p-6">
-            <img
-              src={product.image_url || localImages[0]}
-              alt={product.name}
-              className="max-h-80 sm:max-h-96 w-auto object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = localImages[0];
-              }}
-            />
-          </div>
-
-          {/* Product Details */}
-          <div className="flex flex-col justify-between">
-            <div>
-              <Badge className="mb-4 bg-secondary text-secondary-foreground">
-                {product.category}
-              </Badge>
-              <h1 className="text-2xl sm:text-4xl font-bold mb-4">{product.name}</h1>
-              <p className="text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
-                {product.description}
-              </p>
-
-              {product.benefits?.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
-                  {product.benefits.map((b, i) => (
-                    <Badge key={i} variant="outline" className="text-xs">
-                      {b}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 mb-4 sm:mb-6">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-5 w-5 ${
-                      i < Math.floor(product.rating) ? "text-yellow-400 fill-current" : "text-gray-300"
-                    }`}
-                  />
-                ))}
-                <span className="text-sm text-muted-foreground">
-                  {product.rating} ({product.reviews_count} reviews)
-                </span>
-              </div>
+          {/* Content grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            {/* Product image */}
+            <div className="flex items-center justify-center bg-gray-50 rounded-xl p-4 sm:p-6">
+              <img
+                src={product.image_url || localImages[0]}
+                alt={product.name}
+                className="w-full h-auto max-h-96 object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = localImages[0];
+                }}
+              />
             </div>
 
-            {/* Price & Add to Cart */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-border gap-4 sm:gap-0">
-              <div className="text-2xl sm:text-3xl font-bold text-[#0b8686]">
-                ₨{product.price.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
+            {/* Product details */}
+            <div className="flex flex-col justify-between">
+              <div>
+                <Badge className="mb-4 bg-secondary text-secondary-foreground">
+                  {product.category}
+                </Badge>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">{product.name}</h1>
+                <p className="text-muted-foreground mb-4 sm:mb-6 leading-relaxed">
+                  {product.description}
+                </p>
+
+                {product.benefits?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4 sm:mb-6">
+                    {product.benefits.map((b, i) => (
+                      <Badge key={i} variant="outline" className="text-xs">
+                        {b}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 mb-4 sm:mb-6">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-5 w-5 ${
+                        i < Math.floor(product.rating)
+                          ? "text-yellow-400 fill-current"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  ))}
+                  <span className="text-sm text-muted-foreground">
+                    {product.rating} ({product.reviews_count} reviews)
+                  </span>
+                </div>
               </div>
-              <Button
-                className="bg-[#0b8686] hover:bg-[#097575] text-white w-full sm:w-auto flex justify-center items-center"
-                onClick={handleAddToCart}
-                disabled={product.stock_quantity === 0}
-              >
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                {product.stock_quantity === 0 ? "Out of Stock" : "Add to Cart"}
-              </Button>
+
+              {/* Price & Add to cart */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-border gap-4 sm:gap-0">
+                <div className="text-2xl sm:text-3xl font-bold text-[#0b8686]">
+                  ₨{product.price.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
+                </div>
+                <Button
+                  className="bg-[#0b8686] hover:bg-[#097575] text-white w-full sm:w-auto flex justify-center items-center"
+                  onClick={handleAddToCart}
+                  disabled={product.stock_quantity === 0}
+                >
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                  {product.stock_quantity === 0 ? "Out of Stock" : "Add to Cart"}
+                </Button>
+              </div>
             </div>
           </div>
 
