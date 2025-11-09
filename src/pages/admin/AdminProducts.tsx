@@ -44,7 +44,7 @@ const AdminProducts = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const { toast } = useToast();
 
-  const [imageFile, setImageFile] = useState<File | null>(null); // ✅ New state for image
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -89,26 +89,23 @@ const AdminProducts = () => {
   // Add or update product
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
       let imageUrl = formData.image_url;
 
-      // ✅ Upload to Supabase Storage if a new image is selected
+      // Upload new image if selected
       if (imageFile) {
         const fileName = `${Date.now()}-${imageFile.name}`;
-        const { data, error: uploadError } = await supabase.storage
-          .from("product-images") // ⚠️ Change to your bucket name
+        const { error: uploadError } = await supabase.storage
+          .from("product-images") // your bucket
           .upload(fileName, imageFile);
 
-        if (uploadError) {
-          throw uploadError;
-        }
+        if (uploadError) throw uploadError;
 
         const { data: publicUrlData } = supabase.storage
           .from("product-images")
           .getPublicUrl(fileName);
 
-        imageUrl = publicUrlData.publicUrl;
+        imageUrl = publicUrlData?.publicUrl || "";
       }
 
       const productData = {
@@ -121,7 +118,7 @@ const AdminProducts = () => {
         benefits: formData.benefits
           .split(",")
           .map((b) => b.trim())
-          .filter((b) => b),
+          .filter(Boolean),
         rating: parseFloat(formData.rating),
         reviews_count: parseInt(formData.reviews_count),
         stock_quantity: parseInt(formData.stock_quantity),
@@ -134,7 +131,6 @@ const AdminProducts = () => {
           .from("products")
           .update(productData)
           .eq("id", editingProduct.id);
-
         if (error) throw error;
         toast({ title: "Success", description: "Product updated successfully" });
       } else {
@@ -165,6 +161,7 @@ const AdminProducts = () => {
       fetchProducts();
     } catch (error) {
       console.error("Error deleting product:", error);
+      toast({ title: "Error", description: "Failed to delete product", variant: "destructive" });
     }
   };
 
@@ -221,21 +218,18 @@ const AdminProducts = () => {
 
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
-                {editingProduct ? "Edit Product" : "Add New Product"}
-              </DialogTitle>
+              <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Name, Category */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Product Name</Label>
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
                   />
                 </div>
@@ -244,49 +238,41 @@ const AdminProducts = () => {
                   <Input
                     id="category"
                     value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   />
                 </div>
               </div>
 
-              {/* ✅ Size & Color */}
+              {/* Size & Color */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="size">Size</Label>
                   <Input
                     id="size"
-                    placeholder="e.g., S, M, L"
+                    placeholder="S, M, L"
                     value={formData.size}
-                    onChange={(e) =>
-                      setFormData({ ...formData, size: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, size: e.target.value })}
                   />
                 </div>
                 <div>
                   <Label htmlFor="color">Color</Label>
                   <Input
                     id="color"
-                    placeholder="e.g., Blue, Red"
+                    placeholder="Red, Blue"
                     value={formData.color}
-                    onChange={(e) =>
-                      setFormData({ ...formData, color: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                   />
                 </div>
               </div>
 
-              {/* ✅ Image Upload */}
+              {/* Image Upload */}
               <div>
                 <Label htmlFor="image">Upload Image</Label>
                 <Input
                   id="image"
                   type="file"
                   accept="image/*"
-                  onChange={(e) =>
-                    setImageFile(e.target.files ? e.target.files[0] : null)
-                  }
+                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
                 />
                 {formData.image_url && (
                   <img
@@ -297,42 +283,35 @@ const AdminProducts = () => {
                 )}
               </div>
 
+              {/* Description, Full Description, Benefits */}
               <div>
                 <Label htmlFor="description">Short Description</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
-
               <div>
                 <Label htmlFor="full_description">Full Description</Label>
                 <Textarea
                   id="full_description"
                   value={formData.full_description}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      full_description: e.target.value,
-                    })
+                    setFormData({ ...formData, full_description: e.target.value })
                   }
                 />
               </div>
-
               <div>
                 <Label htmlFor="benefits">Benefits (comma-separated)</Label>
                 <Input
                   id="benefits"
                   value={formData.benefits}
-                  onChange={(e) =>
-                    setFormData({ ...formData, benefits: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
                 />
               </div>
 
+              {/* Price, Rating, Stock */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="price">Price</Label>
@@ -340,9 +319,7 @@ const AdminProducts = () => {
                     id="price"
                     type="number"
                     value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     required
                   />
                 </div>
@@ -355,9 +332,7 @@ const AdminProducts = () => {
                     min="0"
                     max="5"
                     value={formData.rating}
-                    onChange={(e) =>
-                      setFormData({ ...formData, rating: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
                   />
                 </div>
                 <div>
@@ -367,26 +342,17 @@ const AdminProducts = () => {
                     type="number"
                     value={formData.stock_quantity}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        stock_quantity: e.target.value,
-                      })
+                      setFormData({ ...formData, stock_quantity: e.target.value })
                     }
                   />
                 </div>
               </div>
 
               <div className="flex justify-end space-x-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                >
+                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingProduct ? "Update" : "Create"} Product
-                </Button>
+                <Button type="submit">{editingProduct ? "Update" : "Create"} Product</Button>
               </div>
             </form>
           </DialogContent>
@@ -404,24 +370,15 @@ const AdminProducts = () => {
                   <CardDescription>{product.category}</CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(product)}
-                  >
+                  <Button size="sm" variant="outline" onClick={() => handleEdit(product)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDelete(product.id)}
-                  >
+                  <Button size="sm" variant="destructive" onClick={() => handleDelete(product.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </CardHeader>
-
             <CardContent>
               {product.image_url && (
                 <img
@@ -430,13 +387,9 @@ const AdminProducts = () => {
                   className="w-full h-40 object-cover rounded-md mb-3"
                 />
               )}
-              <p className="text-sm text-muted-foreground mb-2">
-                {product.description}
-              </p>
+              <p className="text-sm text-muted-foreground mb-2">{product.description}</p>
               <div className="flex justify-between items-center text-sm">
-                <span className="font-semibold">
-                  ₨{product.price.toLocaleString()}
-                </span>
+                <span className="font-semibold">₨{product.price.toLocaleString()}</span>
                 <span>Stock: {product.stock_quantity}</span>
               </div>
             </CardContent>
