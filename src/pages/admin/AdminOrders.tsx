@@ -1,20 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
+
+const ADMIN_ORDERS_REFRESH_INTERVAL = 30000; // 30s
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -22,7 +14,9 @@ const AdminOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [updating, setUpdating] = useState(false);
 
-  // Fetch only pending orders
+  // ----------------------
+  // Fetch Orders
+  // ----------------------
   const fetchOrders = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -39,11 +33,13 @@ const AdminOrders = () => {
 
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(fetchOrders, 30000); // Refresh every 30s
+    const interval = setInterval(fetchOrders, ADMIN_ORDERS_REFRESH_INTERVAL);
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch order items
+  // ----------------------
+  // Fetch Order Items
+  // ----------------------
   const fetchOrderDetails = async (orderId: string) => {
     const { data: items, error } = await supabase
       .from("order_items")
@@ -54,28 +50,38 @@ const AdminOrders = () => {
     return items || [];
   };
 
-  // Send invoice email via Edge Function
+  // ----------------------
+  // Send Invoice Email
+  // ----------------------
   const sendInvoiceEmail = async (order: any) => {
     try {
-      const response = await fetch("/functions/v1/send-invoice-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to: order.customer_email,
-          customerName: order.customer_name,
-          invoiceId: order.id,
-          items: order.items.map((i: any) => ({
-            name: i.product_name,
-            price: i.price,
-            size: i.size || "",
-          })),
-          total: order.total_amount,
-          shippingAddress: order.shipping_address,
-          billingAddress: order.billing_address,
-        }),
-      });
+      console.log("📧 Sending invoice email for order:", order.id);
+
+      const response = await fetch(
+        "https://xpaqoturecevoyjjmwez.functions.supabase.co/send-invoice-email", // <-- your Supabase function URL
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: order.customer_email,
+            customerName: order.customer_name,
+            invoiceId: order.id,
+            items: order.items.map((i: any) => ({
+              name: i.product_name,
+              price: i.price,
+              size: i.size || "",
+              quantity: i.quantity,
+            })),
+            total: order.total_amount,
+            shippingAddress: order.shipping_address,
+            billingAddress: order.billing_address,
+          }),
+        }
+      );
 
       const data = await response.json();
+      console.log("📧 Email function response:", data);
+
       if (data.success) alert("✅ Invoice email sent successfully!");
       else alert("⚠️ Failed to send email: " + data.error);
     } catch (err) {
@@ -84,7 +90,9 @@ const AdminOrders = () => {
     }
   };
 
-  // Update order status
+  // ----------------------
+  // Update Order Status
+  // ----------------------
   const handleUpdateStatus = async (orderId: string, status: string) => {
     setUpdating(true);
     try {
@@ -105,7 +113,7 @@ const AdminOrders = () => {
         await fetchOrders();
       }
 
-      // Send invoice if verified
+      // Send invoice email if verified
       if (status === "verified") {
         const order = data?.[0];
         if (order) {
@@ -126,12 +134,17 @@ const AdminOrders = () => {
     }
   };
 
-  // View order details
+  // ----------------------
+  // View Order Details
+  // ----------------------
   const handleViewOrder = async (order: any) => {
     const items = await fetchOrderDetails(order.id);
     setSelectedOrder({ ...order, items });
   };
 
+  // ----------------------
+  // Loading State
+  // ----------------------
   if (loading)
     return (
       <div className="flex justify-center py-10">
@@ -139,6 +152,9 @@ const AdminOrders = () => {
       </div>
     );
 
+  // ----------------------
+  // Render
+  // ----------------------
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold mb-4">🧾 Orders Management</h1>
@@ -188,7 +204,9 @@ const AdminOrders = () => {
         )}
       </div>
 
-      {/* Order Details Modal */}
+      {/* ----------------------
+          Order Details Modal
+      ---------------------- */}
       <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
