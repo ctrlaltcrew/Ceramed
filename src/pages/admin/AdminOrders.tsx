@@ -49,7 +49,7 @@ const handleUpdateStatus = async (orderId: string, status: string) => {
   setUpdating(true);
 
   try {
-    // Update the order status in Supabase
+    // 1️⃣ Update order status in Supabase
     const { data, error } = await supabase
       .from("orders")
       .update({ status })
@@ -65,28 +65,27 @@ const handleUpdateStatus = async (orderId: string, status: string) => {
 
     alert(`✅ Order ${status} successfully`);
 
-    // Remove order from the list if verified or cancelled
+    // 2️⃣ Remove the order from the list if verified or cancelled
     if (status === "verified" || status === "cancelled") {
       setOrders((prevOrders) => prevOrders.filter((o) => o.id !== orderId));
     } else {
       await fetchOrders();
     }
 
-    // ✅ Send invoice email only when verified
+    // 3️⃣ Send invoice email only when verified
     if (status === "verified") {
       const order = data?.[0];
       if (order) {
         const items = await fetchOrderDetails(order.id);
 
         try {
-          // Call your Edge Function
           const response = await fetch("/functions/v1/send-invoice", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              to: order.customer_email || order.email,
+              to: order.customer_email,
               subject: `Invoice for Order #${order.id}`,
               html: `
                 <h3>Hello ${order.customer_name || "Customer"},</h3>
@@ -104,19 +103,20 @@ const handleUpdateStatus = async (orderId: string, status: string) => {
           });
 
           if (response.ok) {
-            alert("✅ Invoice email sent to customer!");
             console.log("📩 Invoice email sent successfully");
+            alert("✅ Invoice email sent to customer!");
           } else {
+            console.error("❌ Email send failed", response.statusText);
             alert("⚠️ Email send failed. Check Supabase logs.");
-            console.error("❌ Email send failed", await response.text());
           }
         } catch (err) {
           console.error("💥 Error sending invoice:", err);
-          alert("❌ Error connecting to email service");
+          alert("Error connecting to email service.");
         }
       }
     }
 
+    // 4️⃣ Close modal if open
     if (selectedOrder && selectedOrder.id === orderId) {
       setSelectedOrder(null);
     }
