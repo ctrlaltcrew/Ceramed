@@ -5,21 +5,21 @@ const Team = () => {
   const teamMembers = [
     {
       name: 'Dr. Imran',
-      role: 'Chief Research Officer',
+      role: 'PI, Head Drug Testing',
       specialization: 'Biochemistry & Molecular Biology',
       image: '/dr_imran-removebg-preview.png',
-      description: 'Leading expert in biochemical research with 12+ years experience in drug development.',
+      description: 'Assistant Professor in the Department of Biomedical Sciences, PAF-IAST',
       linkedin: 'https://www.linkedin.com/in/dr-imran/',
-      email: 'imran@example.com',
+      email: 'imran@gmail.com',
     },
     {
       name: 'Habab Ali Ahmad',
-      role: 'Head of Product Development',
+      role: 'Community Lead /Research Scientist',
       specialization: 'Pharmacology & Toxicology',
       image: '/habab_ali_ahmadimage-removebg-preview (2).png',
       description: 'Specialist in preclinical testing methodologies and regulatory compliance protocols.',
       linkedin: 'https://pk.linkedin.com/in/habab-ali-ahmad',
-      email: 'habab@example.com',
+      email: 'habab@gmail.com',
     },
     {
       name: 'Dr. Waqar Ahmad',
