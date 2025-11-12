@@ -1,34 +1,28 @@
 // supabase/functions/send-invoice-email/index.ts
-// ✅ Import nodemailer properly in Deno Edge Function
-import nodemailer from "npm:nodemailer";
-// ✅ Use Deno.serve (modern Supabase edge runtime)
-Deno.serve(async (req)=>{
-  // ✅ Handle CORS preflight requests
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey"
-      }
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
+      },
     });
   }
+
   try {
-    // ✅ Allow only POST
     if (req.method !== "POST") {
-      return new Response(JSON.stringify({
-        error: "Method Not Allowed"
-      }), {
+      return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
         status: 405,
-        headers: {
-          "Access-Control-Allow-Origin": "*"
-        }
+        headers: { "Access-Control-Allow-Origin": "*" },
       });
     }
+
     const body = await req.json();
-    // ✅ Extract customer info
-    const to = body.to || body.customerEmail;
-    if (!to) throw new Error("Recipient email (to) missing");
+
+    const to = body.customerEmail;
+    if (!to) throw new Error("Recipient email missing");
+
     const customerName = body.customerName || "Customer";
     const invoiceId = body.invoiceId || null;
     const orderId = body.orderId || Math.floor(Math.random() * 900000 + 100000);
@@ -36,39 +30,23 @@ Deno.serve(async (req)=>{
     const total = body.total || "0.00";
     const shippingAddress = body.shippingAddress || "Not Provided";
     const billingAddress = body.billingAddress || "Not Provided";
-    // ✅ Get SMTP credentials from environment variables
-    const host = Deno.env.get("SMTP_HOST");
-    const port = parseInt(Deno.env.get("SMTP_PORT") || "465");
-    const user = Deno.env.get("SMTP_USER") || Deno.env.get("EMAIL_USER");
-    const pass = Deno.env.get("SMTP_PASS") || Deno.env.get("EMAIL_PASS");
-    if (!host || !user || !pass) {
-      throw new Error("SMTP credentials not set in Edge Function secrets");
-    }
-    // ✅ Configure transporter
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: {
-        user,
-        pass
-      }
-    });
-    // ✅ Build items table for email
-    const itemsHTML = items.map((item)=>`
+
+    const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
+    if (!SENDGRID_API_KEY) throw new Error("SendGrid API key missing");
+
+    // Build items HTML
+    const itemsHTML = items
+      .map(
+        (item: any) => `
         <tr>
           <td style="padding:8px 0;color:#333;">${item.name}${item.size ? ` (${item.size})` : ""}</td>
           <td style="padding:8px 0;text-align:right;color:#333;">₨${item.price}</td>
-        </tr>`).join("");
-    // ✅ Email subject and body
-    let subject;
-    let html;
-    if (invoiceId) {
-      subject = `Invoice #${invoiceId}`;
-      html = `<p>Dear ${customerName},</p><p>Your invoice #${invoiceId} is ready.</p>`;
-    } else {
-      subject = `Order #${orderId} Confirmation - Ceramed`;
-      html = `
+        </tr>`
+      )
+      .join("");
+
+    // Email HTML
+    const html = `
       <!DOCTYPE html>
       <html>
       <body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
@@ -122,38 +100,38 @@ Deno.serve(async (req)=>{
           </tr>
         </table>
       </body>
-      </html>`;
+      </html>
+    `;
+
+    // Send email via SendGrid API
+    const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${SENDGRID_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: to }] }],
+        from: { email: "support@ceramed.pk", name: "Ceramed" },
+        subject: `Order #${orderId} Confirmation`,
+        content: [{ type: "text/html", value: html }],
+      }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`SendGrid error: ${res.status} ${errorText}`);
     }
-    // ✅ Send email
-    const info = await transporter.sendMail({
-      from: `"Ceramed" <${user}>`,
-      to,
-      subject,
-      html
+
+    return new Response(JSON.stringify({ success: true, orderId }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
-    console.log("✅ Email sent:", info.messageId);
-    // ✅ Success response
-    return new Response(JSON.stringify({
-      success: true,
-      id: info.messageId
-    }), {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json"
-      },
-      status: 200
-    });
-  } catch (err) {
-    console.error("❌ Error sending invoice:", err);
-    return new Response(JSON.stringify({
-      success: false,
-      error: err.message
-    }), {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json"
-      },
-      status: 500
+  } catch (err: any) {
+    console.error("❌ Error sending email:", err);
+    return new Response(JSON.stringify({ success: false, error: err.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   }
 });
