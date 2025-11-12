@@ -34,12 +34,16 @@ const About = () => {
     { logo: "/PAF-IAST Logo.png", alt: "PAF-IAST" },
     { logo: "/NIH.png", alt: "NIH" },
     { logo: "/drugdev.jpeg", alt: "DPIA" },
+    { logo: "/Picture3.png", alt: "Directorate of Science & Technology Khyber Pakhtunkhwa" },
   ];
 
   const industrialPartners = [
     { logo: "/pharmatech.png", alt: "PharmaTech" },
     { logo: "/bioinnovate.png", alt: "BioInnovate" },
     { logo: "/medilab.png", alt: "MediLab" },
+    { logo: "/Picture1.png", alt: "Vet tech Health care" },
+    { logo: "/Picture2.png", alt: "Sequel Pharma" },
+
   ];
 
   const [currentAcademic, setCurrentAcademic] = useState(0);
