@@ -12,11 +12,11 @@ const Hero = () => {
       className="relative min-h-[60vh] sm:min-h-[75vh] md:min-h-[85vh] lg:min-h-[100vh] flex items-center overflow-hidden"
     >
       {/* Background Image */}
-<div className="absolute inset-0 h-[100vh]">
+<div className="absolute inset-0">
   <img
-    src="/wallpaper4.jpg"
+    src="wallpaper4.jpg"
     alt="Advanced biomedical research laboratory with cutting-edge equipment"
-    className="w-full h-full object-contain sm:object-cover object-center"
+    className="w-full h-full object-cover object-center max-h-[100vh] sm:max-h-[90vh] md:max-h-[85vh] lg:max-h-[100vh]"
   />
   <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
 </div>
