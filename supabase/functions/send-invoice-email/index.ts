@@ -1,6 +1,8 @@
 // supabase/functions/send-invoice-email/index.ts
 
 Deno.serve(async (req) => {
+  console.log("📧 Function invoked");
+  
   // CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -21,16 +23,20 @@ Deno.serve(async (req) => {
     }
 
     // Verify authorization
-    const authHeader = req.headers.get('Authorization')
+    const authHeader = req.headers.get('Authorization');
+    console.log("🔑 Auth header present:", !!authHeader);
+    
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing authorization header' }), { 
         status: 401,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
-      })
+      });
     }
 
     // Parse request body
     const body = await req.json();
+    console.log("📦 Request body received");
+    
     const to = body.customerEmail;
     if (!to) throw new Error("Recipient email missing");
 
@@ -84,13 +90,18 @@ Deno.serve(async (req) => {
       </div>
     `;
 
-    // Send email using Brevo API
+    // Check for Brevo API key
     const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
+    console.log("🔑 BREVO_API_KEY present:", !!BREVO_API_KEY);
     
     if (!BREVO_API_KEY) {
+      console.error("❌ BREVO_API_KEY not configured");
       throw new Error("BREVO_API_KEY not configured");
     }
 
+    console.log("📧 Sending email to:", to);
+
+    // Send email using Brevo API
     const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
@@ -107,12 +118,16 @@ Deno.serve(async (req) => {
     });
 
     const result = await resp.json();
+    console.log("📧 Brevo response status:", resp.status);
+    console.log("📧 Brevo response:", JSON.stringify(result));
 
     if (!resp.ok) {
       console.error("❌ Brevo API error:", result);
       throw new Error(`Brevo API failed: ${JSON.stringify(result)}`);
     }
 
+    console.log("✅ Email sent successfully");
+    
     return new Response(JSON.stringify({ success: true, result }), {
       status: 200,
       headers: { 
@@ -120,9 +135,13 @@ Deno.serve(async (req) => {
         "Access-Control-Allow-Origin": "*" 
       },
     });
-  } catch (err) {
-    console.error("❌ Error sending email:", err);
-    return new Response(JSON.stringify({ success: false, error: err.message }), {
+  } catch (err: any) {
+    console.error("❌ Error sending email:", err.message);
+    
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: err.message
+    }), {
       status: 500,
       headers: { 
         "Content-Type": "application/json", 
