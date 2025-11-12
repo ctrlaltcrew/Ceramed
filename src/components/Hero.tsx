@@ -14,7 +14,7 @@ const Hero = () => {
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
-          src="/wallpaper3.jpg"
+          src="/wallpaper2.jpg"
           alt="Advanced biomedical research laboratory with cutting-edge equipment"
           className="w-full h-full object-cover max-h-[100vh] sm:max-h-[90vh] md:max-h-[85vh] lg:max-h-[100vh]"
         />
