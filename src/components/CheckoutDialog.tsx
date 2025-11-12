@@ -110,13 +110,18 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         customerData.postalCode ? `, ${customerData.postalCode}` : ""
       }`;
 
+      const supabaseUrl = "https://xpaqoturecevoyjjmwez.supabase.co";
+      const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwYXFvdHVyZWNldm95amptd2V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzOTYzODIsImV4cCI6MjA3Mzk3MjM4Mn0.ohoFcJIiYeeZ3b16o_8U5OeKXgPez3JTMAD7maAtT7c";
+
+      console.log("📧 Sending invoice email to:", customerData.email);
+
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-invoice-email`,
+        `${supabaseUrl}/functions/v1/send-invoice-email`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            "Authorization": `Bearer ${supabaseAnonKey}`,
           },
           body: JSON.stringify({
             customerEmail: customerData.email,
@@ -125,12 +130,13 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
             items: items,
             total: totalAmount.toFixed(2),
             shippingAddress: shippingAddress,
-            billingAddress: shippingAddress, // Same as shipping for now
+            billingAddress: shippingAddress,
           }),
         }
       );
 
       const result = await response.json();
+      console.log("📧 Email response:", result);
 
       if (result.success) {
         console.log("✅ Invoice email sent successfully");
