@@ -202,22 +202,22 @@ const About = () => {
             {[
               {
                 name: "Dr. Imran",
-                role: "Chairman & Chief Scientist",
+                role: "PI, Head Drug Testing",
                 image: "/dr_imran-removebg-preview.png",
               },
               {
                 name: "Dr. Habab Ali Ahmad",
-                role: "Director of Innovation & Strategy",
+                role: "Community Lead / Research Scientist",
                 image: "/habab_ali_ahmadimage-removebg-preview (2).png",
               },
               {
                 name: "Dr. Waqar Ahmad",
-                role: "Director of Research & Development",
+                role: "Lead Disease Modeling and Clinical Studies",
                 image: "/waqar_image-removebg-preview (1).png",
               },
               {
                 name: "Dr. Fazle Rabbi",
-                role: "Managing Director",
+                role: "Lead Animal Studies ",
                 image: "/fazle_image-removebg-preview.png",
               },
             ].map((director, idx) => (
