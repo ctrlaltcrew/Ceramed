@@ -1,5 +1,7 @@
 // supabase/functions/send-invoice-email/index.ts
+
 Deno.serve(async (req) => {
+  // ✅ Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: {
@@ -11,7 +13,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // ✅ Only POST allowed
+    // ✅ Only allow POST
     if (req.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
         status: 405,
@@ -19,42 +21,54 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ✅ Get secrets
+    const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const ANON_KEY = Deno.env.get("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+
+    if (!SENDGRID_API_KEY) throw new Error("SendGrid API key missing");
+    if (!SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase service key missing");
+    if (!ANON_KEY) throw new Error("Anon key missing");
+
     // ✅ Authorization check
-    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwYXFvdHVyZWNldm95amptd2V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzOTYzODIsImV4cCI6MjA3Mzk3MjM4Mn0.ohoFcJIiYeeZ3b16o_8U5OeKXgPez3JTMAD7maAtT7c";
     const authHeader = req.headers.get("Authorization") || req.headers.get("apikey");
-    if (!authHeader || authHeader.replace("Bearer ", "") !== supabaseAnonKey) {
+    if (
+      !authHeader ||
+      (authHeader.replace("Bearer ", "") !== ANON_KEY &&
+        authHeader.replace("Bearer ", "") !== SUPABASE_SERVICE_ROLE_KEY)
+    ) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Access-Control-Allow-Origin": "*" },
       });
     }
 
+    // ✅ Parse request body
     const body = await req.json();
     const to = body.customerEmail;
     if (!to) throw new Error("Recipient email missing");
 
     const customerName = body.customerName || "Customer";
-    const invoiceId = body.invoiceId || null;
     const orderId = body.orderId || Math.floor(Math.random() * 900000 + 100000);
     const items = body.items || [];
     const total = body.total || "0.00";
     const shippingAddress = body.shippingAddress || "Not Provided";
     const billingAddress = body.billingAddress || "Not Provided";
 
-    // ✅ Use Brevo / SendGrid API key from secrets
-    const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
-    if (!SENDGRID_API_KEY) throw new Error("SendGrid API key missing");
-
+    // ✅ Generate items table
     const itemsHTML = items
       .map(
-        (item: any) => `
+        (item) => `
         <tr>
-          <td style="padding:8px 0;color:#333;">${item.name}${item.size ? ` (${item.size})` : ""}</td>
+          <td style="padding:8px 0;color:#333;">
+            ${item.name}${item.size ? ` (${item.size})` : ""}
+          </td>
           <td style="padding:8px 0;text-align:right;color:#333;">₨${item.price}</td>
         </tr>`
       )
       .join("");
 
+    // ✅ Email HTML template
     const html = `
       <!DOCTYPE html>
       <html>
@@ -112,6 +126,7 @@ Deno.serve(async (req) => {
       </html>
     `;
 
+    // ✅ Send email via SendGrid
     const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
       method: "POST",
       headers: {
@@ -131,15 +146,22 @@ Deno.serve(async (req) => {
       throw new Error(`SendGrid error: ${res.status} ${errorText}`);
     }
 
+    // ✅ Success response
     return new Response(JSON.stringify({ success: true, orderId }), {
       status: 200,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("❌ Error sending email:", err);
     return new Response(JSON.stringify({ success: false, error: err.message }), {
       status: 500,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
     });
   }
 });
