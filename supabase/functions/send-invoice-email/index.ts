@@ -1,7 +1,5 @@
 // supabase/functions/send-invoice-email/index.ts
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
 Deno.serve(async (req) => {
   // CORS preflight
   if (req.method === "OPTIONS") {
@@ -47,28 +45,50 @@ Deno.serve(async (req) => {
     const itemsHTML = items.map((item: any) => `
       <tr>
         <td style="padding:8px 0;color:#333;">
-          ${item.name}${item.size ? ` (${item.size})` : ""}
+          ${item.name} × ${item.quantity}
         </td>
         <td style="padding:8px 0;text-align:right;color:#333;">₨${item.price}</td>
       </tr>
     `).join("");
 
     const html = `
-      <h2>Thank you for your order!</h2>
-      <p>Hi <b>${customerName}</b>, your order is confirmed. Order #${orderId}</p>
-      <table style="width:100%;border-collapse:collapse;">
-        ${itemsHTML}
-      </table>
-      <p style="font-weight:bold;">Total: ₨${total}</p>
-      <p><strong>Shipping Address:</strong> ${shippingAddress}</p>
-      <p><strong>Billing Address:</strong> ${billingAddress}</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Thank you for your order!</h2>
+        <p>Hi <b>${customerName}</b>, your order is confirmed.</p>
+        <p><strong>Order #${orderId}</strong></p>
+        
+        <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+          <thead>
+            <tr style="border-bottom: 2px solid #ddd;">
+              <th style="text-align:left;padding:8px;">Item</th>
+              <th style="text-align:right;padding:8px;">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHTML}
+          </tbody>
+        </table>
+        
+        <p style="font-size:18px;font-weight:bold;margin-top:20px;">
+          Total: ₨${total}
+        </p>
+        
+        <div style="margin-top:20px;padding:15px;background:#f5f5f5;border-radius:5px;">
+          <p><strong>Shipping Address:</strong><br>${shippingAddress}</p>
+          <p><strong>Billing Address:</strong><br>${billingAddress}</p>
+        </div>
+        
+        <p style="margin-top:30px;color:#666;">
+          Thank you for shopping with Ceramed!
+        </p>
+      </div>
     `;
 
     // Send email using Brevo API
     const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
     
     if (!BREVO_API_KEY) {
-      throw new Error("BREVO_API_KEY not configured in environment variables");
+      throw new Error("BREVO_API_KEY not configured");
     }
 
     const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
