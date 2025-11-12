@@ -110,38 +110,27 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         customerData.postalCode ? `, ${customerData.postalCode}` : ""
       }`;
 
-      const supabaseUrl = "https://xpaqoturecevoyjjmwez.supabase.co";
-      const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwYXFvdHVyZWNldm95amptd2V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzOTYzODIsImV4cCI6MjA3Mzk3MjM4Mn0.ohoFcJIiYeeZ3b16o_8U5OeKXgPez3JTMAD7maAtT7c";
-
       console.log("📧 Sending invoice email to:", customerData.email);
 
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/send-invoice-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${supabaseAnonKey}`,
-          },
-          body: JSON.stringify({
-            customerEmail: customerData.email,
-            customerName: customerData.name,
-            orderId: orderId,
-            items: items,
-            total: totalAmount.toFixed(2),
-            shippingAddress: shippingAddress,
-            billingAddress: shippingAddress,
-          }),
+      // Use Supabase client to invoke function (handles auth automatically)
+      const { data, error } = await supabase.functions.invoke('send-invoice-email', {
+        body: {
+          customerEmail: customerData.email,
+          customerName: customerData.name,
+          orderId: orderId,
+          items: items,
+          total: totalAmount.toFixed(2),
+          shippingAddress: shippingAddress,
+          billingAddress: shippingAddress,
         }
-      );
+      });
 
-      const result = await response.json();
-      console.log("📧 Email response:", result);
+      console.log("📧 Email response:", data, error);
 
-      if (result.success) {
+      if (error) {
+        console.error("❌ Failed to send invoice email:", error);
+      } else if (data?.success) {
         console.log("✅ Invoice email sent successfully");
-      } else {
-        console.error("❌ Failed to send invoice email:", result.error);
       }
     } catch (error) {
       console.error("❌ Error sending invoice email:", error);
