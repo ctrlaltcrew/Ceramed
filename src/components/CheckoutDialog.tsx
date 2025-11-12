@@ -73,31 +73,75 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
   // 📤 Upload receipt image to Supabase
   const uploadReceipt = async (file: File) => {
-  // ✅ Always make a clean, safe file name
-  const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-  const fileName = `${Date.now()}_Receipt_${cleanFileName}`;
+    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+    const fileName = `${Date.now()}_Receipt_${cleanFileName}`;
 
-  console.log("Uploading file as:", fileName); // helps debug
+    console.log("Uploading file as:", fileName);
 
-  const { data, error } = await supabase.storage
-    .from("receipts")
-    .upload(fileName, file, {
-      cacheControl: "3600",
-      upsert: false,
-    });
+    const { data, error } = await supabase.storage
+      .from("receipts")
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
 
-  if (error) {
-    console.error("❌ Supabase Upload Error:", error.message);
-    throw new Error("Failed to upload receipt. " + error.message);
-  }
+    if (error) {
+      console.error("❌ Supabase Upload Error:", error.message);
+      throw new Error("Failed to upload receipt. " + error.message);
+    }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("receipts").getPublicUrl(fileName);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("receipts").getPublicUrl(fileName);
 
-  return publicUrl;
-};
+    return publicUrl;
+  };
 
+  // 📧 Send invoice email via Supabase Edge Function
+  const sendInvoiceEmail = async (orderId: string) => {
+    try {
+      const items = cartItems.map((item) => ({
+        name: item.product.name,
+        quantity: item.quantity,
+        price: item.product.price.toFixed(2),
+      }));
+
+      const shippingAddress = `${customerData.address}, ${customerData.city}${
+        customerData.postalCode ? `, ${customerData.postalCode}` : ""
+      }`;
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-invoice-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            customerEmail: customerData.email,
+            customerName: customerData.name,
+            orderId: orderId,
+            items: items,
+            total: totalAmount.toFixed(2),
+            shippingAddress: shippingAddress,
+            billingAddress: shippingAddress, // Same as shipping for now
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log("✅ Invoice email sent successfully");
+      } else {
+        console.error("❌ Failed to send invoice email:", result.error);
+      }
+    } catch (error) {
+      console.error("❌ Error sending invoice email:", error);
+      // Don't throw error - we don't want to fail the order if email fails
+    }
+  };
 
   // 🧾 Handle checkout
   const handleSubmit = async (e: React.FormEvent) => {
@@ -166,16 +210,19 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
           .insert(orderItems);
 
         if (itemsError) throw itemsError;
+
+        // Step 3: Send invoice email 📧
+        await sendInvoiceEmail(newOrder.id);
       }
 
-      // Step 3: Clear cart + success toast
+      // Step 4: Clear cart + success toast
       await clearCart();
 
       toast({
         title: "Order placed successfully 🎉",
         description: `Your order (total Rs.${totalAmount.toFixed(
           2
-        )}) has been placed successfully.`,
+        )}) has been placed. Check your email for the invoice!`,
       });
 
       // Reset all fields
