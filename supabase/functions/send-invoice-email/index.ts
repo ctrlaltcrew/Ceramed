@@ -1,25 +1,21 @@
 // supabase/functions/send-invoice-email/index.ts
 
-import { connect } from "https://deno.land/x/smtp/mod.ts";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.8.0/mod.ts";
 
 Deno.serve(async (req) => {
-  // ------------------------
   // Handle CORS preflight
-  // ------------------------
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
     });
   }
 
   try {
-    // ------------------------
-    // Only POST allowed
-    // ------------------------
+    // Only allow POST requests
     if (req.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
         status: 405,
@@ -27,42 +23,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ------------------------
-    // Get secrets for SMTP & Supabase
-    // ------------------------
-    const smtpHost = Deno.env.get("SMTP_HOST") || "smtp-relay.brevo.com";
-    const smtpPort = Number(Deno.env.get("SMTP_PORT") || 587);
-    const smtpUser = Deno.env.get("SMTP_USER") || "9a64e4001@smtp-brevo.com";
-    const smtpPass = Deno.env.get("BREVO_SMTP_KEY");
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const ANON_KEY = Deno.env.get("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    // Get environment secrets
+    const SMTP_HOST = Deno.env.get("SMTP_HOST") || "smtp-relay.brevo.com";
+    const SMTP_PORT = Number(Deno.env.get("SMTP_PORT") || 587);
+    const SMTP_USER = Deno.env.get("SMTP_USER") || "9a64e4001@smtp-brevo.com";
+    const SMTP_PASS = Deno.env.get("SMTP_PASS") || "xsmtpsib-...your-key...";
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+    const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!smtpPass) throw new Error("SMTP password/key missing");
-    if (!SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase service role key missing");
-    if (!ANON_KEY) throw new Error("Supabase anon key missing");
-
-    // ------------------------
     // Authorization check
-    // ------------------------
-    const authHeader = req.headers.get("Authorization") || req.headers.get("apikey");
+    const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Access-Control-Allow-Origin": "*" },
-      });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
-
     const token = authHeader.replace("Bearer ", "");
-    if (token !== ANON_KEY && token !== SUPABASE_SERVICE_ROLE_KEY) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Access-Control-Allow-Origin": "*" },
-      });
+    if (token !== ANON_KEY && token !== SERVICE_ROLE_KEY) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
 
-    // ------------------------
     // Parse request body
-    // ------------------------
     const body = await req.json();
     const to = body.customerEmail;
     if (!to) throw new Error("Recipient email missing");
@@ -74,21 +53,14 @@ Deno.serve(async (req) => {
     const shippingAddress = body.shippingAddress || "Not Provided";
     const billingAddress = body.billingAddress || "Not Provided";
 
-    // ------------------------
-    // Build items HTML
-    // ------------------------
+    // Build HTML for items
     const itemsHTML = items.map(item => `
       <tr>
-        <td style="padding:8px 0;color:#333;">
-          ${item.name}${item.size ? ` (${item.size})` : ""}
-        </td>
+        <td style="padding:8px 0;color:#333;">${item.name}${item.size ? ` (${item.size})` : ""}</td>
         <td style="padding:8px 0;text-align:right;color:#333;">₨${item.price}</td>
       </tr>
     `).join("");
 
-    // ------------------------
-    // Email HTML
-    // ------------------------
     const html = `
       <!DOCTYPE html>
       <html>
@@ -129,7 +101,7 @@ Deno.serve(async (req) => {
                       <b>Shipping method:</b> 🚚 Free Delivery (2 - 4 Working Days)
                     </p>
                     <p style="font-size:14px;color:#555;">
-                      Questions? Contact us at <a href="mailto:support@ceramed.pk" style="color:#0b8686;">support@ceramed.pk</a>
+                      Questions? Contact us at <a href="mailto:info@ceramed.org" style="color:#0b8686;">info@ceramed.org</a>
                     </p>
                   </td>
                 </tr>
@@ -146,29 +118,26 @@ Deno.serve(async (req) => {
       </html>
     `;
 
-    // ------------------------
-    // Connect to SMTP and send email
-    // ------------------------
-    const client = await connect({
-      hostname: smtpHost,
-      port: smtpPort,
-      username: smtpUser,
-      password: smtpPass,
+    // Connect to Brevo SMTP
+    const client = new SmtpClient();
+    await client.connect({
+      hostname: SMTP_HOST,
+      port: SMTP_PORT,
+      username: SMTP_USER,
+      password: SMTP_PASS,
     });
 
+    // Send the email
     await client.send({
-      from: smtpUser,
-      to: to,
+      from: "info@ceramed.org",
+      to,
       subject: `Order #${orderId} Confirmation`,
       content: html,
-      headers: { "Content-Type": "text/html" },
     });
 
-    client.close();
+    await client.close();
 
-    // ------------------------
     // Success response
-    // ------------------------
     return new Response(JSON.stringify({ success: true, orderId }), {
       status: 200,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
