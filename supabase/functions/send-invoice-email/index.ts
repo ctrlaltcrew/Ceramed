@@ -1,7 +1,7 @@
 // supabase/functions/send-invoice-email/index.ts
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
+  // CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: {
@@ -14,10 +14,7 @@ Deno.serve(async (req) => {
 
   try {
     if (req.method !== "POST") {
-      return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
-        status: 405,
-        headers: { "Access-Control-Allow-Origin": "*" },
-      });
+      return new Response(JSON.stringify({ error: "Method Not Allowed" }), { status: 405 });
     }
 
     // Parse request body
@@ -32,8 +29,8 @@ Deno.serve(async (req) => {
     const shippingAddress = body.shippingAddress || "Not Provided";
     const billingAddress = body.billingAddress || "Not Provided";
 
-    // Build items HTML
-    const itemsHTML = items.map(item => `
+    // Build HTML content
+    const itemsHTML = items.map((item: any) => `
       <tr>
         <td style="padding:8px 0;color:#333;">
           ${item.name}${item.size ? ` (${item.size})` : ""}
@@ -42,27 +39,23 @@ Deno.serve(async (req) => {
       </tr>
     `).join("");
 
-    // Email HTML content
     const html = `
       <h2>Thank you for your order!</h2>
       <p>Hi <b>${customerName}</b>, your order is confirmed. Order #${orderId}</p>
       <table>${itemsHTML}</table>
-      <p><b>Total:</b> ₨${total}</p>
-      <p><b>Shipping:</b> ${shippingAddress}</p>
-      <p><b>Billing:</b> ${billingAddress}</p>
+      <p>Total: ₨${total}</p>
+      <p>Shipping Address: ${shippingAddress}</p>
+      <p>Billing Address: ${billingAddress}</p>
     `;
 
-    // Brevo API key from environment
-    const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
-    if (!BREVO_API_KEY) throw new Error("Brevo API key not set");
-
     // Send email using Brevo API
-    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
+    const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
         "accept": "application/json",
         "content-type": "application/json",
-        "api-key": BREVO_API_KEY,
+        "api-key": BREVO_API_KEY!,
       },
       body: JSON.stringify({
         sender: { name: "Ceramed", email: "info@ceramed.org" },
@@ -72,16 +65,12 @@ Deno.serve(async (req) => {
       }),
     });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`Brevo API error: ${res.status} ${errText}`);
-    }
+    const result = await resp.json();
 
-    return new Response(JSON.stringify({ success: true, orderId }), {
+    return new Response(JSON.stringify({ success: true, result }), {
       status: 200,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
-
   } catch (err) {
     console.error("❌ Error sending email:", err);
     return new Response(JSON.stringify({ success: false, error: err.message }), {
