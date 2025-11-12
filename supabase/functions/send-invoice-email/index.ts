@@ -1,7 +1,11 @@
 // supabase/functions/send-invoice-email/index.ts
 
+import { connect } from "https://deno.land/x/smtp/mod.ts";
+
 Deno.serve(async (req) => {
-  // ✅ Handle CORS preflight
+  // ------------------------
+  // Handle CORS preflight
+  // ------------------------
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: {
@@ -13,7 +17,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // ✅ Only allow POST
+    // ------------------------
+    // Only POST allowed
+    // ------------------------
     if (req.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
         status: 405,
@@ -21,29 +27,42 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ✅ Get secrets
-    const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
+    // ------------------------
+    // Get secrets for SMTP & Supabase
+    // ------------------------
+    const smtpHost = Deno.env.get("SMTP_HOST") || "smtp-relay.brevo.com";
+    const smtpPort = Number(Deno.env.get("SMTP_PORT") || 587);
+    const smtpUser = Deno.env.get("SMTP_USER") || "9a64e4001@smtp-brevo.com";
+    const smtpPass = Deno.env.get("BREVO_SMTP_KEY");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const ANON_KEY = Deno.env.get("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
-    if (!SENDGRID_API_KEY) throw new Error("SendGrid API key missing");
-    if (!SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase service key missing");
-    if (!ANON_KEY) throw new Error("Anon key missing");
+    if (!smtpPass) throw new Error("SMTP password/key missing");
+    if (!SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase service role key missing");
+    if (!ANON_KEY) throw new Error("Supabase anon key missing");
 
-    // ✅ Authorization check
+    // ------------------------
+    // Authorization check
+    // ------------------------
     const authHeader = req.headers.get("Authorization") || req.headers.get("apikey");
-    if (
-      !authHeader ||
-      (authHeader.replace("Bearer ", "") !== ANON_KEY &&
-        authHeader.replace("Bearer ", "") !== SUPABASE_SERVICE_ROLE_KEY)
-    ) {
+    if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Access-Control-Allow-Origin": "*" },
       });
     }
 
-    // ✅ Parse request body
+    const token = authHeader.replace("Bearer ", "");
+    if (token !== ANON_KEY && token !== SUPABASE_SERVICE_ROLE_KEY) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
+    // ------------------------
+    // Parse request body
+    // ------------------------
     const body = await req.json();
     const to = body.customerEmail;
     if (!to) throw new Error("Recipient email missing");
@@ -55,20 +74,21 @@ Deno.serve(async (req) => {
     const shippingAddress = body.shippingAddress || "Not Provided";
     const billingAddress = body.billingAddress || "Not Provided";
 
-    // ✅ Generate items table
-    const itemsHTML = items
-      .map(
-        (item) => `
-        <tr>
-          <td style="padding:8px 0;color:#333;">
-            ${item.name}${item.size ? ` (${item.size})` : ""}
-          </td>
-          <td style="padding:8px 0;text-align:right;color:#333;">₨${item.price}</td>
-        </tr>`
-      )
-      .join("");
+    // ------------------------
+    // Build items HTML
+    // ------------------------
+    const itemsHTML = items.map(item => `
+      <tr>
+        <td style="padding:8px 0;color:#333;">
+          ${item.name}${item.size ? ` (${item.size})` : ""}
+        </td>
+        <td style="padding:8px 0;text-align:right;color:#333;">₨${item.price}</td>
+      </tr>
+    `).join("");
 
-    // ✅ Email HTML template
+    // ------------------------
+    // Email HTML
+    // ------------------------
     const html = `
       <!DOCTYPE html>
       <html>
@@ -126,42 +146,39 @@ Deno.serve(async (req) => {
       </html>
     `;
 
-    // ✅ Send email via SendGrid
-    const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${SENDGRID_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: to }] }],
-        from: { email: "support@ceramed.pk", name: "Ceramed" },
-        subject: `Order #${orderId} Confirmation`,
-        content: [{ type: "text/html", value: html }],
-      }),
+    // ------------------------
+    // Connect to SMTP and send email
+    // ------------------------
+    const client = await connect({
+      hostname: smtpHost,
+      port: smtpPort,
+      username: smtpUser,
+      password: smtpPass,
     });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`SendGrid error: ${res.status} ${errorText}`);
-    }
+    await client.send({
+      from: smtpUser,
+      to: to,
+      subject: `Order #${orderId} Confirmation`,
+      content: html,
+      headers: { "Content-Type": "text/html" },
+    });
 
-    // ✅ Success response
+    client.close();
+
+    // ------------------------
+    // Success response
+    // ------------------------
     return new Response(JSON.stringify({ success: true, orderId }), {
       status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
+
   } catch (err) {
     console.error("❌ Error sending email:", err);
     return new Response(JSON.stringify({ success: false, error: err.message }), {
       status: 500,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   }
 });
