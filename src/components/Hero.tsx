@@ -16,7 +16,7 @@ const Hero = () => {
         <img
           src="/Featured-Images.png"
           alt="Advanced biomedical research laboratory with cutting-edge equipment"
-          className="w-full h-full object-cover max-h-[100vh] sm:max-h-[80vh] md:max-h-[85vh] lg:max-h-[100vh]"
+          className="w-full h-full object-cover max-h-[100vh] sm:max-h-[90vh] md:max-h-[85vh] lg:max-h-[100vh]"
         />
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
       </div>
