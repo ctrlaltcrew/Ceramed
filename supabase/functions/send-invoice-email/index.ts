@@ -1,12 +1,11 @@
-// supabase/functions/send-invoice-email/index.ts
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
-      },
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey"
+      }
     });
   }
 
@@ -14,12 +13,11 @@ Deno.serve(async (req) => {
     if (req.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
         status: 405,
-        headers: { "Access-Control-Allow-Origin": "*" },
+        headers: { "Access-Control-Allow-Origin": "*" }
       });
     }
 
     const body = await req.json();
-
     const to = body.customerEmail;
     if (!to) throw new Error("Recipient email missing");
 
@@ -34,18 +32,16 @@ Deno.serve(async (req) => {
     const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
     if (!SENDGRID_API_KEY) throw new Error("SendGrid API key missing");
 
-    // Build items HTML
-    const itemsHTML = items
-      .map(
-        (item: any) => `
+    const itemsHTML = items.map(
+      (item) => `
         <tr>
-          <td style="padding:8px 0;color:#333;">${item.name}${item.size ? ` (${item.size})` : ""}</td>
+          <td style="padding:8px 0;color:#333;">${item.name}${
+        item.size ? ` (${item.size})` : ""
+      }</td>
           <td style="padding:8px 0;text-align:right;color:#333;">₨${item.price}</td>
         </tr>`
-      )
-      .join("");
+    ).join("");
 
-    // Email HTML
     const html = `
       <!DOCTYPE html>
       <html>
@@ -67,7 +63,7 @@ Deno.serve(async (req) => {
                       We'll notify you once it's shipped.
                     </p>
                     <div style="margin-top:20px;">
-                      <a href="https://ceramed.pk" style="background:#0b8686;color:#fff;text-decoration:none;padding:12px 20px;border-radius:6px;display:inline-block;">Visit Store</a>
+                      <a href="https://ceramed.org" style="background:#0b8686;color:#fff;text-decoration:none;padding:12px 20px;border-radius:6px;display:inline-block;">Visit Store</a>
                     </div>
                     <div style="margin-top:30px;background:#f4f4f4;border-radius:8px;padding:15px;">
                       <h3 style="margin:0 0 10px 0;color:#222;">Order Summary</h3>
@@ -86,7 +82,7 @@ Deno.serve(async (req) => {
                       <b>Shipping method:</b> 🚚 Free Delivery (2 - 4 Working Days)
                     </p>
                     <p style="font-size:14px;color:#555;">
-                      Questions? Contact us at <a href="mailto:support@ceramed.pk" style="color:#0b8686;">support@ceramed.pk</a>
+                      Questions? Contact us at <a href="mailto:info@ceramed.org" style="color:#0b8686;">info@ceramed.org</a>
                     </p>
                   </td>
                 </tr>
@@ -103,19 +99,21 @@ Deno.serve(async (req) => {
       </html>
     `;
 
-    // Send email via SendGrid API
     const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${SENDGRID_API_KEY}`,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         personalizations: [{ to: [{ email: to }] }],
-        from: { email: "support@ceramed.pk", name: "Ceramed" },
+        from: {
+          email: "info@ceramed.org", // ✅ UPDATED EMAIL
+          name: "Ceramed"
+        },
         subject: `Order #${orderId} Confirmation`,
-        content: [{ type: "text/html", value: html }],
-      }),
+        content: [{ type: "text/html", value: html }]
+      })
     });
 
     if (!res.ok) {
@@ -125,13 +123,20 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ success: true, orderId }), {
       status: 200,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*"
+      }
     });
-  } catch (err: any) {
+
+  } catch (err) {
     console.error("❌ Error sending email:", err);
     return new Response(JSON.stringify({ success: false, error: err.message }), {
       status: 500,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*"
+      }
     });
   }
 });
