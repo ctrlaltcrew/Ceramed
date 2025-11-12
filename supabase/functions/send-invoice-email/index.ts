@@ -1,5 +1,7 @@
 // supabase/functions/send-invoice-email/index.ts
 
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+
 Deno.serve(async (req) => {
   console.log("📧 Function invoked");
   
@@ -9,7 +11,7 @@ Deno.serve(async (req) => {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+        "Access-Control-Allow-Headers": "content-type",
       },
     });
   }
@@ -22,20 +24,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify authorization
-    const authHeader = req.headers.get('Authorization');
-    console.log("🔑 Auth header present:", !!authHeader);
-    
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing authorization header' }), { 
-        status: 401,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
-      });
-    }
-
     // Parse request body
     const body = await req.json();
-    console.log("📦 Request body received");
+    console.log("📦 Request received");
     
     const to = body.customerEmail;
     if (!to) throw new Error("Recipient email missing");
@@ -90,45 +81,47 @@ Deno.serve(async (req) => {
       </div>
     `;
 
-    // Check for Brevo API key
-    const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
-    console.log("🔑 BREVO_API_KEY present:", !!BREVO_API_KEY);
-    
-    if (!BREVO_API_KEY) {
-      console.error("❌ BREVO_API_KEY not configured");
-      throw new Error("BREVO_API_KEY not configured");
+    // Get Hostinger credentials
+    const SMTP_HOST = Deno.env.get("SMTP_HOST");
+    const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "465");
+    const SMTP_USER = Deno.env.get("SMTP_USER");
+    const SMTP_PASS = Deno.env.get("SMTP_PASS");
+
+    console.log("🔑 SMTP configured:", !!SMTP_HOST, !!SMTP_USER, !!SMTP_PASS);
+
+    if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
+      throw new Error("SMTP credentials not configured");
     }
+
+    // Create SMTP client
+    const client = new SMTPClient({
+      connection: {
+        hostname: SMTP_HOST,
+        port: SMTP_PORT,
+        tls: true,
+        auth: {
+          username: SMTP_USER,
+          password: SMTP_PASS,
+        },
+      },
+    });
 
     console.log("📧 Sending email to:", to);
 
-    // Send email using Brevo API
-    const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "api-key": BREVO_API_KEY,
-      },
-      body: JSON.stringify({
-        sender: { name: "Ceramed", email: "info@ceramed.org" },
-        to: [{ email: to, name: customerName }],
-        subject: `Order #${orderId} Confirmation`,
-        htmlContent: html,
-      }),
+    // Send email
+    await client.send({
+      from: SMTP_USER,
+      to: to,
+      subject: `Order #${orderId} Confirmation - Ceramed`,
+      content: html,
+      html: html,
     });
 
-    const result = await resp.json();
-    console.log("📧 Brevo response status:", resp.status);
-    console.log("📧 Brevo response:", JSON.stringify(result));
-
-    if (!resp.ok) {
-      console.error("❌ Brevo API error:", result);
-      throw new Error(`Brevo API failed: ${JSON.stringify(result)}`);
-    }
+    await client.close();
 
     console.log("✅ Email sent successfully");
     
-    return new Response(JSON.stringify({ success: true, result }), {
+    return new Response(JSON.stringify({ success: true, message: "Email sent" }), {
       status: 200,
       headers: { 
         "Content-Type": "application/json", 
