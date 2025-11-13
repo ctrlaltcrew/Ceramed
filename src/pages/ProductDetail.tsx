@@ -7,7 +7,7 @@ import { useCart } from "@/contexts/CartContext";
 import { Star, ShoppingCart, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface Product {
+export interface Product {
   id: string;
   name: string;
   description: string;
@@ -24,6 +24,7 @@ interface ProductDetailProps {
   modal?: boolean;
   product?: Product;
   productId?: string;
+  onClose?: () => void; // ✅ Added onClose support for modal mode
 }
 
 const localImages = ["/Active-P.png", "/zest.png", "/Mossent.png"];
@@ -32,6 +33,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
   modal = true,
   product: initialProduct,
   productId,
+  onClose,
 }) => {
   const { id: routeId } = useParams<{ id: string }>();
   const id = productId || routeId;
@@ -45,7 +47,15 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
   useEffect(() => {
     if (!product && id) fetchProduct();
     else setLoading(false);
-  }, [id, product]);
+
+    // Disable body scroll when modal is open
+    if (modal) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "auto";
+      };
+    }
+  }, [id, product, modal]);
 
   const fetchProduct = async () => {
     try {
@@ -84,25 +94,26 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     setTimeout(() => setAdded(false), 2500);
   };
 
-  const handleClose = () => navigate(-1);
+  const handleClose = () => {
+    if (onClose) onClose(); // ✅ Call parent close
+    else navigate(-1); // fallback
+  };
 
-  // Loading State
+  // Loading
   if (loading) {
     return modal ? (
-      <div className="fixed inset-0 flex justify-center items-center z-[9999]">
-        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-        <p className="relative text-gray-700 text-lg font-medium">Loading product...</p>
+      <div className="fixed inset-0 flex justify-center items-center z-[9999] bg-black/40 backdrop-blur-sm">
+        <p className="relative text-white text-lg font-medium">Loading product...</p>
       </div>
     ) : (
       <p className="text-gray-500">Loading...</p>
     );
   }
 
-  // Product Not Found
+  // Not Found
   if (!product) {
     return modal ? (
-      <div className="fixed inset-0 flex justify-center items-center z-[9999]">
-        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+      <div className="fixed inset-0 flex justify-center items-center z-[9999] bg-black/40 backdrop-blur-sm">
         <div className="relative bg-white p-6 sm:p-10 rounded-2xl text-center shadow-xl max-w-sm sm:max-w-lg w-full">
           <p className="text-lg text-muted-foreground mb-4">Product not found</p>
           <Button onClick={handleClose}>Go Back</Button>
@@ -113,7 +124,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     );
   }
 
-  // Inline / homepage card
+  // Inline mode
   if (!modal) {
     return (
       <div className="relative bg-white shadow-md rounded-xl p-4 flex flex-col items-center w-full">
@@ -150,7 +161,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
     );
   }
 
-  // Modal
+  // ✅ Modal Mode (fixed)
   return (
     <AnimatePresence>
       <motion.div
@@ -158,12 +169,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[9999] flex justify-center items-start sm:items-center overflow-auto"
+        className="fixed inset-0 z-[9999] flex justify-center items-start sm:items-center overflow-auto bg-black/40 backdrop-blur-sm"
+        onClick={handleClose} // ✅ Click outside closes modal
       >
-        {/* Backdrop */}
-        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm pointer-events-none" />
-
-        {/* Modal Card */}
         <motion.div
           ref={modalRef}
           key="modal"
@@ -172,15 +180,16 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
           exit={{ opacity: 0, y: 30 }}
           transition={{ duration: 0.3 }}
           className="relative w-full max-w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl
-                     bg-white rounded-2xl shadow-xl overflow-auto max-h-screen p-4 sm:p-6 md:p-8"
+                     bg-white rounded-2xl shadow-xl overflow-auto max-h-[90vh] p-4 sm:p-6 md:p-8"
+          onClick={(e) => e.stopPropagation()} // ✅ Prevent closing when clicking inside
         >
           {/* Close Button */}
           <button
             onClick={handleClose}
-            className="fixed top-4 right-4 sm:top-6 sm:right-6 w-12 h-12 flex items-center justify-center
-                       bg-white/90 backdrop-blur-sm rounded-full shadow-md z-[10000]"
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 flex items-center justify-center
+                       bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full shadow-md z-[10000]"
           >
-            <X size={28} />
+            <X size={22} />
           </button>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -231,7 +240,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
                 </div>
               </div>
 
-              {/* Price & Add-to-Cart */}
+              {/* Price & Add to Cart */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-border gap-4 sm:gap-0">
                 <div className="text-2xl sm:text-3xl font-bold text-[#0b8686]">
                   ₨{product.price.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
