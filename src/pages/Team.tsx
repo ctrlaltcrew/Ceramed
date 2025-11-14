@@ -8,7 +8,7 @@ const TeamPage = () => {
     {
       name: "Dr.Muhammad Imran khan",
       role: "PI, Head Drug Testing",
-      specialization: "Biochemistry & Molecular Biology",
+      specialization: "Assistant Professor",
       image: "/dr_imran-removebg-preview.png",
       description:
         "Leading expert in biochemical research with 12+ years experience in drug development.",
@@ -18,7 +18,7 @@ const TeamPage = () => {
     {
       name: "Habab Ali Ahmad",
       role: "Community Lead / Research Scientist",
-      specialization: "Pharmacology & Toxicology",
+      specialization: "Pharmacology",
       image: "/habab_ali_ahmadimage-removebg-preview (2).png",
       description:
         "Specialist in preclinical testing methodologies and regulatory compliance protocols.",
@@ -28,7 +28,7 @@ const TeamPage = () => {
     {
       name: "Dr. Waqar khalid Saeed",
       role: "Lead Disease Modeling and clinical Studies",
-      specialization: "Natural Product Chemistry",
+      specialization: "Assistant Professor",
       image: "/waqar_image-removebg-preview (1).png",
       description:
         "Pioneer in natural health product formulation and quality assurance systems.",
@@ -38,7 +38,7 @@ const TeamPage = () => {
     {
       name: "Dr. Fazle Wahab",
       role: "Lead Animal Studies",
-      specialization: "Disease Modeling & Analysis",
+      specialization: "Associate Professor",
       image: "/fazle_image-removebg-preview.png",
       description:
         "Expert in cellular and molecular disease modeling for therapeutic research.",
