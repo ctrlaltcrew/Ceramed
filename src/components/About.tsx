@@ -201,22 +201,22 @@ const About = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {[
               {
-                name: "Dr. Imran",
+                name: "Dr.Muhammad Imran khan",
                 role: "PI, Head Drug Testing",
                 image: "/dr_imran-removebg-preview.png",
               },
               {
-                name: "Dr. Habab Ali Ahmad",
+                name: "Habab Ali Ahmad",
                 role: "Community Lead / Research Scientist",
                 image: "/habab_ali_ahmadimage-removebg-preview (2).png",
               },
               {
-                name: "Dr. Waqar Ahmad",
+                name: "Dr. Waqar Khalid Ahmad",
                 role: "Lead Disease Modeling and Clinical Studies",
                 image: "/waqar_image-removebg-preview (1).png",
               },
               {
-                name: "Dr. Fazle Rabbi",
+                name: "Dr. Fazle Wahab",
                 role: "Lead Animal Studies ",
                 image: "/fazle_image-removebg-preview.png",
               },
