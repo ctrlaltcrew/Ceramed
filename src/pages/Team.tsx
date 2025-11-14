@@ -6,8 +6,8 @@ import { Link } from "react-router-dom";
 const TeamPage = () => {
   const teamMembers = [
     {
-      name: "Dr. Imran",
-      role: "Chief Research Officer",
+      name: "Dr.Muhammad Imran khan",
+      role: "PI, Head Drug Testing",
       specialization: "Biochemistry & Molecular Biology",
       image: "/dr_imran-removebg-preview.png",
       description:
@@ -17,7 +17,7 @@ const TeamPage = () => {
     },
     {
       name: "Habab Ali Ahmad",
-      role: "Head of Product Development",
+      role: "Community Lead / Research Scientist",
       specialization: "Pharmacology & Toxicology",
       image: "/habab_ali_ahmadimage-removebg-preview (2).png",
       description:
@@ -26,8 +26,8 @@ const TeamPage = () => {
       email: "habab@example.com",
     },
     {
-      name: "Dr. Waqar Ahmad",
-      role: "Director of Preclinical Studies",
+      name: "Dr. Waqar khalid Saeed",
+      role: "Lead Disease Modeling and clinical Studies",
       specialization: "Natural Product Chemistry",
       image: "/waqar_image-removebg-preview (1).png",
       description:
@@ -36,8 +36,8 @@ const TeamPage = () => {
       email: "waqar@example.com",
     },
     {
-      name: "Dr. Fazle Rabbi",
-      role: "Senior Research Scientist",
+      name: "Dr. Fazle Wahab",
+      role: "Lead Animal Studies",
       specialization: "Disease Modeling & Analysis",
       image: "/fazle_image-removebg-preview.png",
       description:
