@@ -9,65 +9,64 @@ Deno.serve(async (req) => {
         headers: {
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
+          "Access-Control-Allow-Headers": "content-type",
         },
       });
     }
 
-    // Only allow POST requests
+    // Only allow POST
     if (req.method !== "POST") {
-      return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
-        status: 405,
-        headers: {
-          "Content-Type": "application/json; charset=UTF-8",
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
+      return new Response(
+        JSON.stringify({ error: "Method Not Allowed" }),
+        { status: 405, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+      );
     }
 
-    // --- Parse JSON body ---
-    let body;
+    // Parse JSON body
+    let body: any;
     try {
       body = await req.json();
     } catch {
-      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json; charset=UTF-8",
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON body" }),
+        { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+      );
     }
 
     // --- Validate required fields ---
-    const to = body.customerEmail?.trim();
-    if (!to) {
-      return new Response(JSON.stringify({ error: "Recipient email missing" }), {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json; charset=UTF-8",
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
+    const requiredFields = ["customerEmail", "customerName", "orderId", "items", "total"];
+    for (const field of requiredFields) {
+      if (!body[field]) {
+        return new Response(
+          JSON.stringify({ error: `Missing required field: ${field}` }),
+          { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+        );
+      }
     }
 
-    const customerName = (body.customerName || "Customer").trim();
-    const orderId = body.orderId || Math.floor(Math.random() * 900000 + 100000);
-    const items = Array.isArray(body.items) ? body.items : [];
-    const total = body.total || "0.00";
-    const shippingAddress = (body.shippingAddress || "Not Provided").trim();
-    const billingAddress = (body.billingAddress || shippingAddress).trim();
+    // Validate email format
+    const to = body.customerEmail.trim();
+    if (!to.includes("@")) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email address" }),
+        { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+      );
+    }
 
-    // --- Build HTML content ---
-    const itemsHTML = items
-      .map(
-        (item: any) => `
+    const customerName = body.customerName;
+    const orderId = body.orderId;
+    const items = body.items;
+    const total = body.total;
+    const shippingAddress = body.shippingAddress || "Not Provided";
+    const billingAddress = body.billingAddress || shippingAddress;
+
+    // --- Build HTML email ---
+    const itemsHTML = items.map((item: any) => `
       <tr>
         <td style="padding:8px 0;color:#333;">${item.name} × ${item.quantity}</td>
         <td style="padding:8px 0;text-align:right;color:#333;">₨${item.price}</td>
-      </tr>`
-      )
-      .join("");
+      </tr>
+    `).join("");
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -81,9 +80,7 @@ Deno.serve(async (req) => {
               <th style="text-align:right;padding:8px;">Price</th>
             </tr>
           </thead>
-          <tbody>
-            ${itemsHTML}
-          </tbody>
+          <tbody>${itemsHTML}</tbody>
         </table>
         <p style="font-size:18px;font-weight:bold;margin-top:20px;">Total: ₨${total}</p>
         <div style="margin-top:20px;padding:15px;background:#f5f5f5;border-radius:5px;">
@@ -94,61 +91,47 @@ Deno.serve(async (req) => {
       </div>
     `;
 
-    // --- SMTP Credentials ---
-    const SMTP_HOST = Deno.env.get("SMTP_HOST")?.trim();
+    // --- SMTP credentials ---
+    const SMTP_HOST = Deno.env.get("SMTP_HOST");
     const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "465");
-    const SMTP_USER = Deno.env.get("SMTP_USER")?.trim();
-    const SMTP_PASS = Deno.env.get("SMTP_PASS")?.trim();
+    const SMTP_USER = Deno.env.get("SMTP_USER");
+    const SMTP_PASS = Deno.env.get("SMTP_PASS");
 
     if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
       return new Response(
         JSON.stringify({ error: "SMTP credentials not configured" }),
-        {
-          status: 500,
-          headers: {
-            "Content-Type": "application/json; charset=UTF-8",
-            "Access-Control-Allow-Origin": "*",
-          },
-        }
+        { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
       );
     }
 
-    // --- Send Email ---
+    // --- Send email ---
     const client = new SMTPClient({
       connection: {
         hostname: SMTP_HOST,
         port: SMTP_PORT,
-        tls: true, // Use true for SMTPS, false + starttls for 587
+        tls: true,
         auth: { username: SMTP_USER, password: SMTP_PASS },
       },
     });
 
-    try {
-      await client.send({
-        from: SMTP_USER,
-        to,
-        subject: `Order #${orderId} Confirmation - Ceramed`,
-        html,
-      });
-    } finally {
-      await client.close(); // Ensure client always closes
-    }
-
-    return new Response(JSON.stringify({ success: true, message: "Email sent" }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json; charset=UTF-8",
-        "Access-Control-Allow-Origin": "*",
-      },
+    await client.send({
+      from: SMTP_USER,
+      to,
+      subject: `Order #${orderId} Confirmation - Ceramed`,
+      html,
     });
+    await client.close();
+
+    return new Response(
+      JSON.stringify({ success: true, message: "Email sent" }),
+      { status: 200, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+    );
+
   } catch (err) {
     console.error("❌ Error sending email:", err.message || err);
-    return new Response(JSON.stringify({ success: false, error: err.message || String(err) }), {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json; charset=UTF-8",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
+    return new Response(
+      JSON.stringify({ success: false, error: err.message || String(err) }),
+      { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+    );
   }
 });
