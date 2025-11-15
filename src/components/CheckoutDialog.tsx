@@ -62,7 +62,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
   const { clearCart } = useCart();
   const { toast } = useToast();
 
-  // Guest session ID
+  // Generate session ID for guest users
   const getSessionId = () => {
     const existing = localStorage.getItem("cart_session_id");
     if (existing) return existing;
@@ -71,7 +71,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     return newId;
   };
 
-  // Upload receipt to Supabase
+  // Upload receipt image to Supabase storage
   const uploadReceipt = async (file: File) => {
     const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
     const fileName = `${Date.now()}_Receipt_${cleanFileName}`;
@@ -88,7 +88,10 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
   // Send invoice email via Supabase Edge Function
   const sendInvoiceEmail = async (orderId: string) => {
-    if (!customerData.email || !customerData.email.includes("@")) {
+    const email = customerData.email.trim();
+    const name = customerData.name.trim();
+
+    if (!email || !email.includes("@")) {
       console.warn("No valid customer email, skipping email send");
       return;
     }
@@ -110,8 +113,8 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            customerEmail: customerData.email,
-            customerName: customerData.name,
+            customerEmail: email,
+            customerName: name,
             orderId,
             items,
             total: totalAmount.toFixed(2),
@@ -134,7 +137,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     }
   };
 
-  // Handle checkout submit
+  // Handle checkout submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -143,8 +146,10 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
       return;
     }
 
-    if (!customerData.email || !customerData.email.includes("@")) {
-      toast({ title: "Valid email required", description: "Please enter a valid email address.", variant: "destructive" });
+    const email = customerData.email.trim();
+    const name = customerData.name.trim();
+    if (!email || !email.includes("@") || !name) {
+      toast({ title: "Valid info required", description: "Please enter a valid name and email.", variant: "destructive" });
       return;
     }
 
@@ -170,8 +175,8 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
           status: "pending",
           payment_method: paymentMethod,
           payment_receipt: receiptUrl || null,
-          customer_name: customerData.name,
-          customer_email: customerData.email,
+          customer_name: name,
+          customer_email: email,
           customer_phone: customerData.phone,
           shipping_address,
         }])
@@ -219,7 +224,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     }
   };
 
-  // File input
+  // Handle file input for receipt
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setReceiptFile(file);
