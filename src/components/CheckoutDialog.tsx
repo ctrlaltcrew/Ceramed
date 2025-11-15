@@ -62,111 +62,6 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
   const { clearCart } = useCart();
   const { toast } = useToast();
 
-  // 🧠 Get or create local session ID
-  const getSessionId = () => {
-    const existing = localStorage.getItem("cart_session_id");
-    if (existing) return existing;
-    const newId = crypto.randomUUID();
-    localStorage.setItem("cart_session_id", newId);
-    return newId;
-  };
-
-  // 📤 Upload receipt image to Supabase
-  const uploadReceipt = async (file: File) => {
-    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-    const fileName = `${Date.now()}_Receipt_${cleanFileName}`;
-
-    console.log("Uploading file as:", fileName);
-
-    const { data, error } = await supabase.storage
-      .from("receipts")
-      .upload(fileName, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
-
-    if (error) {
-      console.error("❌ Supabase Upload Error:", error.message);
-      throw new Error("Failed to upload receipt. " + error.message);
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("receipts").getPublicUrl(fileName);
-
-    return publicUrl;
-  };
-
-  // 📧 Send invoice email directly via Brevo API (from client)
-  const sendInvoiceEmail = async (orderId: string) => {
-    try {
-      const items = cartItems.map((item) => ({
-        name: item.product.name,
-        quantity: item.quantity,
-        price: item.product.price.toFixed(2),
-      }));
-
-      const shippingAddress = `${customerData.address}, ${customerData.city}${
-        customerData.postalCode ? `, ${customerData.postalCode}` : ""
-      }`;
-
-      // Build HTML content
-      const itemsHTML = items.map((item) => `
-        <tr>
-          <td style="padding:8px 0;color:#333;">
-            ${item.name} × ${item.quantity}
-          </td>
-          <td style="padding:8px 0;text-align:right;color:#333;">₨${item.price}</td>
-        </tr>
-      `).join("");
-
-      const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Thank you for your order!</h2>
-          <p>Hi <b>${customerData.name}</b>, your order is confirmed.</p>
-          <p><strong>Order #${orderId}</strong></p>
-          
-          <table style="width:100%;border-collapse:collapse;margin:20px 0;">
-            <thead>
-              <tr style="border-bottom: 2px solid #ddd;">
-                <th style="text-align:left;padding:8px;">Item</th>
-                <th style="text-align:right;padding:8px;">Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsHTML}
-            </tbody>
-          </table>
-          
-          <p style="font-size:18px;font-weight:bold;margin-top:20px;">
-            Total: ₨${totalAmount.toFixed(2)}
-          </p>
-          
-          <div style="margin-top:20px;padding:15px;background:#f5f5f5;border-radius:5px;">
-            <p><strong>Shipping Address:</strong><br>${shippingAddress}</p>
-            <p><strong>Billing Address:</strong><br>${shippingAddress}</p>
-          </div>
-          
-          <p style="margin-top:30px;color:#666;">
-            Thank you for shopping with Ceramed!
-          </p>
-        </div>
-      `;
-
-      console.log("📧 Sending invoice email to:", customerData.email);
-
-      // Call Brevo API directly (you'll need to proxy this through your backend for security)
-      // For now, let's use a simple notification
-      console.log("✅ Order placed! Email notification would be sent here.");
-      
-      // TODO: Implement proper email sending through a secure backend endpoint
-      // This is just a placeholder - DO NOT expose your Brevo API key in frontend code!
-      
-    } catch (error) {
-      console.error("❌ Error preparing email:", error);
-    }
-  };
-
   // 🧾 Handle checkout
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,11 +78,20 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     setLoading(true);
 
     try {
+      // Step 1: Upload receipt if provided
       let receiptUrl: string | null = null;
-
-      // Upload file if provided
       if (receiptFile) {
-        receiptUrl = await uploadReceipt(receiptFile);
+        const cleanFileName = receiptFile.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+        const fileName = `${Date.now()}_Receipt_${cleanFileName}`;
+
+        const { data, error } = await supabase.storage
+          .from("receipts")
+          .upload(fileName, receiptFile, { cacheControl: "3600", upsert: false });
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage.from("receipts").getPublicUrl(fileName);
+        receiptUrl = publicUrl;
       }
 
       const shipping_address = {
@@ -196,29 +100,27 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         postalCode: customerData.postalCode,
       };
 
-      // Step 1: Create order record
+      // Step 2: Create order
       const { data: newOrder, error: orderError } = await supabase
         .from("orders")
-        .insert([
-          {
-            user_id: user?.id || null,
-            session_id: user ? null : getSessionId(),
-            total_amount: totalAmount,
-            status: "pending",
-            payment_method: paymentMethod,
-            payment_receipt: receiptUrl || null,
-            customer_name: customerData.name,
-            customer_email: customerData.email,
-            customer_phone: customerData.phone,
-            shipping_address,
-          },
-        ])
+        .insert([{
+          user_id: user?.id || null,
+          session_id: user ? null : localStorage.getItem("cart_session_id") || crypto.randomUUID(),
+          total_amount: totalAmount,
+          status: "pending",
+          payment_method: paymentMethod,
+          payment_receipt: receiptUrl || null,
+          customer_name: customerData.name,
+          customer_email: customerData.email,
+          customer_phone: customerData.phone,
+          shipping_address,
+        }])
         .select("id")
         .single();
 
       if (orderError) throw orderError;
 
-      // Step 2: Insert order items
+      // Step 3: Insert order items
       if (newOrder?.id) {
         const orderItems = cartItems.map((item) => ({
           order_id: newOrder.id,
@@ -235,11 +137,11 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
         if (itemsError) throw itemsError;
 
-        // Step 3: Send invoice email 📧
+        // Step 4: Send invoice email via Supabase Edge Function
         await sendInvoiceEmail(newOrder.id);
       }
 
-      // Step 4: Clear cart + success toast
+      // Step 5: Clear cart + success toast
       await clearCart();
 
       toast({
@@ -249,19 +151,12 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         )}) has been placed. Check your email for the invoice!`,
       });
 
-      // Reset all fields
       onOpenChange(false);
-      setCustomerData({
-        name: "",
-        email: "",
-        phone: "",
-        address: "",
-        city: "",
-        postalCode: "",
-      });
+      setCustomerData({ name: "", email: "", phone: "", address: "", city: "", postalCode: "" });
       setPaymentMethod("");
       setReceiptFile(null);
       setReceiptPreview(null);
+
     } catch (error: any) {
       console.error("🔥 Order error:", error);
       toast({
@@ -274,176 +169,120 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     }
   };
 
-  // 🖼 Handle file input + preview
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setReceiptFile(file);
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setReceiptPreview(previewUrl);
+  // 📨 Send invoice email (calls Supabase Edge Function)
+  const sendInvoiceEmail = async (orderId: string) => {
+    try {
+      const items = cartItems.map((item) => ({
+        name: item.product.name,
+        quantity: item.quantity,
+        price: item.product.price.toFixed(2),
+      }));
+
+      const shippingAddress = `${customerData.address}, ${customerData.city}${customerData.postalCode ? `, ${customerData.postalCode}` : ""}`;
+
+      await fetch("https://xpaqoturecevoyjjmwez.functions.supabase.co/send-invoice-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerEmail: customerData.email,
+          customerName: customerData.name,
+          orderId,
+          items,
+          total: totalAmount.toFixed(2),
+          shippingAddress,
+          billingAddress: shippingAddress,
+        }),
+      })
+      .then(res => res.json())
+      .then(data => console.log("Email result:", data))
+      .catch(err => console.error("Error sending invoice:", err));
+
+    } catch (error) {
+      console.error("❌ Error preparing invoice:", error);
     }
   };
 
-  const requiresReceipt =
-    paymentMethod === "easypaisa" ||
-    paymentMethod === "jazzcash" ||
-    paymentMethod === "bank_transfer";
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setReceiptFile(file);
+    if (file) setReceiptPreview(URL.createObjectURL(file));
+  };
+
+  const requiresReceipt = ["easypaisa", "jazzcash", "bank_transfer"].includes(paymentMethod);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Checkout</DialogTitle>
-        </DialogHeader>
+        <DialogHeader><DialogTitle>Checkout</DialogTitle></DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 🧾 Order Summary */}
+          {/* Order Summary */}
           <div className="space-y-4">
             <h3 className="font-semibold">Order Summary</h3>
             <div className="space-y-2 max-h-40 overflow-y-auto">
-              {cartItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex justify-between items-center text-sm"
-                >
-                  <span>
-                    {item.product.name} × {item.quantity}
-                  </span>
+              {cartItems.map(item => (
+                <div key={item.id} className="flex justify-between items-center text-sm">
+                  <span>{item.product.name} × {item.quantity}</span>
                   <span>Rs{(item.product.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
             </div>
-            <div className="border-t pt-2 font-semibold">
-              Total: Rs{totalAmount.toFixed(2)}
-            </div>
+            <div className="border-t pt-2 font-semibold">Total: Rs{totalAmount.toFixed(2)}</div>
           </div>
 
-          {/* 👤 Customer Info */}
+          {/* Customer Info */}
           <div className="space-y-4">
             <h3 className="font-semibold">Customer Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name">Full Name *</Label>
-                <Input
-                  id="name"
-                  value={customerData.name}
-                  onChange={(e) =>
-                    setCustomerData((p) => ({ ...p, name: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={customerData.email}
-                  onChange={(e) =>
-                    setCustomerData((p) => ({ ...p, email: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone Number *</Label>
-                <Input
-                  id="phone"
-                  value={customerData.phone}
-                  onChange={(e) =>
-                    setCustomerData((p) => ({ ...p, phone: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="city">City *</Label>
-                <Input
-                  id="city"
-                  value={customerData.city}
-                  onChange={(e) =>
-                    setCustomerData((p) => ({ ...p, city: e.target.value }))
-                  }
-                  required
-                />
-              </div>
+              <InputField id="name" label="Full Name *" value={customerData.name} onChange={v => setCustomerData(p => ({ ...p, name: v }))} required />
+              <InputField id="email" label="Email *" type="email" value={customerData.email} onChange={v => setCustomerData(p => ({ ...p, email: v }))} required />
+              <InputField id="phone" label="Phone Number *" value={customerData.phone} onChange={v => setCustomerData(p => ({ ...p, phone: v }))} required />
+              <InputField id="city" label="City *" value={customerData.city} onChange={v => setCustomerData(p => ({ ...p, city: v }))} required />
               <div className="md:col-span-2">
                 <Label htmlFor="address">Address *</Label>
-                <Textarea
-                  id="address"
-                  value={customerData.address}
-                  onChange={(e) =>
-                    setCustomerData((p) => ({ ...p, address: e.target.value }))
-                  }
-                  required
-                />
+                <Textarea id="address" value={customerData.address} onChange={e => setCustomerData(p => ({ ...p, address: e.target.value }))} required />
               </div>
-              <div>
-                <Label htmlFor="postalCode">Postal Code</Label>
-                <Input
-                  id="postalCode"
-                  value={customerData.postalCode}
-                  onChange={(e) =>
-                    setCustomerData((p) => ({
-                      ...p,
-                      postalCode: e.target.value,
-                    }))
-                  }
-                />
-              </div>
+              <InputField id="postalCode" label="Postal Code" value={customerData.postalCode} onChange={v => setCustomerData(p => ({ ...p, postalCode: v }))} />
             </div>
           </div>
 
-          {/* 💳 Payment Section */}
+          {/* Payment Section */}
           <div className="space-y-4">
             <h3 className="font-semibold">Payment Method</h3>
-            <Select
-              value={paymentMethod}
-              onValueChange={setPaymentMethod}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select payment method" />
-              </SelectTrigger>
+            <Select value={paymentMethod} onValueChange={setPaymentMethod} required>
+              <SelectTrigger><SelectValue placeholder="Select payment method" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="easypaisa">EasyPaisa</SelectItem>
                 <SelectItem value="jazzcash">JazzCash</SelectItem>
                 <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                <SelectItem value="cash_on_delivery">
-                  Cash on Delivery
-                </SelectItem>
+                <SelectItem value="cash_on_delivery">Cash on Delivery</SelectItem>
               </SelectContent>
             </Select>
 
             {requiresReceipt && (
               <div className="p-4 bg-muted rounded-lg space-y-3">
                 <Label htmlFor="receipt">Upload Payment Screenshot</Label>
-                <Input
-                  id="receipt"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
-                {receiptPreview && (
-                  <img
-                    src={receiptPreview}
-                    alt="Receipt Preview"
-                    className="mt-2 w-40 h-40 object-contain rounded-lg border"
-                  />
-                )}
+                <Input id="receipt" type="file" accept="image/*" onChange={handleFileChange} />
+                {receiptPreview && <img src={receiptPreview} alt="Receipt Preview" className="mt-2 w-40 h-40 object-contain rounded-lg border" />}
               </div>
             )}
           </div>
 
           <Button type="submit" className="w-full" disabled={loading} size="lg">
-            {loading
-              ? "Placing Order..."
-              : `Place Order - Rs.${totalAmount.toFixed(2)}`}
+            {loading ? "Placing Order..." : `Place Order - Rs.${totalAmount.toFixed(2)}`}
           </Button>
         </form>
       </DialogContent>
     </Dialog>
   );
 };
+
+// Reusable InputField
+const InputField = ({ id, label, value, onChange, type = "text", required = false }: any) => (
+  <div>
+    <Label htmlFor={id}>{label}</Label>
+    <Input id={id} type={type} value={value} onChange={e => onChange(e.target.value)} required={required} />
+  </div>
+);
 
 export default CheckoutDialog;
