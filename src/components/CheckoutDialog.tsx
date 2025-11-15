@@ -62,7 +62,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
   const { clearCart } = useCart();
   const { toast } = useToast();
 
-  // Generate session ID for guest users
+  // Generate guest session ID
   const getSessionId = () => {
     const existing = localStorage.getItem("cart_session_id");
     if (existing) return existing;
@@ -71,7 +71,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     return newId;
   };
 
-  // Upload receipt image to Supabase storage
+  // Upload receipt file
   const uploadReceipt = async (file: File) => {
     const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
     const fileName = `${Date.now()}_Receipt_${cleanFileName}`;
@@ -82,8 +82,8 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
     if (error) throw new Error("Failed to upload receipt: " + error.message);
 
-    const { data: { publicUrl } } = supabase.storage.from("receipts").getPublicUrl(fileName);
-    return publicUrl;
+    const { data } = supabase.storage.from("receipts").getPublicUrl(fileName);
+    return data.publicUrl;
   };
 
   // Send invoice email via Supabase Edge Function
@@ -91,10 +91,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     const email = customerData.email.trim();
     const name = customerData.name.trim();
 
-    if (!email || !email.includes("@")) {
-      console.warn("No valid customer email, skipping email send");
-      return;
-    }
+    if (!email || !email.includes("@")) return;
 
     const items = cartItems.map((item) => ({
       name: item.product.name,
@@ -127,27 +124,26 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
       if (!res.ok) {
         const text = await res.text();
         console.error("Failed to send email:", text);
-        return;
+      } else {
+        const data = await res.json();
+        console.log("Invoice email sent:", data);
       }
-
-      const data = await res.json();
-      console.log("Invoice email result:", data);
     } catch (err) {
       console.error("Error sending invoice:", err);
     }
   };
 
-  // Handle checkout submission
+  // Handle checkout submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const email = customerData.email.trim();
+    const name = customerData.name.trim();
 
     if (!paymentMethod) {
       toast({ title: "Payment method required", description: "Please select a payment method.", variant: "destructive" });
       return;
     }
-
-    const email = customerData.email.trim();
-    const name = customerData.name.trim();
     if (!email || !email.includes("@") || !name) {
       toast({ title: "Valid info required", description: "Please enter a valid name and email.", variant: "destructive" });
       return;
@@ -165,7 +161,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         postalCode: customerData.postalCode,
       };
 
-      // Create order
+      // Insert order
       const { data: newOrder, error: orderError } = await supabase
         .from("orders")
         .insert([{
@@ -193,7 +189,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
           product_name: item.product.name,
           quantity: item.quantity,
           price: item.product.price,
-          total: item.quantity * item.product.price,
+          total: item.product.price * item.quantity,
         }));
 
         const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
@@ -203,7 +199,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         await sendInvoiceEmail(newOrder.id);
       }
 
-      // Clear cart and show success
+      // Clear cart & show success toast
       await clearCart();
       toast({
         title: "Order placed successfully 🎉",
@@ -224,7 +220,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     }
   };
 
-  // Handle file input for receipt
+  // Handle receipt file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setReceiptFile(file);
