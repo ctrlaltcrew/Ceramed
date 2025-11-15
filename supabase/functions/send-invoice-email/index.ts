@@ -3,23 +3,23 @@ import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 Deno.serve(async (req) => {
   try {
-    // --- CORS Preflight ---
+    // --- Handle CORS preflight ---
     if (req.method === "OPTIONS") {
       return new Response("ok", {
         headers: {
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "content-type",
+          "Access-Control-Allow-Headers": "Content-Type",
         },
       });
     }
 
-    // Only allow POST
+    // Only allow POST requests
     if (req.method !== "POST") {
-      return new Response(
-        JSON.stringify({ error: "Method Not Allowed" }),
-        { status: 405, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
-      );
+      return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
+        status: 405,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
     }
 
     // Parse JSON body
@@ -27,32 +27,25 @@ Deno.serve(async (req) => {
     try {
       body = await req.json();
     } catch {
-      return new Response(
-        JSON.stringify({ error: "Invalid JSON body" }),
-        { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
-      );
+      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
     }
 
-    // --- Validate required fields ---
+    // Validate required fields
     const requiredFields = ["customerEmail", "customerName", "orderId", "items", "total"];
     for (const field of requiredFields) {
       if (!body[field]) {
-        return new Response(
-          JSON.stringify({ error: `Missing required field: ${field}` }),
-          { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
-        );
+        return new Response(JSON.stringify({ error: `Missing required field: ${field}` }), {
+          status: 400,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        });
       }
     }
 
-    // Validate email format
+    // Extract fields
     const to = body.customerEmail.trim();
-    if (!to.includes("@")) {
-      return new Response(
-        JSON.stringify({ error: "Invalid email address" }),
-        { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
-      );
-    }
-
     const customerName = body.customerName;
     const orderId = body.orderId;
     const items = body.items;
@@ -60,7 +53,7 @@ Deno.serve(async (req) => {
     const shippingAddress = body.shippingAddress || "Not Provided";
     const billingAddress = body.billingAddress || shippingAddress;
 
-    // --- Build HTML email ---
+    // Build items HTML
     const itemsHTML = items.map((item: any) => `
       <tr>
         <td style="padding:8px 0;color:#333;">${item.name} × ${item.quantity}</td>
@@ -68,6 +61,7 @@ Deno.serve(async (req) => {
       </tr>
     `).join("");
 
+    // Build full invoice HTML
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Thank you for your order!</h2>
@@ -91,25 +85,25 @@ Deno.serve(async (req) => {
       </div>
     `;
 
-    // --- SMTP credentials ---
+    // --- SMTP credentials from Supabase secrets ---
     const SMTP_HOST = Deno.env.get("SMTP_HOST");
-    const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "465");
+    const SMTP_PORT = parseInt(Deno.env.get("SMTP_PORT") || "587");
     const SMTP_USER = Deno.env.get("SMTP_USER");
     const SMTP_PASS = Deno.env.get("SMTP_PASS");
 
     if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-      return new Response(
-        JSON.stringify({ error: "SMTP credentials not configured" }),
-        { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
-      );
+      return new Response(JSON.stringify({ error: "SMTP credentials not configured" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
     }
 
-    // --- Send email ---
+    // --- Send email using Hostinger SMTP ---
     const client = new SMTPClient({
       connection: {
         hostname: SMTP_HOST,
         port: SMTP_PORT,
-        tls: true,
+        tls: SMTP_PORT === 465, // use TLS for port 465
         auth: { username: SMTP_USER, password: SMTP_PASS },
       },
     });
@@ -120,18 +114,19 @@ Deno.serve(async (req) => {
       subject: `Order #${orderId} Confirmation - Ceramed`,
       html,
     });
+
     await client.close();
 
-    return new Response(
-      JSON.stringify({ success: true, message: "Email sent" }),
-      { status: 200, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
-    );
+    return new Response(JSON.stringify({ success: true, message: "Email sent" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
 
   } catch (err) {
-    console.error("❌ Error sending email:", err.message || err);
-    return new Response(
-      JSON.stringify({ success: false, error: err.message || String(err) }),
-      { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
-    );
+    console.error("Error sending email:", err.message || err);
+    return new Response(JSON.stringify({ success: false, error: err.message || String(err) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
   }
 });
