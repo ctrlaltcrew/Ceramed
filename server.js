@@ -26,15 +26,14 @@ app.post("/api/send-invoice", async (req, res) => {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     const supRes = await fetch(`${supabaseUrl}/functions/v1/send-invoice-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${serviceKey}`,
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-function-secret": process.env.SEND_INVOICE_SECRET
+  },
+  body: JSON.stringify(payload),
+});
 
-        "x-function-secret": process.env.SEND_INVOICE_SECRET
-      },
-      body: JSON.stringify(payload),
-    });
 
     const data = await supRes.json().catch(() => ({
       error: "Invalid JSON response from function"
