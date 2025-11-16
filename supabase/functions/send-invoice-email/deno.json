@@ -8,3 +8,9 @@
   },
   "importMap": "import_map.json"
 }
+{
+  "imports": {
+    "resend": "https://esm.sh/resend@3",
+    "@supabase/functions": "https://esm.sh/@supabase/functions@2"
+  }
+}
