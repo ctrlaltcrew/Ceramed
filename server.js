@@ -10,11 +10,16 @@ app.use(express.json());
 // Health check
 app.get("/", (req, res) => res.send("Server is running"));
 
-// ✅ Endpoint to send invoice email
+// Send invoice email
 app.post("/api/send-invoice", async (req, res) => {
   const payload = req.body;
 
-  if (!payload?.to) return res.status(400).json({ message: "'to' email is required" });
+  if (!payload?.to) {
+    return res.status(400).json({
+      success: false,
+      message: "'to' email is required"
+    });
+  }
 
   try {
     const supabaseUrl = process.env.SUPABASE_URL;
@@ -29,19 +34,37 @@ app.post("/api/send-invoice", async (req, res) => {
       body: JSON.stringify(payload),
     });
 
-    const data = await supRes.json().catch(() => null);
+    const data = await supRes.json().catch(() => ({
+      error: "Invalid JSON response from function"
+    }));
 
     if (!supRes.ok) {
       console.error("Supabase function error:", supRes.status, data);
-      return res.status(500).json({ message: "Failed to send invoice email", error: data });
+
+      return res.status(500).json({
+        success: false,
+        message: "Supabase function failed",
+        error: data.error || data.message || "Unknown error from edge function"
+      });
     }
 
-    return res.status(200).json({ message: "Invoice email sent successfully", data });
+    return res.status(200).json({
+      success: true,
+      message: "Invoice email sent successfully",
+      data
+    });
+
   } catch (err) {
     console.error("Server error:", err);
-    return res.status(500).json({ message: "Server error", error: err.message });
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error (backend)",
+      error: err.message || err
+    });
   }
 });
 
+// Server start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
