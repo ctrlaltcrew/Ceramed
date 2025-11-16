@@ -14,27 +14,27 @@ app.get("/", (req, res) => res.send("Server is running"));
 app.post("/api/send-invoice", async (req, res) => {
   const payload = req.body;
 
-  if (!payload?.to) {
+  if (!payload?.customerEmail) {
     return res.status(400).json({
       success: false,
-      message: "'to' email is required"
+      message: "'customerEmail' is required"
     });
   }
 
   try {
     const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+    // ✅ Use anon key for Authorization header
     const supRes = await fetch(`${supabaseUrl}/functions/v1/send-invoice-email`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "x-function-secret": process.env.SEND_INVOICE_SECRET
-  },
-  body: JSON.stringify(payload),
-});
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify(payload),
+    });
 
-
+    // Safely parse JSON response
     const data = await supRes.json().catch(() => ({
       error: "Invalid JSON response from function"
     }));
@@ -42,10 +42,10 @@ app.post("/api/send-invoice", async (req, res) => {
     if (!supRes.ok) {
       console.error("Supabase function error:", supRes.status, data);
 
-      return res.status(500).json({
+      return res.status(supRes.status).json({
         success: false,
         message: "Supabase function failed",
-        error: data.error || data.message || "Unknown error from edge function"
+        error: data.error || data.message || "Unknown error"
       });
     }
 
@@ -61,7 +61,7 @@ app.post("/api/send-invoice", async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error (backend)",
-      error: err.message || err
+      error: err.message || String(err)
     });
   }
 });
@@ -69,3 +69,5 @@ app.post("/api/send-invoice", async (req, res) => {
 // Server start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+export default app;
