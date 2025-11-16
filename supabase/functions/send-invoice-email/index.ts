@@ -1,5 +1,4 @@
-// Supabase Edge Function using Brevo API
-// File: supabase/functions/send-invoice-email/index.ts
+// supabase/functions/send-invoice-email/index.ts
 
 Deno.serve(async (req) => {
   try {
@@ -14,7 +13,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // --- JWT check (Supabase handles verification automatically if ON) ---
     if (req.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
         status: 405,
@@ -26,19 +24,7 @@ Deno.serve(async (req) => {
     }
 
     // Parse JSON body
-    let body;
-    try {
-      body = await req.json();
-    } catch {
-      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
-    }
-
+    const body = await req.json();
     const { customerEmail, customerName, orderId, items, total, shippingAddress, billingAddress } = body;
 
     if (!customerEmail || !customerName || !orderId || !items || !total) {
