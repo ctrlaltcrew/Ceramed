@@ -30,6 +30,8 @@ app.post("/api/send-invoice", async (req, res) => {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${serviceKey}`,
+
+        "x-function-secret": process.env.SEND_INVOICE_SECRET
       },
       body: JSON.stringify(payload),
     });
