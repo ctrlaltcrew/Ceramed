@@ -49,47 +49,54 @@ const AdminOrders = () => {
 
   // Send invoice email
   const sendInvoiceEmail = async (order: any) => {
-    setSendingEmail(true);
-    try {
-      console.log("📧 Sending invoice email for order:", order.id);
+  setSendingEmail(true);
+  try {
+    console.log("📧 Sending invoice email for order:", order.id);
 
-      const response = await fetch(
-        "https://xpaqoturecevoyjjmwez.functions.supabase.co/send-invoice-email",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            to: order.customer_email,
-            customerName: order.customer_name,
-            invoiceId: order.id,
-            items: order.items.map((i: any) => ({
-              name: i.product_name,
-              price: i.price,
-              size: i.size || "",
-              quantity: i.quantity,
-            })),
-            total: order.total_amount,
-            shippingAddress: order.shipping_address,
-            billingAddress: order.billing_address,
-          }),
-        }
-      );
-
-      const data = await response.json();
-      console.log("📧 Email function response:", data);
-
-      if (data.success) {
-        alert(`✅ Invoice email sent for order #${order.id}`);
-      } else {
-        alert(`⚠️ Failed to send email: ${data.error}`);
+    const response = await fetch(
+      "https://xpaqoturecevoyjjmwez.functions.supabase.co/send-invoice-email",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`, 
+        },
+        body: JSON.stringify({
+          customerEmail: order.customer_email,
+          customerName: order.customer_name,
+          orderId: order.id,
+          items: order.items.map((i: any) => ({
+            name: i.product_name,
+            price: i.price,
+            size: i.size || "",
+            quantity: i.quantity,
+          })),
+          total: order.total_amount,
+          shippingAddress: order.shipping_address,
+          billingAddress: order.billing_address,
+        }),
       }
-    } catch (err) {
-      console.error("💥 Error sending invoice email:", err);
-      alert("💥 Unable to connect to email service.");
-    } finally {
-      setSendingEmail(false);
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed with status ${response.status}`);
     }
-  };
+
+    const data = await response.json();
+    console.log("📧 Email function response:", data);
+
+    if (data.success) {
+      alert(`✅ Invoice email sent for order #${order.id}`);
+    } else {
+      alert(`⚠️ Failed to send email: ${data.error}`);
+    }
+  } catch (err) {
+    console.error("💥 Error sending invoice email:", err);
+    alert("💥 Unable to connect to email service.");
+  } finally {
+    setSendingEmail(false);
+  }
+};
 
   // Update order status
   const handleUpdateStatus = async (orderId: string, status: string) => {
