@@ -86,32 +86,51 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     return data.publicUrl;
   };
 
-  // Send invoice email via Supabase Edge Function + Hostinger SMTP
+  // Send invoice email via Supabase Edge Function
   const sendInvoiceEmail = async (orderId: string) => {
     try {
-      await fetch("https://xpaqoturecevoyjjmwez.functions.supabase.co/send-invoice-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-function-secret": "mysecret123", // must match the Supabase secret
-        },
-        body: JSON.stringify({
-          customerEmail: customerData.email,
-          customerName: customerData.name,
-          orderId: orderId,
-          items: cartItems.map(item => ({
-            name: item.product.name,
-            quantity: item.quantity,
-            price: item.product.price.toFixed(2),
-          })),
-          total: totalAmount.toFixed(2),
-          shippingAddress: `${customerData.address}, ${customerData.city}${customerData.postalCode ? `, ${customerData.postalCode}` : ""}`,
-          billingAddress: `${customerData.address}, ${customerData.city}${customerData.postalCode ? `, ${customerData.postalCode}` : ""}`,
-        }),
-      });
+      const res = await fetch(
+        "https://xpaqoturecevoyjjmwez.functions.supabase.co/send-invoice-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            // ✅ Use anon key for JWT verification ON
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            customerEmail: customerData.email,
+            customerName: customerData.name,
+            orderId,
+            items: cartItems.map((item) => ({
+              name: item.product.name,
+              quantity: item.quantity,
+              price: item.product.price.toFixed(2),
+            })),
+            total: totalAmount.toFixed(2),
+            shippingAddress: `${customerData.address}, ${customerData.city}${
+              customerData.postalCode ? `, ${customerData.postalCode}` : ""
+            }`,
+            billingAddress: `${customerData.address}, ${customerData.city}${
+              customerData.postalCode ? `, ${customerData.postalCode}` : ""
+            }`,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed with status ${res.status}`);
+      }
+
       console.log("Invoice email sent successfully");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error sending invoice:", err);
+      toast({
+        title: "Error",
+        description: "Failed to send invoice email. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -123,11 +142,19 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     const name = customerData.name.trim();
 
     if (!paymentMethod) {
-      toast({ title: "Payment method required", description: "Please select a payment method.", variant: "destructive" });
+      toast({
+        title: "Payment method required",
+        description: "Please select a payment method.",
+        variant: "destructive",
+      });
       return;
     }
     if (!email || !email.includes("@") || !name) {
-      toast({ title: "Valid info required", description: "Please enter a valid name and email.", variant: "destructive" });
+      toast({
+        title: "Valid info required",
+        description: "Please enter a valid name and email.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -146,18 +173,20 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
       // Insert order
       const { data: newOrder, error: orderError } = await supabase
         .from("orders")
-        .insert([{
-          user_id: user?.id || null,
-          session_id: user ? null : getSessionId(),
-          total_amount: totalAmount,
-          status: "pending",
-          payment_method: paymentMethod,
-          payment_receipt: receiptUrl || null,
-          customer_name: name,
-          customer_email: email,
-          customer_phone: customerData.phone,
-          shipping_address,
-        }])
+        .insert([
+          {
+            user_id: user?.id || null,
+            session_id: user ? null : getSessionId(),
+            total_amount: totalAmount,
+            status: "pending",
+            payment_method: paymentMethod,
+            payment_receipt: receiptUrl || null,
+            customer_name: name,
+            customer_email: email,
+            customer_phone: customerData.phone,
+            shipping_address,
+          },
+        ])
         .select("id")
         .single();
 
@@ -174,7 +203,9 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
           total: item.product.price * item.quantity,
         }));
 
-        const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+        const { error: itemsError } = await supabase
+          .from("order_items")
+          .insert(orderItems);
         if (itemsError) throw itemsError;
 
         // Send invoice email
@@ -185,18 +216,31 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
       await clearCart();
       toast({
         title: "Order placed successfully 🎉",
-        description: `Your order (total Rs.${totalAmount.toFixed(2)}) has been placed. Check your email for the invoice!`,
+        description: `Your order (total Rs.${totalAmount.toFixed(
+          2
+        )}) has been placed. Check your email for the invoice!`,
       });
 
       // Reset form
       onOpenChange(false);
-      setCustomerData({ name: "", email: "", phone: "", address: "", city: "", postalCode: "" });
+      setCustomerData({
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+        city: "",
+        postalCode: "",
+      });
       setPaymentMethod("");
       setReceiptFile(null);
       setReceiptPreview(null);
     } catch (error: any) {
       console.error("Order error:", error);
-      toast({ title: "Error placing order", description: error.message || "Please try again.", variant: "destructive" });
+      toast({
+        title: "Error placing order",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -209,7 +253,9 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     if (file) setReceiptPreview(URL.createObjectURL(file));
   };
 
-  const requiresReceipt = ["easypaisa", "jazzcash", "bank_transfer"].includes(paymentMethod);
+  const requiresReceipt = ["easypaisa", "jazzcash", "bank_transfer"].includes(
+    paymentMethod
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -224,13 +270,22 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
             <h3 className="font-semibold">Order Summary</h3>
             <div className="space-y-2 max-h-40 overflow-y-auto">
               {cartItems.map((item) => (
-                <div key={item.id} className="flex justify-between items-center text-sm">
-                  <span>{item.product.name} × {item.quantity}</span>
-                  <span>Rs{(item.product.price * item.quantity).toFixed(2)}</span>
+                <div
+                  key={item.id}
+                  className="flex justify-between items-center text-sm"
+                >
+                  <span>
+                    {item.product.name} × {item.quantity}
+                  </span>
+                  <span>
+                    Rs{(item.product.price * item.quantity).toFixed(2)}
+                  </span>
                 </div>
               ))}
             </div>
-            <div className="border-t pt-2 font-semibold">Total: Rs{totalAmount.toFixed(2)}</div>
+            <div className="border-t pt-2 font-semibold">
+              Total: Rs{totalAmount.toFixed(2)}
+            </div>
           </div>
 
           {/* Customer Info */}
