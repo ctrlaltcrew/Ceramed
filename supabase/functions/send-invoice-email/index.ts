@@ -25,7 +25,15 @@ Deno.serve(async (req) => {
 
     // Parse JSON body
     const body = await req.json();
-    const { customerEmail, customerName, orderId, items, total, shippingAddress, billingAddress } = body;
+    const {
+      customerEmail,
+      customerName,
+      orderId,
+      items,
+      total,
+      shippingAddress,
+      billingAddress
+    } = body;
 
     if (!customerEmail || !customerName || !orderId || !items || !total) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -37,6 +45,9 @@ Deno.serve(async (req) => {
       });
     }
 
+    const deliveryCharges = 200;
+    const grandTotal = total + deliveryCharges;
+
     // Build items HTML
     const itemsHTML = items.map((item: any) => `
       <tr>
@@ -44,6 +55,12 @@ Deno.serve(async (req) => {
         <td style="padding:8px 0;text-align:right;color:#333;">₨${item.price}</td>
       </tr>
     `).join("");
+
+    // Format address helper
+    const formatAddress = (addr: any) =>
+      addr && typeof addr === "object"
+        ? `${addr.street || ""}, ${addr.city || ""}, ${addr.zip || ""}`
+        : "Not provided";
 
     // Build invoice HTML
     const html = `
@@ -60,10 +77,11 @@ Deno.serve(async (req) => {
           </thead>
           <tbody>${itemsHTML}</tbody>
         </table>
-        <p style="font-size:18px;font-weight:bold;margin-top:20px;">Total: ₨${total}</p>
+        <p style="margin-top:10px;">Delivery Charges: ₨${deliveryCharges}</p>
+        <p style="font-size:18px;font-weight:bold;margin-top:10px;">Grand Total: ₨${grandTotal}</p>
         <div style="margin-top:20px;padding:15px;background:#f5f5f5;border-radius:5px;">
-          <p><strong>Shipping Address:</strong><br>${shippingAddress}</p>
-          <p><strong>Billing Address:</strong><br>${billingAddress}</p>
+          <p><strong>Shipping Address:</strong><br>${formatAddress(shippingAddress)}</p>
+          <p><strong>Billing Address:</strong><br>${formatAddress(billingAddress)}</p>
         </div>
         <p style="margin-top:30px;color:#666;">Thank you for shopping with Ceramed!</p>
       </div>
