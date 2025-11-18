@@ -6,11 +6,9 @@
   "tasks": {
     "start": "deno run --allow-env --allow-net index.ts"
   },
-  "importMap": "import_map.json"
-}
-{
+  "importMap": "import_map.json",
   "imports": {
-    "resend": "https://esm.sh/resend@3",
-    "@supabase/functions": "https://esm.sh/@supabase/functions@2"
+    "@supabase/functions": "https://esm.sh/@supabase/functions@2",
+    "brevo": "https://esm.sh/@getbrevo/node@latest"
   }
 }

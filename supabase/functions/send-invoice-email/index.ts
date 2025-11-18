@@ -97,6 +97,7 @@ Deno.serve(async (req) => {
 
     if (!brevoRes.ok) {
       const errText = await brevoRes.text();
+      console.error("Brevo error:", errText);
       return new Response(JSON.stringify({ success: false, error: errText }), {
         status: brevoRes.status,
         headers: {
