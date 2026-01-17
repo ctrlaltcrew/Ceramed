@@ -74,6 +74,7 @@ const AdminOrders = () => {
           total: order.total_amount,
           shippingAddress: order.shipping_address,
           billingAddress: order.billing_address,
+          isApproval: true,
         }),
       }
     );

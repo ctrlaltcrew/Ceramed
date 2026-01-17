@@ -35,7 +35,8 @@ const serveHandler = async (req: any): Promise<Response> => {
       items,
       total,
       shippingAddress,
-      billingAddress
+      billingAddress,
+      isApproval = false
     } = body;
 
     console.log("📨 Received Email Request:");
@@ -143,8 +144,9 @@ const serveHandler = async (req: any): Promise<Response> => {
               </tr>
               <tr>
                 <td style="padding:20px 0; color:#555; text-align:center;">
-                  We're getting your order ready to be shipped.<br>
-                  We’ll notify you once it has been sent after admin approval.
+                  ${isApproval 
+                    ? 'Great news! Your order has been approved and dispatched.<br>You will receive it soon!' 
+                    : "We're getting your order ready to be shipped.<br>We'll notify you once it has been sent after admin approval."}
                 </td>
               </tr>
 
