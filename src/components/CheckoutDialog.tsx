@@ -246,7 +246,20 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
         // Send "order received" email immediately
         console.log("🎯 Order created, sending email for order ID:", newOrder.id);
-        await sendOrderReceivedEmail(newOrder.id);
+        alert(`📧 About to send order received email for order: ${newOrder.id}`);
+        try {
+          await sendOrderReceivedEmail(newOrder.id);
+          alert(`✅ Order received email sent successfully!`);
+        } catch (emailError) {
+          console.error("❌ Failed to send order received email:", emailError);
+          alert(`❌ Email failed: ${emailError}`);
+          // Don't fail the entire checkout if email fails
+          toast({
+            title: "Order placed but email failed",
+            description: "Your order was placed successfully, but we couldn't send the confirmation email.",
+            variant: "destructive",
+          });
+        }
       }
 
       // Clear cart & show success toast
