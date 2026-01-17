@@ -54,7 +54,7 @@ const serveHandler = async (req: any): Promise<Response> => {
     }
 
     const deliveryCharges = 200;
-    const grandTotal = total + deliveryCharges;
+    const grandTotal = parseFloat(total) + deliveryCharges;
 
     // Build items HTML
     const itemsHTML = (items as Array<{ name: string; quantity: number; price: number }>).map((item) => `
@@ -72,7 +72,7 @@ const serveHandler = async (req: any): Promise<Response> => {
 
     // Build invoice HTML
     // Build new email HTML template
-    const logo_url = "https://ceramed.org/assets/logo.png";
+    const logo_url = "https://ceramed.org/logo.png";
     const order_link = `https://ceramed.org/orders/${orderId}`;
     const support_email = "info@ceramed.org";
     const productRows = (items as Array<{ name: string; size?: string; price: number }>).map((item) => `
