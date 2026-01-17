@@ -72,7 +72,7 @@ const serveHandler = async (req: any): Promise<Response> => {
 
     // Build invoice HTML
     // Build new email HTML template
-    const logo_url = "https://ceramed.org/assets/logo.png";
+    const logo_url = "https://ceramed.org/logo.png";
     const order_link = `https://ceramed.org/orders/${orderId}`;
     const support_email = "info@ceramed.org";
     const productRows = (items as Array<{ name: string; size?: string; price: number }>).map((item) => `
@@ -147,15 +147,7 @@ const serveHandler = async (req: any): Promise<Response> => {
                   We’ll notify you once it has been sent after admin approval.
                 </td>
               </tr>
-              <tr>
-                <td align="center" style="padding-bottom:30px;">
-                  <a href="${order_link}" 
-                     style="background:#8cc63f; color:#ffffff; text-decoration:none; 
-                            padding:14px 28px; border-radius:4px; display:inline-block;">
-                    View Your Order
-                  </a>
-                </td>
-              </tr>
+
               <tr>
                 <td>
                   <h3 style="border-bottom:1px solid #eee; padding-bottom:10px;">Order Summary</h3>
