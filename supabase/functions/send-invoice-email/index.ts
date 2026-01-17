@@ -79,9 +79,22 @@ const serveHandler = async (req: any): Promise<Response> => {
     const shipping = deliveryCharges;
     const tax = 0;
     const totalDisplay = grandTotal;
-    const address = shippingAddress?.street || "";
-    const city = shippingAddress?.city || "";
-    const country = shippingAddress?.country || "Pakistan";
+    // Extract address components safely - handle both object and string formats
+    let address = "";
+    let city = "";
+    let country = "Pakistan";
+    
+    if (typeof shippingAddress === "object" && shippingAddress !== null) {
+      address = shippingAddress.street || "";
+      city = shippingAddress.city || "";
+      country = shippingAddress.country || "Pakistan";
+    } else if (typeof shippingAddress === "string") {
+      // If it's a string, split by comma
+      const parts = shippingAddress.split(",").map((p: string) => p.trim());
+      address = parts[0] || "";
+      city = parts[1] || "";
+      country = parts[2] || "Pakistan";
+    }
     const html = `
     <!DOCTYPE html>
     <html>
@@ -199,9 +212,11 @@ const serveHandler = async (req: any): Promise<Response> => {
       }),
     });
 
+    console.log("Brevo API Response Status:", brevoRes.status);
+
     if (!brevoRes.ok) {
       const errText = await brevoRes.text();
-      console.error("Brevo error:", errText);
+      console.error("Brevo error:", brevoRes.status, errText);
       return new Response(JSON.stringify({ success: false, error: errText }), {
         status: brevoRes.status,
         headers: {
@@ -211,6 +226,7 @@ const serveHandler = async (req: any): Promise<Response> => {
       });
     }
 
+    console.log("Email sent successfully to:", customerEmail);
     return new Response(JSON.stringify({ success: true, message: "Order received email sent via Brevo" }), {
       status: 200,
       headers: {

@@ -89,6 +89,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
   // Send "order received" email immediately when checkout happens
   const sendOrderReceivedEmail = async (orderId: string) => {
     try {
+      console.log("📧 Sending order received email for order:", orderId);
       const res = await fetch(
         "https://xpaqoturecevoyjjmwez.functions.supabase.co/send-invoice-email",
         {
@@ -121,12 +122,15 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         }
       );
 
+      console.log("📧 Email API Response Status:", res.status);
+      
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
+        console.error("📧 Email API Error:", errorData);
         throw new Error(errorData.error || `Failed with status ${res.status}`);
       }
 
-      console.log("Order received email sent successfully");
+      console.log("✅ Order received email sent successfully");
     } catch (err: any) {
       console.error("Error sending order received email:", err);
       toast({
@@ -212,6 +216,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         if (itemsError) throw itemsError;
 
         // Send "order received" email immediately
+        console.log("🎯 Order created, sending email for order ID:", newOrder.id);
         await sendOrderReceivedEmail(newOrder.id);
       }
 
