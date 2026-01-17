@@ -1,6 +1,9 @@
+// TypeScript: declare Deno global to avoid type errors
+declare const Deno: any;
 // supabase/functions/send-invoice-email/index.ts
 
-Deno.serve(async (req) => {
+// Universal serve handler for Deno and Node.js
+const serveHandler = async (req: any): Promise<Response> => {
   try {
     // --- Handle CORS preflight ---
     if (req.method === "OPTIONS") {
@@ -49,7 +52,7 @@ Deno.serve(async (req) => {
     const grandTotal = total + deliveryCharges;
 
     // Build items HTML
-    const itemsHTML = items.map((item: any) => `
+    const itemsHTML = (items as Array<{ name: string; quantity: number; price: number }>).map((item) => `
       <tr>
         <td style="padding:8px 0;color:#333;">${item.name} × ${item.quantity}</td>
         <td style="padding:8px 0;text-align:right;color:#333;">₨${item.price}</td>
@@ -57,38 +60,121 @@ Deno.serve(async (req) => {
     `).join("");
 
     // Format address helper
-    const formatAddress = (addr: any) =>
+    const formatAddress = (addr: { street?: string; city?: string; zip?: string } | undefined) =>
       addr && typeof addr === "object"
         ? `${addr.street || ""}, ${addr.city || ""}, ${addr.zip || ""}`
         : "Not provided";
 
     // Build invoice HTML
+    // Build new email HTML template
+    const logo_url = "https://ceramed.org/assets/logo.png";
+    const order_link = `https://ceramed.org/orders/${orderId}`;
+    const support_email = "info@ceramed.org";
+    const productRows = (items as Array<{ name: string; size?: string; price: number }>).map((item) => `
+      <tr>
+        <td>${item.name}${item.size ? ` (${item.size})` : ""}</td>
+        <td align="right">Rs. ${item.price}</td>
+      </tr>
+    `).join("");
+    const shipping = deliveryCharges;
+    const tax = 0;
+    const totalDisplay = grandTotal;
+    const address = shippingAddress?.street || "";
+    const city = shippingAddress?.city || "";
+    const country = shippingAddress?.country || "Pakistan";
     const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Thank you for your order!</h2>
-        <p>Hi <b>${customerName}</b>, your order is confirmed.</p>
-        <p><strong>Order #${orderId}</strong></p>
-        <table style="width:100%;border-collapse:collapse;margin:20px 0;">
-          <thead>
-            <tr style="border-bottom: 2px solid #ddd;">
-              <th style="text-align:left;padding:8px;">Item</th>
-              <th style="text-align:right;padding:8px;">Price</th>
-            </tr>
-          </thead>
-          <tbody>${itemsHTML}</tbody>
-        </table>
-        <p style="margin-top:10px;">Delivery Charges: ₨${deliveryCharges}</p>
-        <p style="font-size:18px;font-weight:bold;margin-top:10px;">Grand Total: ₨${grandTotal}</p>
-        <div style="margin-top:20px;padding:15px;background:#f5f5f5;border-radius:5px;">
-          <p><strong>Shipping Address:</strong><br>${formatAddress(shippingAddress)}</p>
-          <p><strong>Billing Address:</strong><br>${formatAddress(billingAddress)}</p>
-        </div>
-        <p style="margin-top:30px;color:#666;">Thank you for shopping with Ceramed!</p>
-      </div>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Order Confirmation</title>
+    </head>
+    <body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial, sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td align="center">
+            <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; margin:30px 0; padding:30px; border-radius:6px;">
+              <tr>
+                <td align="center" style="padding-bottom:20px;">
+                  <img src="${logo_url}" alt="Company Logo" width="120">
+                </td>
+              </tr>
+              <tr>
+                <td align="center">
+                  <h2 style="margin:0; color:#333;">Thank you for your purchase!</h2>
+                  <p style="color:#777; margin-top:8px;">
+                    Order <strong>#${orderId}</strong>
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:20px 0; color:#555; text-align:center;">
+                  We're getting your order ready to be shipped.<br>
+                  We’ll notify you once it has been sent after admin approval.
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding-bottom:30px;">
+                  <a href="${order_link}" 
+                     style="background:#8cc63f; color:#ffffff; text-decoration:none; 
+                            padding:14px 28px; border-radius:4px; display:inline-block;">
+                    View Your Order
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <h3 style="border-bottom:1px solid #eee; padding-bottom:10px;">Order Summary</h3>
+                  <table width="100%" cellpadding="8">
+                    ${productRows}
+                    <tr>
+                      <td>Shipping</td>
+                      <td align="right">Rs. ${shipping}</td>
+                    </tr>
+                    <tr>
+                      <td>Taxes</td>
+                      <td align="right">Rs. ${tax}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Total</strong></td>
+                      <td align="right"><strong>Rs. ${totalDisplay}</strong></td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding-top:25px;">
+                  <h3 style="border-bottom:1px solid #eee; padding-bottom:10px;">Customer Information</h3>
+                  <p>
+                    <strong>Shipping Address</strong><br>
+                    ${customerName}<br>
+                    ${address}<br>
+                    ${city}, ${country}
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding-top:30px; color:#999; font-size:12px;">
+                  If you have any questions, contact us at  
+                  <a href="mailto:${support_email}" style="color:#8cc63f;">${support_email}</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
     `;
 
     // --- Send email via Brevo API ---
-    const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
+    // Get Brevo API key in a way compatible with Deno and Node.js
+    let BREVO_API_KEY = undefined;
+    if (typeof globalThis !== "undefined" && typeof (globalThis as any).Deno !== "undefined" && (globalThis as any).Deno.env && typeof (globalThis as any).Deno.env.get === "function") {
+      BREVO_API_KEY = (globalThis as any).Deno.env.get("BREVO_API_KEY");
+    } else if (typeof process !== "undefined" && process.env) {
+      BREVO_API_KEY = process.env.BREVO_API_KEY;
+    }
     if (!BREVO_API_KEY) {
       return new Response(JSON.stringify({ error: "Brevo API key not configured" }), {
         status: 500,
@@ -108,7 +194,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         sender: { email: "info@ceramed.org", name: "Ceramed" },
         to: [{ email: customerEmail, name: customerName }],
-        subject: `Order #${orderId} Confirmation - Ceramed`,
+        subject: `Order #${orderId} Received - Ceramed`,
         htmlContent: html,
       }),
     });
@@ -125,7 +211,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ success: true, message: "Email sent via Brevo" }), {
+    return new Response(JSON.stringify({ success: true, message: "Order received email sent via Brevo" }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -143,4 +229,9 @@ Deno.serve(async (req) => {
       },
     });
   }
-});
+};
+
+if (typeof globalThis !== "undefined" && typeof (globalThis as any).Deno !== "undefined" && typeof (globalThis as any).Deno.serve === "function") {
+  (globalThis as any).Deno.serve(serveHandler);
+}
+export default serveHandler;
