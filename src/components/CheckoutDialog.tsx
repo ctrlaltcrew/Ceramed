@@ -49,10 +49,16 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
   const [paymentMethod, setPaymentMethod] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [useSameAsBilling, setUseSameAsBilling] = useState(true);
   const [customerData, setCustomerData] = useState({
     name: "",
     email: "",
     phone: "",
+    address: "",
+    city: "",
+    postalCode: "",
+  });
+  const [billingData, setBillingData] = useState({
     address: "",
     city: "",
     postalCode: "",
@@ -113,10 +119,14 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
               city: customerData.city,
               zip: customerData.postalCode,
             },
-            billingAddress: {
+            billingAddress: useSameAsBilling ? {
               street: customerData.address,
               city: customerData.city,
               zip: customerData.postalCode,
+            } : {
+              street: billingData.address,
+              city: billingData.city,
+              zip: billingData.postalCode,
             },
           }),
         }
@@ -231,10 +241,16 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
 
       // Reset form
       onOpenChange(false);
+      setUseSameAsBilling(true);
       setCustomerData({
         name: "",
         email: "",
         phone: "",
+        address: "",
+        city: "",
+        postalCode: "",
+      });
+      setBillingData({
         address: "",
         city: "",
         postalCode: "",
@@ -325,6 +341,38 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
                 <Input id="postalCode" value={customerData.postalCode} onChange={(e) => setCustomerData((p) => ({ ...p, postalCode: e.target.value }))} />
               </div>
             </div>
+          </div>
+
+          {/* Billing Address */}
+          <div className="space-y-4">
+            <h3 className="font-semibold">Billing Address</h3>
+            <div className="flex items-center space-x-2">
+              <input 
+                type="checkbox" 
+                id="useSameAddress" 
+                checked={useSameAsBilling}
+                onChange={(e) => setUseSameAsBilling(e.target.checked)}
+                className="w-4 h-4"
+              />
+              <Label htmlFor="useSameAddress" className="font-normal cursor-pointer">Same as shipping address</Label>
+            </div>
+            
+            {!useSameAsBilling && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <Label htmlFor="billingAddress">Address *</Label>
+                  <Textarea id="billingAddress" value={billingData.address} onChange={(e) => setBillingData((p) => ({ ...p, address: e.target.value }))} required={!useSameAsBilling} />
+                </div>
+                <div>
+                  <Label htmlFor="billingCity">City *</Label>
+                  <Input id="billingCity" value={billingData.city} onChange={(e) => setBillingData((p) => ({ ...p, city: e.target.value }))} required={!useSameAsBilling} />
+                </div>
+                <div>
+                  <Label htmlFor="billingPostalCode">Postal Code</Label>
+                  <Input id="billingPostalCode" value={billingData.postalCode} onChange={(e) => setBillingData((p) => ({ ...p, postalCode: e.target.value }))} />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Payment */}
