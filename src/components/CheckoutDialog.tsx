@@ -190,9 +190,19 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
       if (receiptFile) receiptUrl = await uploadReceipt(receiptFile);
 
       const shipping_address = {
-        address: customerData.address,
+        street: customerData.address,
         city: customerData.city,
-        postalCode: customerData.postalCode,
+        zip: customerData.postalCode,
+      };
+      
+      const billing_address = useSameAsBilling ? {
+        street: customerData.address,
+        city: customerData.city,
+        zip: customerData.postalCode,
+      } : {
+        street: billingData.address,
+        city: billingData.city,
+        zip: billingData.postalCode,
       };
 
       // Insert order
@@ -210,6 +220,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
             customer_email: email,
             customer_phone: customerData.phone,
             shipping_address,
+            billing_address,
           },
         ])
         .select("id")
