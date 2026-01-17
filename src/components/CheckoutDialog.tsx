@@ -245,8 +245,11 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         if (itemsError) throw itemsError;
 
         // Send "order received" email immediately
+        console.log("🎯 Order created successfully, ID:", newOrder.id);
+        console.log("📧 About to call sendOrderReceivedEmail...");
         try {
           await sendOrderReceivedEmail(newOrder.id);
+          console.log("✅ Order received email sent successfully!");
         } catch (emailError) {
           console.error("❌ Failed to send order received email:", emailError);
           // Don't fail the entire checkout if email fails
