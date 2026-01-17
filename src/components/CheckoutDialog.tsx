@@ -86,8 +86,8 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
     return data.publicUrl;
   };
 
-  // Send invoice email via Supabase Edge Function
-  const sendInvoiceEmail = async (orderId: string) => {
+  // Send "order received" email immediately when checkout happens
+  const sendOrderReceivedEmail = async (orderId: string) => {
     try {
       const res = await fetch(
         "https://xpaqoturecevoyjjmwez.functions.supabase.co/send-invoice-email",
@@ -95,7 +95,6 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            // ✅ Use anon key for JWT verification ON
             Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
           },
           body: JSON.stringify({
@@ -108,12 +107,16 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
               price: item.product.price.toFixed(2),
             })),
             total: totalAmount.toFixed(2),
-            shippingAddress: `${customerData.address}, ${customerData.city}${
-              customerData.postalCode ? `, ${customerData.postalCode}` : ""
-            }`,
-            billingAddress: `${customerData.address}, ${customerData.city}${
-              customerData.postalCode ? `, ${customerData.postalCode}` : ""
-            }`,
+            shippingAddress: {
+              street: customerData.address,
+              city: customerData.city,
+              zip: customerData.postalCode,
+            },
+            billingAddress: {
+              street: customerData.address,
+              city: customerData.city,
+              zip: customerData.postalCode,
+            },
           }),
         }
       );
@@ -123,12 +126,12 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
         throw new Error(errorData.error || `Failed with status ${res.status}`);
       }
 
-      console.log("Invoice email sent successfully");
+      console.log("Order received email sent successfully");
     } catch (err: any) {
-      console.error("Error sending invoice:", err);
+      console.error("Error sending order received email:", err);
       toast({
         title: "Error",
-        description: "Failed to send invoice email. Please try again.",
+        description: "Failed to send order received email. Please try again.",
         variant: "destructive",
       });
     }
@@ -208,8 +211,8 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
           .insert(orderItems);
         if (itemsError) throw itemsError;
 
-        // Send invoice email
-        await sendInvoiceEmail(newOrder.id);
+        // Send "order received" email immediately
+        await sendOrderReceivedEmail(newOrder.id);
       }
 
       // Clear cart & show success toast
