@@ -96,6 +96,38 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
   const sendOrderReceivedEmail = async (orderId: string) => {
     try {
       console.log("📧 Sending order received email for order:", orderId);
+      console.log("📋 Customer Data:", customerData);
+      console.log("📋 Billing Data:", billingData);
+      console.log("📋 Use Same as Billing:", useSameAsBilling);
+      
+      const payloadData = {
+        customerEmail: customerData.email,
+        customerName: customerData.name,
+        orderId,
+        items: cartItems.map((item) => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          price: item.product.price.toFixed(2),
+        })),
+        total: totalAmount.toFixed(2),
+        shippingAddress: {
+          street: customerData.address,
+          city: customerData.city,
+          zip: customerData.postalCode,
+        },
+        billingAddress: useSameAsBilling ? {
+          street: customerData.address,
+          city: customerData.city,
+          zip: customerData.postalCode,
+        } : {
+          street: billingData.address,
+          city: billingData.city,
+          zip: billingData.postalCode,
+        },
+      };
+      
+      console.log("📧 Full Payload:", JSON.stringify(payloadData, null, 2));
+      
       const res = await fetch(
         "https://xpaqoturecevoyjjmwez.functions.supabase.co/send-invoice-email",
         {
@@ -104,31 +136,7 @@ const CheckoutDialog: React.FC<CheckoutDialogProps> = ({
             "Content-Type": "application/json",
             Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
           },
-          body: JSON.stringify({
-            customerEmail: customerData.email,
-            customerName: customerData.name,
-            orderId,
-            items: cartItems.map((item) => ({
-              name: item.product.name,
-              quantity: item.quantity,
-              price: item.product.price.toFixed(2),
-            })),
-            total: totalAmount.toFixed(2),
-            shippingAddress: {
-              street: customerData.address,
-              city: customerData.city,
-              zip: customerData.postalCode,
-            },
-            billingAddress: useSameAsBilling ? {
-              street: customerData.address,
-              city: customerData.city,
-              zip: customerData.postalCode,
-            } : {
-              street: billingData.address,
-              city: billingData.city,
-              zip: billingData.postalCode,
-            },
-          }),
+          body: JSON.stringify(payloadData),
         }
       );
 

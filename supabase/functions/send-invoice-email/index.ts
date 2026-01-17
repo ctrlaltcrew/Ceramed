@@ -38,6 +38,11 @@ const serveHandler = async (req: any): Promise<Response> => {
       billingAddress
     } = body;
 
+    console.log("📨 Received Email Request:");
+    console.log("Customer:", customerName, "Email:", customerEmail);
+    console.log("Shipping Address:", JSON.stringify(shippingAddress));
+    console.log("Billing Address:", JSON.stringify(billingAddress));
+
     if (!customerEmail || !customerName || !orderId || !items || !total) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400,
@@ -94,6 +99,22 @@ const serveHandler = async (req: any): Promise<Response> => {
       address = parts[0] || "";
       city = parts[1] || "";
       country = parts[2] || "Pakistan";
+    }
+    
+    // Extract billing address components
+    let billingAddressStr = "";
+    let billingCity = "";
+    let billingCountry = "Pakistan";
+    
+    if (typeof billingAddress === "object" && billingAddress !== null) {
+      billingAddressStr = billingAddress.street || address; // fallback to shipping
+      billingCity = billingAddress.city || city;
+      billingCountry = billingAddress.country || "Pakistan";
+    } else if (typeof billingAddress === "string") {
+      const parts = billingAddress.split(",").map((p: string) => p.trim());
+      billingAddressStr = parts[0] || address;
+      billingCity = parts[1] || city;
+      billingCountry = parts[2] || "Pakistan";
     }
     const html = `
     <!DOCTYPE html>
@@ -161,8 +182,14 @@ const serveHandler = async (req: any): Promise<Response> => {
                   <p>
                     <strong>Shipping Address</strong><br>
                     ${customerName}<br>
-                    ${address}<br>
-                    ${city}, ${country}
+                    ${address || "Address not provided"}<br>
+                    ${city || "City not provided"}, ${country}
+                  </p>
+                  <p style="margin-top:15px;">
+                    <strong>Billing Address</strong><br>
+                    ${customerName}<br>
+                    ${billingAddressStr || "Address not provided"}<br>
+                    ${billingCity || "City not provided"}, ${billingCountry}
                   </p>
                 </td>
               </tr>
