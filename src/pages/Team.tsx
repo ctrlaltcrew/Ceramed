@@ -67,9 +67,9 @@ const TeamPage = () => {
       name: "Jalal Khan Utman",
       role: "Invitro Experimentation and MD Simulation Expert",
       specialization: "In Vitro & MD Simulation",
-      image: "/jalal_khan_utman.jpg",
+      image: "/Jalal Khan .jpg",
       description:
-        "Specialist in preclinical testing methodologies and regulatory compliance protocols.",
+        "Expert in molecular dynamics and in vitro experimentation techniques.",
       linkedin: "https://www.linkedin.com/",
       email: "jalal@example.com",
       github: "",
