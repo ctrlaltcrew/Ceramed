@@ -1,4 +1,4 @@
-import { Linkedin, Mail, Award } from 'lucide-react';
+import { Linkedin, Mail, Award, Github } from 'lucide-react';
 import { Link } from "react-router-dom";
 
 const Team = () => {
@@ -10,6 +10,7 @@ const Team = () => {
       image: '/dr_imran-removebg-preview.png',
       description: 'Assistant Professor in the Department of Biomedical Sciences, PAF-IAST',
       linkedin: 'https://www.linkedin.com/in/dr-imran/',
+      github: 'https://github.com/dr-imran',
       email: 'imran@gmail.com',
     },
     {
@@ -19,7 +20,18 @@ const Team = () => {
       image: '/habab_ali_ahmadimage-removebg-preview (2).png',
       description: 'Specialist in preclinical testing methodologies and regulatory compliance protocols.',
       linkedin: 'https://pk.linkedin.com/in/habab-ali-ahmad',
+      github: 'https://github.com/habab-ali',
       email: 'habab@gmail.com',
+    },
+    {
+      name: 'Ayesha Khan',
+      role: 'Research Assistant',
+      specialization: 'Biomedical Research',
+      image: '/Ayesha Khan.jpg',
+      description: 'Specialist in preclinical testing methodologies and regulatory compliance protocols.',
+      linkedin: 'https://www.linkedin.com/in/ayesha-khan/',
+      github: 'https://github.com/ayesha-khan',
+      email: 'ayesha@gmail.com',
     },
     {
       name: 'Dr. Waqar Khalid Saeed',
@@ -28,6 +40,7 @@ const Team = () => {
       image: '/waqar_image-removebg-preview (1).png',
       description: 'Assistant Professor',
       linkedin: 'https://www.linkedin.com/in/waqar-ahmad-451b6215/',
+      github: 'https://github.com/waqar-saeed',
       email: 'waqar@example.com',
     },
     {
@@ -37,7 +50,18 @@ const Team = () => {
       image: '/fazle_image-removebg-preview.png',
       description: 'Associate Professor',
       linkedin: 'https://www.linkedin.com/in/fazle-rabbi/',
+      github: 'https://github.com/fazle-rabbi',
       email: 'fazle@example.com',
+    },
+    {
+      name: 'Jalal Khan Utman',
+      role: 'Invitro Experimentation and MD Simulation Expert',
+      specialization: 'In Vitro & Molecular Dynamics',
+      image: '/jalal_khan_utman.jpg',
+      description: 'Specialist in preclinical testing methodologies and regulatory compliance protocols.',
+      linkedin: 'https://www.linkedin.com/in/jalal-khan-utman/',
+      github: 'https://github.com/jalal-khan-utman',
+      email: 'jalal@gmail.com',
     },
   ];
 
@@ -107,6 +131,16 @@ const Team = () => {
                     className="w-8 h-8 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200"
                   >
                     <Linkedin className="h-4 w-4" />
+                  </a>
+
+                  {/* GitHub */}
+                  <a
+                    href={member.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200"
+                  >
+                    <Github className="h-4 w-4" />
                   </a>
 
                   {/* Email */}
