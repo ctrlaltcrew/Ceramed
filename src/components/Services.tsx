@@ -8,6 +8,7 @@ import {
   FlaskConical,
   Activity,
   Dna,
+  FilePenLine,
   X,
 } from "lucide-react";
 
@@ -67,6 +68,34 @@ const Services = () => {
         "Protein Studies",
         "Gene Expression",
         "Molecular Diagnostics",
+      ],
+    },
+    {
+      icon: FlaskConical,
+      title: "Metagenomic Data Analysis",
+      description:
+        "End-to-end bioinformatic analysis of metagenomic sequencing data from raw reads to biological interpretation for clinical and environmental research.",
+      features: [
+        "Taxonomic classification and abundance profiling",
+        "Functional annotation and pathway mapping",
+        "Alpha and beta diversity analysis",
+        "Resistome and virulence factor detection",
+        "Customized bioinformatics pipelines",
+        "Publication-ready figures and comprehensive report",
+      ],
+    },
+    {
+      icon: FilePenLine,
+      title: "Article Editing Services",
+      description:
+        "Professional scientific editing to strengthen manuscripts before submission with clarity, structure, formatting, and publication readiness.",
+      features: [
+        "Grammar, clarity and language editing",
+        "Journal-specific formatting and reference styling",
+        "Abstract writing and optimization",
+        "Cover letter preparation",
+        "Response to reviewer comments",
+        "Plagiarism screening and report",
       ],
     },
   ];
