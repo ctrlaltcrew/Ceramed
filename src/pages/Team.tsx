@@ -28,13 +28,11 @@ const TeamPage = () => {
       github: "",
     },
 
-    // ✅ NEW
     {
       name: "Ayesha Khan",
       role: "Research Assistant",
       specialization: "Biomedical Research",
       image: "/Ayesha Khan.jpg",
-      // same intro as Habab
       description:
         "Specialist in preclinical testing methodologies and regulatory compliance protocols.",
       linkedin: "https://www.linkedin.com/in/ayesha-khan/",
@@ -65,7 +63,6 @@ const TeamPage = () => {
       github: "",
     },
 
-    // ✅ NEW
     {
       name: "Jalal Khan Utman",
       role: "Invitro Experimentation and MD Simulation Expert",
@@ -85,7 +82,22 @@ const TeamPage = () => {
 
       <section id="team" className="py-20 bg-white">
         <div className="container mx-auto px-6">
-          {/* ...existing code... */}
+          <div className="text-center mb-16 animate-fade-in">
+            <div className="inline-block px-5 py-2 bg-[#0b8686]/10 text-[#0b8686] rounded-full text-sm font-semibold mb-6 font-parka">
+              Our Team
+            </div>
+
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight font-parka">
+              Meet Our Expert{" "}
+              <span className="text-[#FFB84D]">Researchers</span>
+            </h2>
+
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed font-montserrat">
+              Our multidisciplinary team combines decades of experience in
+              biomedical research, bringing together expertise from various
+              fields to drive innovation in healthcare.
+            </p>
+          </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {teamMembers.map((member, index) => (
@@ -94,38 +106,67 @@ const TeamPage = () => {
                 className="group text-center bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg hover:border-[#0b8686]/40 transition-all duration-300"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                {/* ...existing code... */}
-
-                <div className="flex justify-center gap-3 pt-2">
-                  <a
-                    href={member.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-8 h-8 bg-[#0b8686]/10 hover:bg-[#0b8686] text-[#0b8686] hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200"
-                  >
-                    <Linkedin className="h-4 w-4" />
-                  </a>
-
-                  {!!member.github && (
-                    <a
-                      href={member.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-8 h-8 bg-gray-200/60 hover:bg-gray-900 text-gray-700 hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200"
-                    >
-                      <Github className="h-4 w-4" />
-                    </a>
-                  )}
-
-                  <a
-                    href={`mailto:${member.email}`}
-                    className="w-8 h-8 bg-[#FFB84D]/10 hover:bg-[#FFB84D] text-[#FFB84D] hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200"
-                  >
-                    <Mail className="h-4 w-4" />
-                  </a>
+                <div className="relative mb-6">
+                  <div className="w-28 h-28 mx-auto mb-4 relative overflow-hidden rounded-2xl group-hover:scale-105 transition-transform duration-300">
+                    <img
+                      src={member.image}
+                      alt={`${member.name} - ${member.role}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="absolute top-0 right-1/4 transform translate-x-1/2">
+                    <div className="w-8 h-8 bg-[#FFB84D] rounded-full flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-md">
+                      <Award className="h-4 w-4 text-white" />
+                    </div>
+                  </div>
                 </div>
 
-                {/* ...existing code... */}
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="text-xl font-semibold text-[#0b8686] mb-1 font-parka">
+                      {member.name}
+                    </h3>
+                    <p className="text-[#FFB84D] font-medium mb-1 font-montserrat">
+                      {member.role}
+                    </p>
+                    <p className="text-sm text-gray-600 font-montserrat">
+                      {member.specialization}
+                    </p>
+                  </div>
+
+                  <p className="text-sm text-gray-600 leading-relaxed font-montserrat">
+                    {member.description}
+                  </p>
+
+                  <div className="flex justify-center gap-3 pt-2">
+                    <a
+                      href={member.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-8 h-8 bg-[#0b8686]/10 hover:bg-[#0b8686] text-[#0b8686] hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200"
+                    >
+                      <Linkedin className="h-4 w-4" />
+                    </a>
+
+                    {!!member.github && (
+                      <a
+                        href={member.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-8 h-8 bg-gray-200/60 hover:bg-gray-900 text-gray-700 hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200"
+                      >
+                        <Github className="h-4 w-4" />
+                      </a>
+                    )}
+
+                    <a
+                      href={`mailto:${member.email}`}
+                      className="w-8 h-8 bg-[#FFB84D]/10 hover:bg-[#FFB84D] text-[#FFB84D] hover:text-white rounded-lg flex items-center justify-center transition-colors duration-200"
+                    >
+                      <Mail className="h-4 w-4" />
+                    </a>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
