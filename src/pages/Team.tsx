@@ -35,8 +35,8 @@ const TeamPage = () => {
       image: "/Ayesha Khan.jpg",
       description:
         "Specialist in preclinical testing methodologies and regulatory compliance protocols.",
-      linkedin: "https://www.linkedin.com/in/ayesha-khan/",
-      email: "ayesha@example.com",
+      linkedin: "www.linkedin.com/in/ayesha-khan2833",
+      email: "iayshak.han8@gmail.com",
       github: "",
     },
 
@@ -70,8 +70,8 @@ const TeamPage = () => {
       image: "/Jalal Khan .jpg",
       description:
         "Expert in molecular dynamics and in vitro experimentation techniques.",
-      linkedin: "https://www.linkedin.com/",
-      email: "jalal@example.com",
+      linkedin: "www.linkedin.com/in/jalal-utman-56bb83193",
+      email: "jalalkhanutman154@gmail.com",
       github: "",
     },
   ];
